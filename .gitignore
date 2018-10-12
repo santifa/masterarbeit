@@ -1,0 +1,16 @@
+# ignore latex files
+auto/
+*.aux
+*.idx
+*.blg
+*.bbl
+*.ilg
+*.ind
+*.lof
+*.log
+*.lot
+*.out
+*.toc
+*.gz
+*.fls
+*.fdb_latexmk

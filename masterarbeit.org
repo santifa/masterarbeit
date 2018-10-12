@@ -1,0 +1,100 @@
+
+
+* Besprechungen
+
+** <2018-09-11 Di> Erstbesprechung (Skype)
+
+vollständige Präsentation über Eigenschaften von verteilten Systemen
+ - Ziel + Eigenschaften von Kommunikationssystemen
+*** EventML + Logik Paper lesen
+*** EentML zum laufen bringen 
+*** PingPong Beispiel
+
+** <2018-09-21 Fr> 2. Besprechung (Skype)
+   
+   Mögliche Themen
+   - Beschreibung Prozess
+   - Transformation von Lisp zu anderer Sprache
+   - Anbindung an anderen Simulator
+   - Anbindung anderer Beweiser (GPM + LoE erforderlich)
+  
+*** Shar Paper Referenz schicken
+
+<2018-10-15 Mo> Kreitz wieder in Potsdam, Kommunikation davor über Mail
+
+* Masterarbeit Gliederung
+
+Thema der Masterarbeit ist die Beschreibung von EventML in seinen einzelnen Bestandteilen
+mit Vertiefung eines Preozssschrittes. Dabei sollen die einzelnen Teile ausführlich
+dargestellt werden und mit Beispielen unterfüttert werden.
+
+** Motivation: Anwendung in Kommunikationsprotokollen 
+*** Paxos Protokoll + Bedeutung + Anwendung + Ziele/Eigenschaften verteilter Systeme
+
+** Einführung Logik of Events
+*** Prädikatenlogik + Events + konstruktive Eigenschaften 
+
+** Paxos Konsens Protokoll 
+*** Verstehen
+*** Eigenschaften + Beweise
+
+** Anbindung an Nuprl für Beweise
+
+** Transformation Ml -> Lisp -> Bytecode
+
+** Simulation
+
+* Notizen/Todos [1/4] [25%]
+
+ - [X] Zeitplan schreiben
+ - [ ] Alup 2 Prüfung innerhalb Masterarbeit
+ - [ ] Zugang Nuprl Cornell University
+ - [ ] Vincent Rahli wegen PingPong schreiben
+
+
+* TODO Zeitplan [0/9] [0%]
+
+Insgesamt stehen 6 Monate zur Verfügung
+in insgesamt 26 Einheiten/KW aufgeteilt. 
+Begin: <2018-10-15 Mo>  42 KW
+
+** TODO Recherche <2018-10-15 Mo>--<2018-11-16 Fr> (5E)
+   - Paxos, Motivationsschreiben
+   - Grundlagen Logik
+   - Relevante Quellen für EventML (Logik, Programmierung, Beispiele)
+   
+** TODO Einführung Schreiben <2018-11-16 Fr>--<2018-11-30 Fr> (2E)
+   - Motivationsschreiben / Themeneinleitung
+   - Grundlagen?
+
+** TODO Beispiele in EventML <2018-11-30 Fr>--<2018-12-14 Fr> (2E)
+   - kleine Beispiele für Basiselemente von EventML
+   - Testen Kombination aus EventML Nuprl
+
+** TODO Einführung EventML schreiben <2018-12-14 Fr>--<2018-12-31 Mo> (2E)
+   - Grundlagen Logik für EventML
+   - Beschreibung EventMl Sprache
+   - Einbung einfacher Beispiele
+
+** TODO Untersuchung Transformations <2018-12-31 Mo>--<2019-01-31 Do> (4E)
+   - Transformation von EventML -> Lisp
+   - Einbindung von Nuprl in EventML Transformationsprozess/Programmierung
+   - Transformation von Lisp -> Bytecode
+   - Beispiele für den Prozess (Schritte)
+   - Mögliche Vertiefung durch Prozesserleichterung (UI) -> Anwendbarkeit verbessern
+   - Beweise über EventML Eigenschaften
+
+** TODO Transformationsprozess schreiben <2019-01-31 Do>--<2019-02-15 Fr> (2E) 17
+   - Transformationsprozess beschreiben
+   - Unterfüttern mit Beispielen, Schrittweise
+   - Beschreibung der Vorgehensweise bei Beweisen über Eigenschaften von EventML Programmen mit Nuprl
+
+** TODO Simulation von Beispielen <2019-02-15 Fr>--<2019-03-15 Fr> (2E)
+   - Beispiele für die Simulation von EventMl
+   - reale Anwendbarkeit untersuchen/reale Beispiele
+
+** TODO Simulationsprozess schreiben <2019-03-15 Fr>--<2019-04-05 Fr> (2E)
+
+** TODO Finishing <2019-04-05 Fr>--<2019-05-10 Fr> (5E)
+   - Reinschrift
+   - Rechtschreibkontrolle, Gramatik, Verständlichkeit, Index...

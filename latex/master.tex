@@ -1,0 +1,180 @@
+\documentclass[11pt, a4paper]{article}
+
+%\usepackage{ngerman}
+\usepackage[ngerman]{babel}
+\usepackage[utf8]{inputenc} %Korrekte Kodierung der Umlaute nach UTF-8
+\usepackage[T1]{fontenc} %Korrekte Kodierung der Umlaute nach UTF-8
+\usepackage{makeidx} %Zur automatischen Indexerstellung
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{color}    % Verwendung von Farben
+\usepackage{listings} % Korrekter Satz von Listings und Quellcode
+\usepackage{tikz}     % graphen malen in latex
+\usetikzlibrary{matrix,decorations.pathreplacing}
+\usepackage{graphicx} % abbildungen einfügen
+\usepackage{subfigure}
+\usepackage{amsmath}  % mathe
+\usepackage{amsthm}   % theoreme
+\usepackage{footnote}
+\usepackage{etoolbox} % common tools
+\usepackage[colorlinks,
+pdfpagelabels,
+pdfstartview = FitH,
+bookmarksopen = true,
+bookmarksnumbered = true,
+linkcolor = black,
+urlcolor = black,
+plainpages = false,
+hypertexnames = false,
+citecolor = black] {hyperref}
+\usepackage{url}      % Korrekter Satz von URLs
+
+
+%Hilfs-Fonts - ohne Serifen (hier für Tabellen)
+\newfont{\bib}{cmss8 scaled 1040}
+\newfont{\bibf}{cmssbx8 scaled 1040}
+
+% definitionen
+\newtheorem{defi}{Definition}
+
+\definecolor{lightgray}{gray}{0.85}
+\setlength{\emergencystretch}{1em} % erlaube zusätzliche abstände
+
+%Seitenformat-Definitionen
+\topmargin0mm
+\textwidth147mm
+\textheight214mm
+\evensidemargin5mm
+\oddsidemargin5mm
+\footskip19mm
+\parindent=0in
+
+\renewcommand{\lstlistingname}{Auflistung}
+\apptocmd{\thebibliography}{\raggedright}{}{} % bibliography right aligned
+\newcounter{sectionnumber}
+\newcommand*\rot{\rotatebox{90}}
+
+\makeindex % legt das Index-File an
+
+\begin{document}          
+
+\begin{titlepage}
+  \begin{center} 
+    \mbox{}
+    
+    {\large \sc Bachelorarbeit} \\    
+
+    \vspace{1cm}
+  
+    {\huge Erweiterung des GERBIL-Frameworks zur Evaluation von Named-Entity-Linking Verfahren\\[1em] {\LARGE}}  
+        
+    \vspace{2cm}
+    
+    \includegraphics[scale=0.05]{images/Mathnatlogo.jpg}\\[1em]
+    Universität Potsdam\\
+    Institut für Informatik \\
+    Hasso-Plattner-Institut für Softwaresystemtechnik GmbH\\
+    Professur Internet-Technologien und Systeme
+    
+    \vspace{2cm}
+    
+		vorgelegt von
+		
+    \vspace{1em}
+    
+		{\Large Henrik Jürges} \\
+        {Matr.-Nr. 751237}\\
+
+    \vspace{2em}
+        {Aufgabenstellung und Betreuung:}\\
+        {Prof. Christoph Meinel}\\
+        {Dr. Harald Sack}
+		
+    \vspace{3em}    
+    Potsdam\\
+    29. April 2016
+  \end{center}
+\end{titlepage}
+
+
+\pagenumbering{gobble}
+% Zweite Seite = Kurzzusammenfassung
+\begin{center}
+{\bf Kurzzusammenfassung}
+\end{center}
+\noindent
+Named Entity Linking (NEL) ist ein Verfahren, um Text in natürlicher Sprache mit formalen Wissenbasen wie z.\,B. DBpedia 
+zu verknüpfen. Antwortsystem, Suchmaschinen und Empfehlungssystem nutzen Verfahren zur automatisierten Textverarbeitung.
+Zur Verbesserung dieser Verfahren werden dabei Mehrdeutigkeiten von Texten in natürlicher Sprache aufgelöst und in formales
+Wissen überführt.
+%Zur Verbesserung aufbauender Verfahren zur automatisierten Textverarbeitung, wie z.\,B. Antwortsysteme und Empfehlungssysteme, werden
+%dabei Mehrdeutigkeiten von Texten in natürlicher Sprache aufgelöst. 
+Daneben ist vor allem die Evaluation von NEL-Verfahren ein aktueller Gegenstand der Forschung.
+
+Diese Bachelorarbeit hat zum Ziel, bestehende NEL-Evaluationsverfahren zu verfeinern, um daraus differenzierte Aussagen über
+die Effektivität von NEL-Methoden und deren Evaluation treffen zu können. Dafür wird GERBIL, ein NEL-Evaluationsframework, analysiert und
+existierende Defizite aufgezeigt und klassifiziert. Für die Defizite werden Lösungen und Erweiterungen vorgeschlagen und implementiert.
+
+\newpage
+
+% Dritte Seite = Inhaltsverzeichnis
+\tableofcontents 
+\newpage
+
+\pagenumbering{Roman}
+% Abkürzungsverzichnis
+\newpage
+\begin{appendix}
+\input{abkz.tex}
+
+\addcontentsline{toc}{section}{C~\,Abbildungsverzeichnis}
+%\addcontentsline{toc}{section}{~~~~Abbildungsverzeichnis} % Zeile für das Inhaltsverzeichnis
+\listoffigures
+
+\newpage
+\addcontentsline{toc}{section}{D~\,Tabellenverzeichnis}
+%\addcontentsline{toc}{section}{~~~~Tabellenverzeichnis} % Zeile für das Inhaltsverzeichnis
+\listoftables
+\end{appendix}
+\newpage
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\setcounter{section}{0}
+\renewcommand{\thesection}{\arabic{section}}
+\newpage
+\input{chapters/chapter_1.tex} 
+\newpage
+\input{chapters/chapter_2.tex}
+\newpage
+\input{chapters/chapter_3.tex}
+\newpage
+\input{chapters/chapter_4.tex}
+\newpage
+\input{chapters/chapter_5.tex}
+\newpage
+\input{chapters/chapter_6.tex}
+
+\newpage
+\begin{appendix}
+\setcounter{section}{4}
+\renewcommand{\thesection}{\Alph{section}}
+\input{chapters/appendix.tex}
+\end{appendix}
+
+%Hier kommt das Literaturverzeichnis
+\newpage
+\addcontentsline{toc}{section}{~~~~Literaturverzeichnis} % Zeile für das Inhaltsverzeichnis
+\bibliography{bibfile}
+\bibliographystyle{plain}
+
+\newpage
+%Hierhin kommt der Index (Sachverzeichnis)
+%\addcontentsline{toc}{section}{Index} % Dies ist die Zeile für das Inhaltsverzeichnis
+%\flushbottom                                    
+%\printindex
+
+\newpage
+\input{selbst.tex}
+
+\end{document}
