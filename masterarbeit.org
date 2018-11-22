@@ -51,7 +51,9 @@ dargestellt werden und mit Beispielen unterfüttert werden.
  - [X] Zeitplan schreiben
  - [ ] Alup 2 Prüfung innerhalb Masterarbeit
  - [ ] Zugang Nuprl Cornell University
- - [ ] Vincent Rahli wegen PingPong schreiben
+ - [ ] PingPong Beispiel
+   + Vincent Rahli wegen PingPong schreiben
+
 
 *** EventML installieren
     
@@ -66,6 +68,9 @@ dargestellt werden und mit Beispielen unterfüttert werden.
 Makefile öffnen und im Ziel ~install-doc:~ ~esharp-language.pdf~ 
 zu ~esharp-language.dvi~ ändern. Bei Fehlern die Datei ~docs/manual/esharp-language.tex~
 entsprechend ändern.
+
+
+** Umgang mit Nuprl + EventMl 
 
 
 * TODO Zeitplan [0/9] [0%]
@@ -114,3 +119,93 @@ Begin: <2018-10-15 Mo>  42 KW
 ** TODO Finishing <2019-04-05 Fr>--<2019-05-10 Fr> (5E)
    - Reinschrift
    - Rechtschreibkontrolle, Gramatik, Verständlichkeit, Index...
+
+
+* Recherche
+
+[[https://github.com/adjoint-io/raft%0A][Raft Consensus]]
+
+** Paxos made simple - Lamport - 2001
+
+wichtige Referenzen:
+  - The part-time parliament - Lamport
+  - Thime, clocks, and the ordering of events in a distributed system - Lamport
+
+*** Protokoll
+_Rahmenbedingungen:_
+
+Annahme: Mehrere Prozesse können Werte vorschlagen. 
+Ein Konensalgorithumus stellt sicher, dass ein vorgeschlagener Wert gewählt wird.
+Wird kein Wert vorgeschlagen, wird keiner gewählt und wenn einer gewählt wird, dann
+ist dieser Konsens unter allen Prozessen.
+
+Sicherheitsanforderungen:
+ - S1: Nur vorgeschlagene Werte können gewählt werden
+ - S2: Nur ein Wert wird gewählt
+ - S3: Ein Wert ist erst dann gewählt, wenn er wirklich gewählt ist
+    
+Rollen: (ein Prozess kann mehrere Rollen haben)
+Proposer: Schlägt Werte vor
+Acceptor: Akzeptiert Werte
+Learner:
+
+Kommunikation zwischen Prozessen über Message Passing mit folgenden Einschränkungen:
+ - Nachrichten können lange brauchen, dupliziert werden, verloren gehen (nicht korumpiert)
+ - Prozesse arbeiten willkürlich schnell, können neustarten oder stoppen
+ - Wenn alle Prozesse ausfallen und schon ein Wert gewählt wurde, ist dieser Zustand verloren,
+   solange kein Prozess mehr Informationen hat. 
+
+=> Sonderfälle, wie nur ein Acceptor, werden nicht berücksichtigt.
+
+Ein Wert ist gewählt, wenn ein Mehrheit von Acceptors diesen Wert akzeptiert hat.
+Bedingung: dass ein Acceptor nur einen Wert akzeptieren kann. 
+-> Alle zwei Mehrheiten haben ein Akzeptor gemeinsam -> sie sind Teil einer größeren Mehrheit
+
+_Ablauf:_
+
+Wert: $v$, Accpetor: $a \in A$ , Proposer: $p \in P$, Learner: $l \in L$,
+
+Eigenschaft 0: Damit ein v gewählt wird, muss eine Mehrheit $A_m \subseteq A$ existieren, die v akzeptiert hat.
+Eigenschaft 1: a akzeptiert den 1. ankommenden Vorschlag 
+-> Problem: Gleichzeitigkeit; Wenn jeder $a_n$ ein $v_n$ akzeptiert, dann kann keine Mehrheit entstehen 
+-> Lösung: a darf mehrere Vorschläge akzeptieren, Vorschläge werden durchnummeriert
+
+Eigenschaft 2: Wenn ein Vorschlag mit Wert v und Nummer i gewählt wurde, 
+               dann hat jeder Vorschlag i+x auch den Wert v. (Erfüllt S2)
+
+Eigenschaft 2a: Wenn ein Vorschlag mit Wert v und Nummer i gewählt wurde,
+                dann hat jeder von einem a akzeptierte Vorschlag i+x den Wert v.
+-> Damit E1 E2a nicht verletzt
+
+Eigenschaft 2b: Wenn ein Vorschlag mit Wert v und Nummer i gewählt wurde,
+                dann jeder von einem p vorgebrachte Vorschlag i+x den Wert v.
+
+Eigenschaft 2c: Für jeden Vorschlag n mit Wert v, existiert eine Mehrheit $A_S$
+                für die gilt, dass (i) kein $a \in A_S$ keinen Vorschlag i < n angenommen hat
+                oder (ii) v ist der höchste Wert aller Vorschläge i < n, der von einem $a \in A_S$
+                angenommen wurden.
+
+=> Ein p muss höchste Vorschlagsnummer n erfahren um Vorschlag n+1 zu tätigen.
+
+Vorschlag abgeben -> /Prepare Request/
+1. p wählt Vorschlagsnummer n und sendet die Anfrage an eine Menge $a \in A$
+2 Anwtortmöglichkeiten:
+  (i) Constraint, dass a kein Vorschlag i mit i < n akzeptiert
+  (ii) den größten Vorschlag i < n der akzeptiert wurde
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*** Zusammenfassung
+
+    
