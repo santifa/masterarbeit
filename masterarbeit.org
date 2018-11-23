@@ -123,6 +123,7 @@ Begin: <2018-10-15 Mo>  42 KW
 
 * Recherche
 
+[[http://www.cs.ru.nl/~freek/100/][100 Theoreme und welche formalisiert sind]]
 [[https://github.com/adjoint-io/raft%0A][Raft Consensus]]
 
 ** Paxos made simple - Lamport - 2001
@@ -147,7 +148,7 @@ Sicherheitsanforderungen:
 Rollen: (ein Prozess kann mehrere Rollen haben)
 Proposer: Schlägt Werte vor
 Acceptor: Akzeptiert Werte
-Learner:
+Learner: Stellt fest ob ein Wert von einer Mehrheit akzeptiert wurde
 
 Kommunikation zwischen Prozessen über Message Passing mit folgenden Einschränkungen:
  - Nachrichten können lange brauchen, dupliziert werden, verloren gehen (nicht korumpiert)
@@ -169,6 +170,7 @@ Eigenschaft 0: Damit ein v gewählt wird, muss eine Mehrheit $A_m \subseteq A$ e
 Eigenschaft 1: a akzeptiert den 1. ankommenden Vorschlag 
 -> Problem: Gleichzeitigkeit; Wenn jeder $a_n$ ein $v_n$ akzeptiert, dann kann keine Mehrheit entstehen 
 -> Lösung: a darf mehrere Vorschläge akzeptieren, Vorschläge werden durchnummeriert
+(disjoint set of numbers per proposer)
 
 Eigenschaft 2: Wenn ein Vorschlag mit Wert v und Nummer i gewählt wurde, 
                dann hat jeder Vorschlag i+x auch den Wert v. (Erfüllt S2)
@@ -187,25 +189,48 @@ Eigenschaft 2c: Für jeden Vorschlag n mit Wert v, existiert eine Mehrheit $A_S$
 
 => Ein p muss höchste Vorschlagsnummer n erfahren um Vorschlag n+1 zu tätigen.
 
-Vorschlag abgeben -> /Prepare Request/
+*Proposer*  
+/Prepare Request/
 1. p wählt Vorschlagsnummer n und sendet die Anfrage an eine Menge $a \in A$
-2 Anwtortmöglichkeiten:
+2. Anwtortmöglichkeiten:
   (i) Constraint, dass a kein Vorschlag i mit i < n akzeptiert
   (ii) den größten Vorschlag i < n der akzeptiert wurde
+/Accept Request/
+Wenn p von einer Mehrheit (i) zurückbekommt, kann es das akzeptieren des Vorschlags anfordern.
 
+*Acceptor*
+1. Jede Anfrage kann ignoriert werden, ohne Einschränkungen
+2. Jeder Prepare Request kann beantwortet werden
+Eigenschaft 1a: Ein a kann jeden Vorschlag n akzeptieren, wenn und nur wenn es
+                auf keinen Prepare Request i mit i > n geantwortet hat.
 
+Optimierung: 
+- a merkt sich nur den höchsten Vorschlag n und ignoriert Prepare Request i < n
+- a ignoriert Prepare Request n, wenn n schon akzeptiert ist
 
+_Algorithmus:_
 
+Phase 1:
+1. p wählt Vorschlagsnummer n und sendet Prepare Request an $A_m \subseteq A$
+2. Wenn a ein Prepare Request n, der größer als alle bisherigen ist, dann
+   antwortet a mit dem Versprechen keine Vorschläge unter n zu akzeptieren und
+   mit dem höchsten von a akzeptierten Vorschlag.
+Phase 2:
+1. Wenn p eine Antwort auf ein Prepare Request von einer Mehrheit $A_m$ erhält,
+   dann sendet er Accept Requests an alle $a_i \in A_m$ mit dem Vorschlag (n, v).
+   Wobei v der Wert des höchsten Vorschlags unter den Antworten ist (oder jeder wenn keine Antworten).
+2. Wenn a ein Accept Request n erhält, akzeptiert er den Vorschlag, wenn er vorher nicht
+   ein Prepare Request i > n beantwortet hat.
 
+_Lernen:_
+Ein l muss herausfinden das ein Wert v von einer Mehrheit gewählt wurde.
 
+Eine Menge von ausgwählten Learners erhält von a den Vorschlag, wenn dieser von a akzeptiert wurde.
+Andere Learner erfahren von akzeptierte Werte durch die ausgwählten Learnern.
 
+_Fortschritt:_
+Um gegenseitiges überbieten/unterbrechen zu verhindern, wird ein besonderer p ausgewählt,
+der als einziges Vorschläge machen darf.
 
-
-
-
-
-
-
-*** Zusammenfassung
-
+** Paxos Made Moderatly Complex - van Renesse - 2011
     
