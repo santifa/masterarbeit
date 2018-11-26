@@ -232,5 +232,23 @@ _Fortschritt:_
 Um gegenseitiges überbieten/unterbrechen zu verhindern, wird ein besonderer p ausgewählt,
 der als einziges Vorschläge machen darf.
 
+
 ** Paxos Made Moderatly Complex - van Renesse - 2011
-    
+
+wichtige Referenzen:
+- How to build highly available systems using consensus - Lampson
+
+Beispielsysteme für Multi-Paxos: Chubby, Zookeeper
+
+_Muli-Paxos:_
+
+Ein Client $k$ sendet Kommandos $c$ an ein Netz von Servern $S$.
+Ein Kommand is ein Tripel $c = <k,cid,operation>$, wobei $k$ die ID
+des Clients ist, $cid$ eine eindeutige Sequenznummer für $c$ und $operation$
+die Zustandstransition angibt.
+
+Server $s \in S$ sind DEA's die mit Hilfe von SMR (State Machine Replication) gespiegelt werden.
+Problem: Mehrere Clients können zum selben Zeitpunkt Kommandos an alle Server senden. Wie ist die Reihenfolge
+         in der die Kommandos abgearbeitet werden? Lösung, Multi-Paxos.
+
+

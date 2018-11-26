@@ -1,6 +1,63 @@
 
 \section{Einleitung}
-\label{sec_einleitung}
+\label{sec_1}
+
+%“Nur Weicheier benutzen Datensicherungen auf Band: richtige Männer laden ihren
+%wichtigen Kram einfach auf einen FTP und lassen diesen vom Rest der Welt
+%spiegeln.” –Linus Torvalds im Usenet, 1996
 
 % Motivation
+\begin{quote}
+A distributed system is one in which the failure of a computer you didn't even
+know existed can render your own computer unusable. - Leslie Lamport
+\end{quote}
 
+In der modernen Welt sind Computer allgegenwärtig und mit den Entwicklungen
+der letzten 20 Jahre haben Netzwerke von Computern eine immer wichtigere Rolle
+für die Entwicklung der Menschheit gespielt. Sie ermöglichen physikalische
+Limitierung der Ressourcen eines Computers aufzuweichen durch Bündelung
+mehrerer Computer zu einem Virtuellen. Verteilte Systeme die sich einem Nutzer
+als ein koheräntes System darstellen, sind in vielen Anwendungsfällen essential
+für moderne Softwareanwendungen geworden, zum Beispiel Datenbanken die
+auf mehrere Computer verteilt sind. Solche verteilten Systeme ermöglichen
+es das Ausfälle einzelner Teilnehmer keinen Einfluss auf das Gesamtsystem haben,
+solange noch genügend Teilnehmer verbleiben. Solche Ausfälle können nicht nur
+durch dne Ausfall eines Computer entstehen, auch Netzwerkverbindungen können
+ausfallen oder extrem langsam sein. Damit Informationen zwischen den
+Instanzen gleich sind wurden Protokolle entwickelt, die auf die speziellen
+Gegebenheiten angepasst sind.
+
+Solche Protokolle sind bekanntermaßen schwer zu implementieren und stellen
+die Entwickler vor die Herausforderung wie man sie testet. Da sie darauf
+basieren, dass Teile eines verteilten Systems unerwartet ausfallen können,
+ist die Anzahl der Möglichen Fehler extrem Groß und schwer in definierten
+Umgebungen zu replizieren. Auch die Verifikation gestaltet sich als
+schwierig, da viele Interaktionen statt finden und keine zeitliche
+Kausalität angenommen werden kann.
+
+Mit Hilfe von Theorembeweisern und formalen Methoden der Theoretischen
+Informatik ist es Möglich Teile der Mathematik zu formalisieren und
+diese zur Verifikation von formalisierten Algorithmen zu verwenden.
+Die ``Logic of Events'' ist eine mathematische Theorie, um Protokolle
+in verteilten Systemen zu beschreiben.
+Die Theorie wurde in der Programmiersprache EventML umgesetzt, welches eine
+ML-Dialekt ist. sie besitzt eine Schnittstelle zu NUPRL, einem Theorembeweiser,
+um Eigenschaften verteilter Protokolle formal zu beweisen.
+Außerdem ist es mit EventML möglich ausführbare Programme zu erzeugen und
+diese auch in Simulationen zu testen und genauer zu untersuchen.
+
+%Forschungsfragen:
+In dieser Arbeit werden die folgenden Forschungsfragen erörtert:
+\begin{itemize}
+  \item 
+\end{itemize}
+
+%Struktur:
+
+Im nächsten Abschnitt werden die Grundlagen für die ``Logic of Events'' nach
+Bickford hergeleitet und diese Eingeführt. Danach wird EventML
+als Programmiersprache genauer vorgestellt. In Abschnitt~\ref{sec_3} wird
+der Prozess von EventML zu asuführbaren Code genauer betrachtet. Danach wird gezeigt wie
+NUPRL Eigenschaften von verteilten Protokollen beweisen kann. Die Simulation
+von in EventML geschriebenen Systemen wird im Abschnitt~\ref{sec_5} gezeigt.
+Im letzten Abschnitt wird eine Zusammenfassung und ein Ausblick gegeben.
