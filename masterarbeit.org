@@ -46,11 +46,11 @@ dargestellt werden und mit Beispielen unterfüttert werden.
 ** Simulation
 
 
-* Notizen/Todos [1/4] [25%]
+* Notizen/Todos [2/4] [50%]
 
  - [X] Zeitplan schreiben
  - [ ] Alup 2 Prüfung innerhalb Masterarbeit
- - [ ] Zugang Nuprl Cornell University
+ - [X] Zugang Nuprl Cornell University
  - [ ] PingPong Beispiel
    + Vincent Rahli wegen PingPong schreiben
 
@@ -73,7 +73,7 @@ entsprechend ändern.
 ** Umgang mit Nuprl + EventMl 
 
 
-* TODO Zeitplan [0/9] [0%]
+* TODO Zeitplan [0/8] [0%]
 
 Insgesamt stehen 6 Monate zur Verfügung
 in insgesamt 26 Einheiten/KW aufgeteilt. 
@@ -105,7 +105,7 @@ Begin: <2018-10-15 Mo>  42 KW
    - Mögliche Vertiefung durch Prozesserleichterung (UI) -> Anwendbarkeit verbessern
    - Beweise über EventML Eigenschaften
 
-** TODO Transformationsprozess schreiben <2019-01-31 Do>--<2019-02-15 Fr> (2E) 17
+** Transformationsprozess schreiben <2019-01-31 Do>--<2019-02-15 Fr> (2E) 17
    - Transformationsprozess beschreiben
    - Unterfüttern mit Beispielen, Schrittweise
    - Beschreibung der Vorgehensweise bei Beweisen über Eigenschaften von EventML Programmen mit Nuprl
@@ -252,3 +252,6 @@ Problem: Mehrere Clients können zum selben Zeitpunkt Kommandos an alle Server s
          in der die Kommandos abgearbeitet werden? Lösung, Multi-Paxos.
 
 
+
+** The Byzantine Generals Problem
+ 
