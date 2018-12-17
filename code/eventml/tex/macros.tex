@@ -1,0 +1,749 @@
+\newcommand{\SET}[1]{\mathsf{#1}}
+
+\newcommand{\SETtoset}[1]{\pow(\SET{#1})}
+
+\newcommand{\SETnat}[0]{\nat}
+\newcommand{\SETvar}{\SET{Var}}
+\newcommand{\SETexp}{\SET{Exp}}
+\newcommand{\SETatexp}{\SET{AtExp}}
+\newcommand{\SETpat}{\SET{Pat}}
+\newcommand{\SETatpat}{\SET{AtPat}}
+\newcommand{\SETint}{\SET{Int}}
+\newcommand{\SETstring}{\SET{String}}
+\newcommand{\SETatom}{\SET{Token}}
+\newcommand{\SETcharseq}{\SET{CharSeq}}
+\newcommand{\SETatoms}{\SET{Tokens}}
+\newcommand{\SETatomsl}{\SET{TokensList}}
+\newcommand{\SETatomsp}{\SET{PTokens}}
+\newcommand{\SETop}{\SET{Op}}
+\newcommand{\SETvid}{\SET{Vid}}
+\newcommand{\SETbind}{\SET{Bind}}
+\newcommand{\SETty}{\SET{Ty}}
+\newcommand{\SETdec}{\SET{Dec}}
+\newcommand{\SETldec}{\SET{LetDec}}
+\newcommand{\SETcdec}{\SET{ClassDec}}
+\newcommand{\SETtyvar}{\SET{TyVar}}
+\newcommand{\SETeqtyvar}{\SET{EqTyVar}}
+\newcommand{\SETtycon}{\SET{PTyC}}
+\newcommand{\SETinftycon}{\SET{ITyC}}
+\newcommand{\SETbool}{\SET{Bool}}
+\newcommand{\SETparam}{\SET{Param}}
+\newcommand{\SETityenv}{\SET{ITyEnv}}
+\newcommand{\SETity}{\SET{ITy}}
+\newcommand{\SETityseq}{\SET{ITySeq}}
+\newcommand{\SETitypseq}{\SET{ITySeq}}
+\newcommand{\SETityvar}{\SET{ITyVar}}
+\newcommand{\SETityvarset}{\SET{ITyVarSet}}
+\newcommand{\SETityscheme}{\SET{ITyScheme}}
+\newcommand{\SETityfun}{\SET{ITyFun}}
+\newcommand{\SETtypseq}{\SET{TySeq}}
+\newcommand{\SETtypseqset}{\SET{TySeqSet}}
+\newcommand{\SETtypvarseq}{\SET{TvSeq}}
+\newcommand{\SETsub}{\SET{Sub}}
+\newcommand{\SETprog}{\SET{Prog}}
+\newcommand{\SETcrule}{\SET{CRule}}
+\newcommand{\SETbrule}{\SET{BRule}}
+\newcommand{\SETmrule}{\SET{MRule}}
+\newcommand{\SETbagpat}{\SET{BagPat}}
+\newcommand{\SETmsgpat}{\SET{MsgPat}}
+\newcommand{\SETcasepat}{\SET{CasePat}}
+\newcommand{\SETarg}{\SET{Arg}}
+\newcommand{\SETargs}{\SET{Args}}
+\newcommand{\SETbvars}{\SET{BVars}}
+\newcommand{\SETheader}{\SET{Header}}
+\newcommand{\SEThdrstatus}{\SET{Status}}
+\newcommand{\SEThdropt}{\SET{HdrOpt}}
+\newcommand{\SEThdropts}{\SET{HdrOpts}}
+\newcommand{\SETnatnum}{\SET{Nat}}
+\newcommand{\SETconst}{\SET{Const}}
+
+\newcommand{\META}[1]{\mathit{#1}}
+
+\newcommand{\METAtoset}[1]{\overline{\META{#1}}}
+\newcommand{\METAtoseq}[1]{\overrightarrow{\META{#1}}}
+
+\newcommand{\METAexp}{\META{exp}}
+\newcommand{\METAvar}{\META{v}}
+\newcommand{\METAatexp}{\META{atexp}}
+\newcommand{\METApat}{\META{pat}}
+\newcommand{\METAatpat}{\META{atpat}}
+\newcommand{\METAint}{\META{i}}
+\newcommand{\METAstring}{\META{s}}
+\newcommand{\METAty}{\META{ty}}
+\newcommand{\METAvid}{\META{vid}}
+\newcommand{\METAop}{\META{op}}
+\newcommand{\METAbind}{\META{bind}}
+\newcommand{\METAdec}{\META{dec}}
+\newcommand{\METAldec}{\META{ldec}}
+\newcommand{\METAcdec}{\META{cdec}}
+\newcommand{\METAtyvar}{\META{a}}
+\newcommand{\METAtyvarset}{\METAtoset{\METAtyvar}}
+\newcommand{\METAtyvarseq}{\METAtoseq{\METAtyvar}}
+\newcommand{\METAeqtyvar}{\META{ea}}
+\newcommand{\METAtycon}{\META{ptc}}
+\newcommand{\METAinftycon}{\META{itc}}
+\newcommand{\METAbool}{\META{b}}
+\newcommand{\METAparam}{\META{p}}
+\newcommand{\METAity}{\META{\tau}}
+\newcommand{\METAityseq}{\METAtoseq{\METAity}}
+\newcommand{\METAityset}{\METAtoset{\METAity}}
+\newcommand{\METAityscheme}{\META{\sigma}}
+\newcommand{\METAityschemeset}{\METAtoset{\sigma}}
+\newcommand{\METAityfun}{\META{\delta}}
+\newcommand{\METAityenv}{\META{\Gamma}}
+\newcommand{\METAityvar}{\META{\alpha}}
+\newcommand{\METAityvarset}{\METAtoset{\METAityvar}}
+\newcommand{\METAityvarseq}{\METAtoseq{\METAityvar}}
+\newcommand{\METAfun}{\META{f}}
+\newcommand{\METAatom}{\META{tok}}
+\newcommand{\METAcharseq}{\META{cseq}}
+\newcommand{\METAatoms}{\META{toks}}
+\newcommand{\METAatomsl}{\META{latoms}}
+\newcommand{\METAatomsp}{\META{patoms}}
+\newcommand{\METAtypseq}{\META{tyseq}}
+\newcommand{\METAtypseqset}{\META{tyseqset}}
+\newcommand{\METAtypvarseq}{\META{tvseq}}
+\newcommand{\METAclass}{\META{C}}
+\newcommand{\METAset}{\META{s}}
+\newcommand{\METArel}{\META{rel}}
+\newcommand{\METAtup}{\META{t}}
+\newcommand{\METAsub}{\META{sub}}
+\newcommand{\METAprog}{\META{prog}}
+\newcommand{\METAcrule}{\META{crule}}
+\newcommand{\METAbrule}{\META{brule}}
+\newcommand{\METAmrule}{\META{mrule}}
+\newcommand{\METAbagpat}{\META{bagpat}}
+\newcommand{\METAmsgpat}{\META{msgpat}}
+\newcommand{\METAcasepat}{\META{casepat}}
+\newcommand{\METAarg}{\META{arg}}
+\newcommand{\METAargs}{\META{args}}
+\newcommand{\METAbvars}{\META{bvars}}
+\newcommand{\METAheader}{\META{hdr}}
+\newcommand{\METAeo}{\META{eo}}
+\newcommand{\METAeclass}{\META{X}}
+\newcommand{\METAevent}{\META{e}}
+\newcommand{\METAhdrstatus}{\META{status}}
+\newcommand{\METAhdropt}{\META{hdropt}}
+\newcommand{\METAhdropts}{\META{hdropts}}
+\newcommand{\METAnatnum}{\META{n}}
+\newcommand{\METAconst}{\META{c}}
+
+\newcommand{\MEM}[1]{\mathsf{#1}}
+
+\newcommand{\MEMinfera}[1]{\infer[]{#1}{}}
+\newcommand{\MEMinferb}[2]{\infer[]{#1}{#2}}
+\newcommand{\MEMinferc}[3]{\infer[]{#1}{#2 & #3}}
+\newcommand{\MEMinfercc}[3]{\infer[]{#1}{\begin{array}{l}#2 \\ #3\end{array}}}
+\newcommand{\MEMinferd}[4]{\infer[]{#1}{#2 & #3 & #4}}
+\newcommand{\MEMinferdd}[4]{\infer[]{#1}{\begin{array}{l}#2 \\ #3 \\ #4\end{array}}}
+\newcommand{\MEMinferddd}[4]{\infer[]{#1}{\begin{array}{c@{\hspace{0.4in}}c}#2 & #3 \\ \multicolumn{2}{c}{#4}\end{array}}}
+\newcommand{\MEMinfere}[5]{\infer[]{#1}{#2 & #3 & #4 & #5}}
+\newcommand{\MEMinferee}[5]{\infer[]{#1}{\begin{array}{l}#2 \\ #3 \\ #4 \\ #5\end{array}}}
+\newcommand{\MEMinferf}[6]{\infer[]{#1}{#2 & #3 & #4 & #5 & #6}}
+\newcommand{\MEMinferff}[6]{\infer[]{#1}{\begin{array}{l}#2 \\ #3 \\ #4 \\ #5 \\ #6\end{array}}}
+\newcommand{\MEMinferffp}[6]{\infer[]{#1}{\begin{array}{l}#2\ \ \ \ \ #3\ \ \ \ \ #4 \\ #5 \\ #6\end{array}}}
+\newcommand{\MEMtyping}[3]{#1 : \mytuple{#2, #3}}
+\newcommand{\MEMtypingexp}[3]{#1 : \mytuple{#2, #3}}
+\newcommand{\MEMtypingpat}[3]{#1 :_{\mbox{p}} \mytuple{#2, #3}}
+\newcommand{\MEMtypingseq}[3]{#1 :_{\mbox{s}} \mytuple{#2, #3}}
+\newcommand{\MEMtypingtyseq}[2]{#1 :_{\mbox{s}} #2}
+\newcommand{\MEMtypingty}[2]{#1 :_{\mbox{t}} #2}
+\newcommand{\MEMtypingdec}[3]{#1 :_{\mbox{d}} \mytuple{#2, #3}}
+\newcommand{\MEMtypinghdr}[3]{#1 :_{\mbox{h}} \mytuple{#2, #3}}
+\newcommand{\MEMafunc}[2]{#1(#2)}
+\newcommand{\MEMafuncat}[2]{#1[#2]}
+\newcommand{\MEMfunc}[2]{#1\rightarrow#2}
+\newcommand{\MEMinstance}[2]{#1 \prec #2}
+\newcommand{\MEMtypeofopSYMB}{\MEM{typeOf}}
+\newcommand{\MEMtypeofop}[1]{\MEMtypeofopSYMB(#1)}
+\newcommand{\MEMrestrictoutSYMB}{\domsub}
+\newcommand{\MEMrestrictout}[2]{#2\MEMrestrictoutSYMB#1}
+\newcommand{\MEMdomSYMB}{\MEM{dom}}
+\newcommand{\MEMdom}[1]{\MEMdomSYMB(#1)}
+\newcommand{\MEMdisj}[1]{\MEM{dj}(#1)}
+\newcommand{\MEMpowset}[1]{\pow(#1)}
+\newcommand{\MEMpair}[2]{\llparenthesis#1,#2\rrparenthesis}
+\newcommand{\MEMdunion}[2]{#1\uplus#2}
+\newcommand{\MEMbrel}[3]{#1\ #2\ #3}
+\newcommand{\MEMinverse}[1]{#1^{-1}}
+\newcommand{\MEMranSYMB}{\MEM{ran}}
+\newcommand{\MEMran}[1]{\MEMranSYMB(#1)}
+\newcommand{\MEMrestrictinSYMB}[0]{\domres}
+\newcommand{\MEMrestrictin}[2]{#2\MEMrestrictinSYMB#1}
+\newcommand{\MEMuplusSYMB}{+}
+\newcommand{\MEMuplus}[2]{#1\MEMuplusSYMB#2}
+\newcommand{\MEMuplusop}[2]{#1\CONSop{\MEMuplusSYMB#2}}
+\newcommand{\MEMplusenv}[2]{\MEMuplus{#1}{#2}}
+\newcommand{\MEMplusopenv}[2]{\MEMuplusop{#1}{#2}}
+\newcommand{\MEMequnionSYMB}[0]{\boxplus}
+\newcommand{\MEMequnion}[2]{#1{\MEMequnionSYMB}#2}
+\newcommand{\MEMuenvSYMB}[0]{\Cup}
+\newcommand{\MEMuenv}[2]{#1\MEMuenvSYMB#2}
+\newcommand{\MEMfintuple}[1]{\MEM{tuple}(#1)}
+\newcommand{\MEMclosSYMB}{\MEM{clos}}
+\newcommand{\MEMclos}[2]{\MEMclosSYMB_{#1}(#2)}
+\newcommand{\MEMsub}[2]{#1[#2]}
+\newcommand{\MEMfreetyvarsSYMB}{\MEM{fv}}
+\newcommand{\MEMfreetyvars}[1]{\MEMfreetyvarsSYMB(#1)}
+%\newcommand{\MEMinternalTySYMB}{\MEM{iTy}}
+%\newcommand{\MEMinternalTy}[1]{\MEMinternalTySYMB(#1)}
+%\newcommand{\MEMinternalTyseqSYMB}{\MEM{iTyseq}}
+%\newcommand{\MEMinternalTyseq}[1]{\MEMinternalTyseqSYMB(#1)}
+\newcommand{\MEMtoidSYMB}{\MEM{toid}}
+\newcommand{\MEMtoid}[2]{\MEMtoidSYMB(#1,#2)}
+\newcommand{\MEMtransSYMB}{\MEM{trans}}
+\newcommand{\MEMtrans}[1]{\MEMtransSYMB(#1)}
+\newcommand{\MEMoverloadSYMB}{\MEM{overload}}
+\newcommand{\MEMoverload}[3]{\MEMoverloadSYMB(#1,#2,#3)}
+\newcommand{\MEMadmitseqSYMB}{\MEM{admitsEq}}
+\newcommand{\MEMadmitseq}[1]{\MEMadmitseqSYMB(#1)}
+\newcommand{\MEMityenvop}{\MEM{\Gamma{op}}}
+\newcommand{\MEMityenvlib}{\MEM{\Gamma{lib}}}
+
+\newcommand{\CONS}[1]{\mathtt{#1}}
+\newcommand{\CONSB}[1]{\textbf{\texttt{#1}}}
+
+\newcommand{\CONSquot}{\textbf{\texttt{/}}\hspace{-0.05in}\sim}
+\newcommand{\CONSunder}{\textbf{\texttt{\_}}}
+\newcommand{\CONSpipe}{\textbf{\texttt{|}}}
+\newcommand{\CONScomp}{\textbf{\texttt{o}}}
+\newcommand{\CONSbcomp}{\textbf{\texttt{O}}}
+\newcommand{\CONSlpar}{\textbf{\texttt{(}}}
+\newcommand{\CONSrpar}{\textbf{\texttt{)}}}
+\newcommand{\CONSsemicolon}{\textbf{\texttt{;}}}
+\newcommand{\CONScolon}{\textbf{\texttt{:}}}
+\newcommand{\CONSconslist}{\textbf{\texttt{.}}}
+\newcommand{\CONSbinding}{\mathrel{\textbf{\texttt{>>}}}}
+\newcommand{\CONSmonbindSYMB}{\textbf{\texttt{>>=}}}
+\newcommand{\CONSmonbind}{\mathrel{\CONSmonbindSYMB}}
+\newcommand{\CONSparallelSYMB}{\textbf{\texttt{||}}}
+\newcommand{\CONSparallel}[2]{#1\ \CONSparallelSYMB\ #2}
+\newcommand{\CONSdot}{\textbf{\texttt{.}}}
+\newcommand{\CONSeq}{\textbf{\texttt{=}}}
+\newcommand{\CONSat}{\textbf{\texttt{@}}}
+\newcommand{\CONScomma}{\textbf{\texttt{,}}}
+\newcommand{\CONSdarrow}{\textbf{\texttt{=>}}}
+\newcommand{\CONSbackslash}{\textbf{\texttt{$\backslash$}}}
+\newcommand{\CONSparen}[1]{\textbf{\texttt{(}}#1\textbf{\texttt{)}}}
+\newcommand{\CONSpriorSYMB}{\CONS{Prior}}
+\newcommand{\CONSprior}[1]{\CONSpriorSYMB(#1)}
+\newcommand{\CONSonceSYMB}{\CONS{Once}}
+\newcommand{\CONSonce}[1]{\CONSonceSYMB(#1)}
+\newcommand{\CONSoutputSYMB}{\CONS{Output}}
+\newcommand{\CONSoutput}[1]{\CONSoutputSYMB(#1)}
+\newcommand{\CONSonlocSYMB}{\CONS{OnLoc}}
+\newcommand{\CONSonloc}[1]{\CONSonlocSYMB(#1)}
+\newcommand{\CONSinlSYMB}{\CONS{inl}}
+\newcommand{\CONSinl}[1]{\CONSinlSYMB(#1)}
+\newcommand{\CONSinrSYMB}{\CONS{inr}}
+\newcommand{\CONSinr}[1]{\CONSinrSYMB(#1)}
+\newcommand{\CONSbaseSYMB}{\CONS{Base}}
+\newcommand{\CONSbase}[2]{\CONSbaseSYMB(#1\CONSat#2)}
+\newcommand{\CONSbasehdropt}[1]{\CONS{base}\ #1}
+\newcommand{\CONSsendhdropt}[1]{\CONS{send}\ #1}
+\newcommand{\CONSbroadcasthdropt}[1]{\CONS{broadcast}\ #1}
+\newcommand{\CONSmsgSYMB}{\CONS{MSG}}
+\newcommand{\CONSmsg}[2]{\CONSmsgSYMB(#1,#2)}
+\newcommand{\CONScaseexp}[2]{\CONS{case}\ #1\ #2}
+\newcommand{\CONScasemsg}[2]{\CONS{caseMsg}\ #1\ #2}
+\newcommand{\CONScasebag}[2]{\CONS{caseBag}\ #1\ #2}
+\newcommand{\CONSmatchexp}[2]{\CONS{match}\ #1\ #2}
+\newcommand{\CONScasen}[2]{\ \CONS{of}\ #1\ \cdots\ \CONS{of}\ #2}
+\newcommand{\CONSmatchmsgn}[2]{\CONS{of}\ #1\ \cdots\ \CONS{of}\ #2}
+\newcommand{\CONSmatchmsgna}[2]{\begin{array}[t]{l}\CONS{of}\ #1\\ \vdots\\ \CONS{of}\ #2\end{array}}
+\newcommand{\CONSmrulemsg}[2]{#1\ \CONSdarrow\ #2}
+\newcommand{\CONSmrulebag}[2]{#1\ \CONSdarrow\ #2}
+\newcommand{\CONSmatchbagn}[2]{\CONS{of}\ #1\ \cdots\ \CONS{of}\ #2}
+\newcommand{\CONSmatchn}[2]{\CONS{with}\ #1\ \cdots\ \CONS{with}\ #2}
+\newcommand{\CONSmatchna}[2]{\begin{array}[t]{l}\CONS{with}\ #1\\ \vdots\\ \CONS{with}\ #2\end{array}}
+\newcommand{\CONSmrule}[2]{#1\ \CONSdarrow\ #2}
+\newcommand{\CONSopexp}[3]{#1\ #2\ #3}
+\newcommand{\CONStypexp}[2]{#1 \CONScolon #2}
+\newcommand{\CONStexp}[1]{\CONScolon\CONScolon#1}
+\newcommand{\CONSappexp}[2]{#1\ #2}
+\newcommand{\CONSlamexp}[2]{\CONSbackslash#1\CONSdot#2}
+\newcommand{\CONStlamexp}[3]{\CONSbackslash#1\CONScolon#2\CONSdot#3}
+\newcommand{\CONStoplamexp}[3]{\CONSbackslash#1\CONSop{\CONScolon#2}\CONSdot#3}
+\newcommand{\CONSiteexp}[3]{\CONS{if}\ #1\ \CONS{then}\ #2\ \CONS{else}\ #3}
+\newcommand{\CONSforallexp}[3]{\CONS{forall}\ #1\ \CONScolon\ #2\CONSdot\ #3}
+\newcommand{\CONSexistsexp}[3]{\CONS{exists}\ #1\ \CONScolon\ #2\CONSdot\ #3}
+\newcommand{\CONSobservesexp}[3]{#1\ \CONS{observes}\ #2\ \CONSat\ #3}
+\newcommand{\CONSbindingexp}[3]{#1\CONSbinding#2\CONSbinding#3}
+\newcommand{\CONSmonbindexp}[2]{#1\CONSmonbind#2}
+%\newcommand{\CONSjoinexp}[3]{#1\CONSpipe#2\CONSsemicolon#3\CONSpipe}
+%\newcommand{\CONSjoinexpn}[3]{#1\CONSpipe#2\CONSsemicolon\cdots\CONSsemicolon#3\CONSpipe}
+%\newcommand{\CONSopjoinexpn}[3]{#1\CONSpipe\CONSop{\CONS{Loc}\CONSsemicolon}#2\CONSsemicolon\cdots\CONSsemicolon#3\CONSpipe}
+%\newcommand{\CONSjoinsexp}[3]{#1\CONSpipe#2\CONSsemicolon#3\CONSsemicolon\CONSprior{\CONSself}\CONSpipe}
+%\newcommand{\CONSjoinsexpn}[3]{#1\CONSpipe#2\CONSsemicolon\cdots\CONSsemicolon#3\CONSsemicolon\CONSprior{\CONSself}\CONSpipe}
+\newcommand{\CONSreccombinitn}[4]{#1\ \CONScomp\ (#2,\cdots,#3,\CONSprior{\CONSself}?#4)}
+\newcommand{\CONSreccombinitopn}[4]{#1\ \CONScomp\ (#2,\cdots,#3\CONSop{,\CONSprior{\CONSself}?#4})}
+%\newcommand{\CONSopjoinsexpn}[3]{#1\CONSpipe\CONSop{\CONS{Loc}\CONSsemicolon}#2\CONSsemicolon\cdots\CONSsemicolon#3\CONSsemicolon\CONSprior{\CONSself}\CONSpipe}
+%\newcommand{\CONSjoinlexp}[3]{#1\CONSpipe\CONS{Loc}\CONSsemicolon#2\CONSsemicolon#3\CONSpipe}
+%\newcommand{\CONSjoinlexpn}[3]{#1\CONSpipe\CONS{Loc}\CONSsemicolon#2\CONSsemicolon\cdots\CONSsemicolon#3\CONSpipe}
+%\newcommand{\CONSjoinlsexp}[3]{#1\CONSpipe\CONS{Loc}\CONSsemicolon#2\CONSsemicolon#3\CONSsemicolon\CONSprior{\CONSself}\CONSpipe}
+%\newcommand{\CONSjoinlsexpn}[3]{#1\CONSpipe\CONS{Loc}\CONSsemicolon#2\CONSsemicolon\cdots\CONSsemicolon#3\CONSsemicolon\CONSprior{\CONSself}\CONSpipe}
+\newcommand{\CONSlet}[2]{\CONS{let}\ #1\ \CONS{in}\ #2}
+\newcommand{\CONSsplet}[3]{\CONS{let}\ #1\ \CONSeq\ #2\ \CONS{in}\ #3}
+\newcommand{\CONSletrec}[2]{\CONS{letrec}\ #1\ \CONS{in}\ #2}
+\newcommand{\CONSclass}[2]{\CONS{class}\ #1\ \CONS{in}\ #2}
+\newcommand{\CONSwhere}[2]{#1\ \CONS{where}\ #2}
+\newcommand{\CONSbindpat}[2]{#1\ \CONSeq\ #2}
+\newcommand{\CONSparamn}[2]{#1\ \cdots\ #2}
+\newcommand{\CONSbindinfix}[4]{\CONS{infix}\ #1\ (#2,#3)\ \CONSeq\ #4}
+\newcommand{\CONSbindinfixr}[4]{\CONS{infixr}\ #1\ (#2,#3)\ \CONSeq\ #4}
+\newcommand{\CONSbindinfixopty}[5]{\CONS{infix}\ #1\ (#2,#3)\ \CONSop{\CONScolon\ #4}\ \CONSeq\ #5}
+\newcommand{\CONSbindinfixropty}[5]{\CONS{infixr}\ #1\ (#2,#3)\ \CONSop{\CONScolon\ #4}\ \CONSeq\ #5}
+\newcommand{\CONSbindapp}[3]{#1\ #2\ \CONSeq\ #3}
+\newcommand{\CONSbindappem}[2]{#1\ \CONSeq\ #2}
+\newcommand{\CONSbindappty}[4]{#1\ #2\ \CONScolon\ #3\ \CONSeq\ #4}
+\newcommand{\CONSbindappopty}[4]{#1\ #2\ \CONSop{\CONScolon\ #3}\ \CONSeq\ #4}
+\newcommand{\CONSoppat}[3]{#1\ #2\ #3}
+\newcommand{\CONSoplistpat}[2]{#1\ \CONSconslist\ #2}
+\newcommand{\CONStyppat}[2]{#1 \CONScolon #2}
+\newcommand{\CONSwild}{\CONSunder}
+\newcommand{\CONSletdec}[1]{\CONS{let}\ #1\CONSsemicolon\CONSsemicolon}
+\newcommand{\CONSclassdec}[1]{\CONS{class}\ #1\CONSsemicolon\CONSsemicolon}
+\newcommand{\CONSletrecdec}[1]{\CONS{letrec}\ #1\CONSsemicolon\CONSsemicolon}
+\newcommand{\CONSconsdec}[2]{\CONS{constant}\ #1\ :\ #2}
+\newcommand{\CONSconsargsdec}[3]{\CONS{constant}\ #1\ #2\ :\ #3}
+\newcommand{\CONSconsovdec}[4]{\CONS{constant}\ #1\ :\ #2\ \CONS{with}\ #3\ \CONS{in}\ #4}
+\newcommand{\CONSconsOpovOpcsDec}[5]{\CONS{constant}\ #1\ :\ #2\ \CONSop{\CONS{with}\ #3\ \CONS{in}\ #4}}%\ \CONSop{\CONSpipe #5}
+\newcommand{\CONSconsOpargsOpovOpcsDec}[6]{\CONS{constant}\ #1\ \CONSop{#2}\ \CONScolon\ #3\ \CONSop{\CONS{with}\ #4\ \CONS{in}\ #5}}%\ \CONSop{\CONSpipe #6}
+\newcommand{\CONSconsOpeqOpargsOpovOpcsDec}[7]{\CONS{constant}\ #1\CONSop{\CONScomma\ #2}\ \CONSop{#3}\ \CONScolon\ #4\ \CONSop{\CONS{with}\ #5\ \CONS{in}\ #6}}%\ \CONSop{\CONSpipe #7}
+\newcommand{\CONSparameter}[2]{\CONS{parameter}\ #1\ \CONScolon\ #2}
+\newcommand{\CONSparameterOpeq}[3]{\CONS{parameter}\ #1\ #2\CONSop{\CONScomma\ #3}\ \CONScolon\ \CONStypety}
+\newcommand{\CONSimportSYMB}{\CONS{import}}
+\newcommand{\CONSimportn}[2]{\CONSimportSYMB\ #1\ \cdots\ #2}
+\newcommand{\CONSconstyndeq}[2]{\CONS{constant}\ #1\ #2\ \CONScolon\ \CONStypety}
+\newcommand{\CONSconstydec}[3]{\CONS{constant}\ #1\ #2\ \CONScomma\ #3\ \CONScolon\ \CONStypety}
+\newcommand{\CONSconstydecOpeq}[3]{\CONS{constant}\ #1\ #2\CONSop{\CONScomma\ #3}\ \CONScolon\ \CONStypety}
+\newcommand{\CONStypedec}[2]{\CONS{type}\ #1\ #2}
+\newcommand{\CONSeqtypedec}[2]{\CONS{eqtype}\ #1\ #2}
+\newcommand{\CONStypefundec}[3]{\CONS{type}\ #1\ #2\ \CONSeq\ #3}
+\newcommand{\CONSanyexpSYMB}{\CONS{any}}
+\newcommand{\CONSanyexp}[1]{\CONSanyexpSYMB(#1)}
+\newcommand{\CONStuptySYMB}{*}
+\newcommand{\CONSarrowtySYMB}{\,\mathrel{\rightarrow}\,}
+\newcommand{\CONSdisjutySYMB}{+}
+\newcommand{\CONStupty}[2]{#1\ *\ #2}
+\newcommand{\CONStuptyc}[3]{#1\ *\ #2\ *\ #3}
+\newcommand{\CONStuptyn}[2]{#1\ *\ \cdots *\ #2}
+\newcommand{\CONSbag}[1]{\{#1\}}
+\newcommand{\CONSbagn}[2]{\CONSbag{#1;\dots;#2}}
+\newcommand{\CONSlistn}[2]{[#1;\dots;#2]}
+\newcommand{\CONSemlist}{[]}
+\newcommand{\CONSnil}{\CONS{nil}}
+\newcommand{\CONSquotient}[1]{#1\CONSquot}
+\newcommand{\CONStup}[2]{(#1,#2)}
+\newcommand{\CONStupn}[2]{(#1,\dots,#2)}
+\newcommand{\CONSinfconsty}[3]{#1\ #3\ #2}
+\newcommand{\CONSarrowty}[2]{#1\rightarrow#2}
+\newcommand{\CONSarrowtyp}[2]{#1\rightarrow#2}
+\newcommand{\CONSarrowtyt}[2]{\begin{array}[t]{l}#1\\\rightarrow#2\end{array}}
+\newcommand{\CONSoparrowty}[2]{\CONSop{#1\rightarrow}\ #2}
+\newcommand{\CONSdisjuty}[2]{#1\ +\ #2}
+\newcommand{\CONSdepty}[2]{(#1\ \CONScolon\ #2)}
+\newcommand{\CONSconsty}[2]{#1\ #2}
+\newcommand{\CONSclassty}{\CONS{Class}}
+\newcommand{\CONSbagty}{\CONS{Bag}}
+\newcommand{\CONSlistty}{\CONS{List}}
+\newcommand{\CONSdeqty}{\CONS{Deq}}
+\newcommand{\CONSmsgty}{\CONS{Msg}}
+\newcommand{\CONSpropty}{\CONS{Prop}}
+\newcommand{\CONSeventty}{\CONS{Event}}
+\newcommand{\CONSintty}{\CONS{Int}}
+\newcommand{\CONSinterfacety}{\CONS{Inst}}
+\newcommand{\CONSboolty}{\CONS{Bool}}
+\newcommand{\CONSstringty}{\CONS{String}}
+\newcommand{\CONSunitty}{\CONS{Unit}}
+\newcommand{\CONSatomty}{\CONS{Token}}
+\newcommand{\CONSnatty}{\CONS{Nat}}
+\newcommand{\CONStypety}{\CONS{Type}}
+\newcommand{\CONSlocty}{\CONS{Loc}}
+\newcommand{\CONStrue}{\CONS{true}}
+\newcommand{\CONSfalse}{\CONS{false}}
+\newcommand{\CONSopplus}{\CONSB{+}}
+\newcommand{\CONSopminus}{\CONSB{-}}
+\newcommand{\CONSopequal}{\CONSB{=}}
+\newcommand{\CONSopeqequal}{\CONSB{==}}
+\newcommand{\CONSoplistcons}{\CONSB{.}}
+\newcommand{\CONSoplistappend}{\CONSB{++}}
+\newcommand{\CONSopatclass}{\CONSB{@}}
+\newcommand{\CONSopbefore}{\CONSB{before}}
+\newcommand{\CONSopandprop}{\CONSB{/\char`\\}}
+\newcommand{\CONSoporprop}{\CONSB{\char`\\/}}
+\newcommand{\CONSople}{\CONSB{<=}}
+\newcommand{\CONSoplt}{\CONSB{<}}
+\newcommand{\CONSopge}{\CONSB{>=}}
+\newcommand{\CONSopgt}{\CONSB{>}}
+\newcommand{\CONSopand}{\CONSB{\&}}
+\newcommand{\CONSopor}{\CONSB{or}}
+\newcommand{\CONSopmult}{\CONSB{*}}
+\newcommand{\CONSopdiv}{\CONSB{/}}
+\newcommand{\CONSopdiff}{\CONSB{<>}}
+\newcommand{\CONSself}{\CONS{self}}
+\newcommand{\CONSityscheme}[2]{\forall\{#1\}.\ #2}
+\newcommand{\CONSityschemeb}[2]{\forall#1.\ #2}
+\newcommand{\CONSityfun}[2]{\Lambda#1.\ #2}
+\newcommand{\CONSop}[1]{\,\ulcorner\!#1\urcorner}
+\newcommand{\CONSope}[1]{\CONS{op}\ #1}
+\newcommand{\CONSopope}[1]{\CONSop{\CONS{op}}\ #1}
+\newcommand{\CONSvoid}{\epsilon}
+\newcommand{\CONSmsgsdecSYMB}{\CONS{MSGS}}
+\newcommand{\CONSmsgsdec}[1]{\CONSmsgsdecSYMB\ #1}
+\newcommand{\CONSmsgsdecn}[2]{\CONSmsgsdecSYMB\ #1\ \cdots\ #2}
+\newcommand{\CONSmsgspdecn}[2]{#1\ \cdots\ #2}
+\newcommand{\CONSmaindecSYMB}{\CONS{main}}
+\newcommand{\CONSmaindec}[1]{\CONSmaindecSYMB\ #1}
+\newcommand{\CONSspecdecSYMB}{\CONS{specification}}
+\newcommand{\CONSspecdec}[1]{\CONSspecdecSYMB\ #1}
+\newcommand{\CONStypedatoms}[2]{(#1\ \CONScolon\ #2)}
+\newcommand{\CONSdec}[1]{#1\CONSsemicolon\CONSsemicolon}
+\newcommand{\CONSemptyityenv}{\emptyset}
+\newcommand{\CONSprog}[2]{#1\ \CONSop{#2}}
+\newcommand{\CONSprogem}{\CONSvoid}
+\newcommand{\CONStypseqsetn}[2]{\{#1,\dots,#2\}}
+\newcommand{\CONSatom}[1]{{\char18}#1{\char18}}
+\newcommand{\CONSatoms}[1]{{\char18\!\char18}\textit{#1}{\char18\!\char18}}
+\newcommand{\CONSatomsn}[2]{{\char18\!\char18}#1\ \cdots\ #2{\char18\!\char18}}
+\newcommand{\CONSatomsln}[2]{#1\CONSsemicolon\cdots\CONSsemicolon#2}
+\newcommand{\CONSmsgpat}[2]{#1\CONScomma#2}
+\newcommand{\CONSbagpatnil}{\CONSbag{}}
+\newcommand{\CONSbagpatsing}[1]{\CONSbag{#1}}
+\newcommand{\CONSget}[1]{\CONS{get}\ #1}
+\newcommand{\CONSargs}[1]{(#1)}
+\newcommand{\CONSargsn}[2]{(#1\CONSsemicolon\cdots\CONSsemicolon#2)}
+\newcommand{\CONSonearg}[2]{#1\ \CONScolon\ #2}
+\newcommand{\CONSoneargbvars}[3]{#1\ #3\ \CONScolon\ #2}
+\newcommand{\CONSoneargop}[3]{#1\CONSop{#3}\ \CONScolon\ #2}
+\newcommand{\CONSbvars}[1]{[#1]}
+\newcommand{\CONSbvarsn}[2]{[#1\CONSsemicolon\cdots\CONSsemicolon#2]}
+\newcommand{\CONSonebvar}[2]{#1\CONScolon#2}
+\newcommand{\CONSheadert}[2]{(#1\CONScolon#2)}
+\newcommand{\CONSheaderc}[3]{(#1\CONScolon#2\CONScomma#3)}
+\newcommand{\CONSheaderl}[4]{(#1\CONSat#2\CONScolon#3\CONScomma#4)}
+\newcommand{\CONShdrgen}[3]{#1\ #2\ \CONScolon\ #3}
+\newcommand{\CONShdrinternal}{\CONS{internal}}
+\newcommand{\CONShdrinput}{\CONS{input}}
+\newcommand{\CONShdroutput}{\CONS{output}}
+\newcommand{\CONSdecinternal}[2]{\CONShdrinternal\ #1\ \CONScolon\ #2}
+\newcommand{\CONSdecinput}[2]{\CONShdrinput\ #1\ \CONScolon\ #2}
+\newcommand{\CONSdecoutput}[2]{\CONShdroutput #1\ \CONScolon\ #2}
+\newcommand{\CONSminusSYMB}{\mbox{$\sim$}}
+\newcommand{\CONSminus}[1]{\CONSminusSYMB#1}
+
+\newcommand{\NAME}[1]{\textsf{#1}}
+\newcommand{\eml}{\NAME{EventML}}
+\newcommand{\cml}{\NAME{Classic ML}}
+\newcommand{\EML}{\NAME{EML}}
+\newcommand{\IOA}{\NAME{IOA}}
+\newcommand{\TIOA}{\NAME{TIOA}}
+\newcommand{\tempo}{\NAME{Tempo}}
+\newcommand{\Orc}{\NAME{Orc}}
+\newcommand{\LARCH}{\NAME{Larch}}
+\newcommand{\Isabelle}{\NAME{Isabelle}}
+\newcommand{\Isar}{\NAME{Isar}}
+\newcommand{\Zenon}{\NAME{Zenon}}
+\newcommand{\TLA}{\NAME{TLA}}
+\newcommand{\TLAP}{\NAME{TLA$^+$}}
+\newcommand{\TLAPS}{\NAME{TLAPS}}
+\newcommand{\CML}{\cml}
+\newcommand{\COREML}{\NAME{core ML}}
+\newcommand{\esharp}{\NAME{E\#}}
+\newcommand{\coreeml}{\NAME{core }\eml}
+\newcommand{\Coreeml}{\NAME{Core }\eml}
+\newcommand{\nuprl}{\NAME{Nuprl}}
+\newcommand{\plato}{\NAME{Plat\Omega}}
+%\newcommand{\omega}{\NAME{\Omega{MEGA}}}
+\newcommand{\mpp}{\NAME{MPP}}
+\newcommand{\fstar}{\NAME{F*}}
+\newcommand{\zthree}{\NAME{Z3}}
+\newcommand{\fseven}{\NAME{F7}}
+\newcommand{\fine}{\NAME{Fine}}
+\newcommand{\fsharp}{\NAME{F\#}}
+\newcommand{\prl}{\NAME{PRL}}
+\newcommand{\SML}{\NAME{SML}}
+\newcommand{\erlang}{\NAME{Erlang}}
+\newcommand{\Clang}{\NAME{C}}
+\newcommand{\JAVA}{\NAME{Java}}
+\newcommand{\DM}{\NAME{DM}}
+\newcommand{\HM}{\NAME{HM}}
+\newcommand{\SYSTF}{\NAME{F}}
+\newcommand{\StdML}{\NAME{Standard ML}}
+\newcommand{\GIT}{\NAME{GIT}}
+\newcommand{\ML}{\NAME{ML}}
+\newcommand{\haskell}{\NAME{Haskell}}
+\newcommand{\emacs}{\NAME{Emacs}}
+\newcommand{\emacslisp}{\NAME{Emacs Lisp}}
+\newcommand{\logicE}{Logic of Events}
+\newcommand{\LOE}{\NAME{LOE}}
+\newcommand{\logicalPE}{Logical Programming Environment}
+\newcommand{\LPE}{\NAME{LPE}}
+\newcommand{\CLASSREL}[1]{\NAME{#1}}
+\newcommand{\LEMMA}[1]{\NAME{#1}}
+\newcommand{\FUNCTION}[1]{\NAME{#1}}
+\newcommand{\TACTIC}[1]{\NAME{#1}}
+\newcommand{\LCF}{\NAME{LCF}}
+\newcommand{\OCAML}{\NAME{OCaml}}
+\newcommand{\CAML}{\NAME{Caml}}
+\newcommand{\COQ}{\NAME{Coq}}
+\newcommand{\pvs}{\NAME{PVS}}
+\newcommand{\IsabelleHOL}{\NAME{Isabelle/HOL}}
+\newcommand{\PLCV}{\NAME{PL/CV}}
+\newcommand{\epigram}{\NAME{Epigram}}
+\newcommand{\TRELLYS}{\NAME{TRELLYS}}
+\newcommand{\specsharp}{\NAME{Spec\#}}
+\newcommand{\agda}{\NAME{Agda}}
+\newcommand{\WALGO}{\NAME{W}}
+\newcommand{\ENSEMBLE}{\NAME{Ensemble}}
+\newcommand{\HOL}{\NAME{HOL}}
+\newcommand{\PPL}{\NAME{PP$\lambda$}}
+\newcommand{\ctt}{Computational Type Theory}
+\newcommand{\CTT}{\NAME{CTT}}
+
+%\newcommand{\intitle}[1]{{\medskip\noindent\textbf{\textsf{#1}}}}
+\newcommand{\intitle}[1]{{\smallskip\noindent\textbf{\textsf{#1}}}}
+\newcommand{\mytupleLEFT}{\langle}
+\newcommand{\mytupleRIGHT}{\rangle}
+\newcommand{\mytuple}[1]{\mytupleLEFT #1 \mytupleRIGHT}
+\newcommand{\myset}[1]{\{#1\}}
+\newcommand{\asgnSYMB}{\mapsto}
+\newcommand{\asgn}[2]{#1\,{\mapsto}\,#2}
+\newcommand{\quantsepSYMB}{.}
+\newcommand{\forallexp}[2]{\forall#1\quantsepSYMB\ #2}
+\newcommand{\existsexp}[2]{\exists#1\quantsepSYMB\ #2}
+
+\newcommand{\codebody}[1]{{\tt\renewcommand{\arraystretch}{1}$$#1$$}}
+\newcommand{\incodebody}[1]{{\tt\renewcommand{\arraystretch}{1}$\Bl#1\El$}}
+\newcommand{\Bl}{\begin{tabular}[t]{@{}l@{}}}
+\newcommand{\El}{\end{tabular}}
+\newcommand{\Bi}{\begin{tabular}[t]{@{\quad}l}}
+\newcommand{\Ei}{\end{tabular}}
+
+\newcommand{\hidden}[1]{}
+
+
+\newcommand{\NUPRL}[1]{\mathit{#1}}
+\newcommand{\NUPRLC}[1]{\mathtt{#1}}
+\newcommand{\NUPRLarrow}[2]{#1\rightarrow#2}
+\newcommand{\NUPRLdeparrow}[3]{#1\ \NUPRLC{:}\ #2\rightarrow#3}
+\newcommand{\NUPRLevent}{\NUPRL{e}}
+\newcommand{\NUPRLes}{\NUPRL{eo}}
+\newcommand{\NUPRLtoken}{\NUPRLC{Token}}
+\newcommand{\NUPRLloc}{\NUPRLC{Loc}}
+\newcommand{\NUPRLprop}{{\mathbb P}}
+\newcommand{\NUPRLbool}{{\mathbb B}}
+\newcommand{\NUPRLnat}{{\mathbb N}}
+\newcommand{\NUPRLheader}{\NUPRLC{Header}}
+\newcommand{\NUPRLtype}{\NUPRLC{Type}}
+\newcommand{\NUPRLese}{\NUPRLC{E}}
+\newcommand{\NUPRLint}{\intg}
+\newcommand{\NUPRLmsg}{\NUPRLC{Msg}}
+\newcommand{\NUPRLbag}[1]{\NUPRLC{Bag}(#1)}
+\newcommand{\NUPRLclass}[1]{\NUPRLC{Class}(#1)}
+\newcommand{\NUPRLlist}[1]{\NUPRLC{List}(#1)}
+\newcommand{\NUPRLbase}[2]{\NUPRLC{Base}(#1,#2)}
+\newcommand{\NUPRLlam}[2]{\lambda#1.\ #2}
+\newcommand{\NUPRLlamn}[3]{\lambda#1.\dots\lambda#2.\ #3}
+\newcommand{\NUPRLite}[3]{\NUPRLC{if}\ #1\ \NUPRLC{then}\ #2\ \NUPRLC{else}\ #3}
+\newcommand{\NUPRLitep}[3]{\begin{array}[t]{l}\NUPRLC{if}\ #1\\\NUPRLC{then}\ #2\\\NUPRLC{else}\ #3\end{array}}
+\newcommand{\NUPRLitepp}[3]{\begin{array}[t]{l}\NUPRLC{if}\ #1\ \NUPRLC{then}\ #2\\\NUPRLC{else}\ #3\end{array}}
+\newcommand{\NUPRLeqnameSYMB}{=_{\NUPRLC{name}}}
+\newcommand{\NUPRLeqname}[2]{#1\NUPRLeqnameSYMB#2}
+\newcommand{\NUPRLeqnameb}[2]{#1=#2}
+\newcommand{\NUPRLeqtermSYMB}{==}
+\newcommand{\NUPRLeqterm}[2]{#1\NUPRLeqtermSYMB#2}
+\newcommand{\NUPRLeqintSYMB}{=_{\NUPRLC{z}}}
+\newcommand{\NUPRLeqint}[2]{#1\NUPRLeqintSYMB#2}
+\newcommand{\NUPRLltint}[2]{#1<_{\NUPRLC{z}}#2}
+\newcommand{\NUPRLinfoSYMB}{\NUPRLC{info}}
+\newcommand{\NUPRLinfo}[2]{\NUPRLinfoSYMB(#2)}
+\newcommand{\NUPRLfstSYMB}{\NUPRLC{fst}}
+\newcommand{\NUPRLsndSYMB}{\NUPRLC{snd}}
+\newcommand{\NUPRLfst}[1]{\NUPRLfstSYMB(#1)}
+\newcommand{\NUPRLsnd}[1]{\NUPRLsndSYMB(#1)}
+\newcommand{\NUPRLmsgheader}[1]{\NUPRLC{msg\mbox{-}header}(#1)}
+\newcommand{\NUPRLmsgtype}[1]{\NUPRLC{msg\mbox{-}type}(#1)}
+\newcommand{\NUPRLmsgbody}[1]{\NUPRLC{msg\mbox{-}body}(#1)}
+\newcommand{\NUPRLmsgkind}[3]{\NUPRLC{msg\mbox{-}kind}(#1,#2,#3)}
+\newcommand{\NUPRLmakemsg}[3]{\langle#1,#2,#3\rangle}
+\newcommand{\NUPRLbandSYMB}{\wedge_{b}}
+\newcommand{\NUPRLband}[2]{#1\NUPRLbandSYMB#2}
+\newcommand{\NUPRLbandb}[2]{#1\ \&\ #2}
+\newcommand{\NUPRLbandn}[2]{#1\ \&\ \cdots\ \&\ #2}
+\newcommand{\NUPRLbandp}[2]{\begin{array}[t]{ll}&#1\\\wedge_{b}&#2\end{array}}
+\newcommand{\NUPRLbnotSYMB}{\neg_{b}}
+\newcommand{\NUPRLbnot}[1]{\NUPRLbnotSYMB#1}
+\newcommand{\NUPRLsinglebag}[1]{\{#1\}}
+\newcommand{\NUPRLtermbag}[1]{\{#1\}}
+\newcommand{\NUPRLembag}{\{\}}
+\newcommand{\NUPRLiddeq}{\NUPRLC{LocDeq}}
+\newcommand{\NUPRLhdrdeq}{\NUPRLC{HeaderDeq}}
+\newcommand{\NUPRLbagdeqmemberSYMB}{\NUPRLC{bag\mbox{-}deq\mbox{-}member}}
+\newcommand{\NUPRLbagdeqmember}[3]{\NUPRLbagdeqmemberSYMB(#1,#2,#3)}
+\newcommand{\NUPRLbaglocmemberSYMB}{\NUPRLC{bag\mbox{-}loc\mbox{-}member}}
+\newcommand{\NUPRLbaglocmember}[2]{\NUPRLbaglocmemberSYMB(#1,#2)}
+\newcommand{\NUPRLbagnullSYMB}{\NUPRLC{bag\mbox{-}null}}
+\newcommand{\NUPRLbagnull}[1]{\NUPRLbagnullSYMB(#1)}
+\newcommand{\NUPRLbagsizeSYMB}{\NUPRLC{bag\mbox{-}size}}
+\newcommand{\NUPRLbagsize}[1]{\NUPRLbagsizeSYMB(#1)}
+\newcommand{\NUPRLbagcombineSYMB}{\bigcup}
+\newcommand{\NUPRLbagcombine}[3]{\NUPRLbagcombineSYMB_{#2\in#1}#3}
+\newcommand{\NUPRLbagcombinen}[5]{\NUPRLbagcombineSYMB_{#2\in#1}\dots\bigcup_{#4\in#3}#5}
+\newcommand{\NUPRLbagmemberSYMB}{\NUPRLC{bag\mbox{-}member}}
+\newcommand{\NUPRLbagmember}[2]{\NUPRLbagmemberSYMB(#1,#2)}
+\newcommand{\NUPRLbagconcat}[1]{\NUPRLC{bag\mbox{-}concat}(#1)}
+\newcommand{\NUPRLbagmapSYMB}{\NUPRLC{bag\mbox{-}map}}
+\newcommand{\NUPRLbagmap}[2]{\NUPRLbagmapSYMB(#1,#2)}
+\newcommand{\NUPRLlistappendSYMB}{\NUPRLC{append}}
+\newcommand{\NUPRLlistappend}[2]{\NUPRLlistappendSYMB(#1,#2)}
+\newcommand{\NUPRLbagappend}[2]{#1\ \textbf{\texttt{+}}\ #2}
+\newcommand{\NUPRLconcatSYMB}{\NUPRLC{concat}}
+\newcommand{\NUPRLmapSYMB}{\NUPRLC{map}}
+\newcommand{\NUPRLconcat}[1]{\NUPRLconcatSYMB(#1)}
+\newcommand{\NUPRLmap}[2]{\NUPRLmapSYMB(#1,#2)}
+\newcommand{\NUPRLapp}[2]{#1\ #2}
+\newcommand{\NUPRLsqapp}[2]{#1[#2]}
+\newcommand{\NUPRLsqappb}[3]{#1[#2;#3]}
+\newcommand{\NUPRLsqappc}[4]{#1[#2;#3;#4]}
+\newcommand{\NUPRLsqappn}[3]{#1[#2;\dots;#3]}
+\newcommand{\NUPRLappn}[3]{#1\ #2\ \cdots\ #3}
+\newcommand{\NUPRLappclass}[3]{\NUPRLapp{\NUPRLapp{#1}{#2}}{#3}}
+\newcommand{\NUPRLadd}[2]{#1 + #2}
+\newcommand{\NUPRLsub}[2]{#1 - #2}
+\newcommand{\NUPRLsimplecombn}[3]{#1\ \CONScomp\ \CONSlpar#2,\cdots,#3\CONSrpar}
+\newcommand{\NUPRLsimplecomba}[2]{#1\ \CONScomp\ \CONSlpar#2\CONSrpar}
+\newcommand{\NUPRLsimplecombb}[3]{#1\ \CONScomp\ \CONSlpar#2;#3\CONSrpar}
+\newcommand{\NUPRLgensimplecombn}[3]{#1\ \CONSbcomp\ \CONSlpar#2;\cdots;#3\CONSrpar}
+\newcommand{\NUPRLreccombpriorselfSYMB}{\NUPRLC{Prior(self)\textbf{\texttt{?}}}}
+\newcommand{\NUPRLreccombpriorself}[1]{\NUPRLreccombpriorselfSYMB#1}
+\newcommand{\NUPRLreccombn}[4]{#1\ \CONScomp\ \CONSlpar#2;\cdots;#3;\NUPRLreccombpriorself{#4}\CONSrpar}
+\newcommand{\NUPRLbind}[2]{#1\CONSmonbind#2}
+\newcommand{\NUPRLskip}[1]{\NUPRLC{skip}(#1)}
+\newcommand{\NUPRLreturn}[1]{\NUPRLC{return}(#1)}
+\newcommand{\NUPRLclassopt}[2]{#1\textbf{\texttt{?}}#2}
+\newcommand{\NUPRLescauslSYMB}{<}
+\newcommand{\NUPRLescausleSYMB}{\leq}
+\newcommand{\NUPRLesloclSYMB}{<_{\NUPRLC{loc}}}
+\newcommand{\NUPRLesleSYMB}{\leq_{\NUPRLC{loc}}}
+\newcommand{\NUPRLesbefore}[2]{\NUPRLescauslSYMB_{\NUPRLC{loc}}~\!\!(#2)}
+\newcommand{\NUPRLeslebefore}[2]{\NUPRLescausleSYMB_{\NUPRLC{loc}}~\!\!(#2)}
+\newcommand{\NUPRLespredlist}[2]{\NUPRLescauslSYMB~\!\!\!(#2)}
+\newcommand{\NUPRLeslocl}[2]{#1\NUPRLesloclSYMB#2}
+\newcommand{\NUPRLesle}[2]{#1\NUPRLesleSYMB#2}
+\newcommand{\NUPRLeoforward}[2]{#1\textbf{\texttt{.}}#2}
+\newcommand{\NUPRLescausles}[3]{#2\NUPRLescauslSYMB_{#1}#3}
+\newcommand{\NUPRLescausl}[3]{#2\NUPRLescauslSYMB#3}
+\newcommand{\NUPRLeslocSYMB}{\NUPRLC{loc}}
+\newcommand{\NUPRLesloc}[2]{\NUPRLeslocSYMB(#2)}
+\newcommand{\NUPRLletp}[3]{\begin{array}[t]{l}\NUPRLC{let}\ #1=#2\\\NUPRLC{in}\ #3\end{array}}
+\newcommand{\NUPRLletpp}[3]{\begin{array}[t]{l}\NUPRLC{let}\ #1=#2\ \NUPRLC{in}\\#3\end{array}}
+\newcommand{\NUPRLspreadp}[4]{\begin{array}[t]{l}\NUPRLC{let}\ \NUPRLpair{#2}{#3}=#1\\\NUPRLC{in}\ #4\end{array}}
+\newcommand{\NUPRLspreadpp}[4]{\begin{array}[t]{l}\NUPRLC{let}\ \NUPRLpair{#2}{#3}=#1\ \NUPRLC{in}\\#4\end{array}}
+\newcommand{\NUPRLspreadn}[4]{\begin{array}[t]{l}\NUPRLC{let}\ \NUPRLpairn{#2}{#3}=#1\\\NUPRLC{in}\ #4\end{array}}
+\newcommand{\NUPRLeq}[3]{#1=_{#3}#2}
+\newcommand{\NUPRLeqh}[3]{#1=#2}
+\newcommand{\NUPRLequal}[3]{#1=#2}
+\newcommand{\NUPRLlt}[2]{#1 < #2}
+\newcommand{\NUPRLgt}[2]{#1 > #2}
+\newcommand{\NUPRLge}[2]{#1 \ge #2}
+\newcommand{\NUPRLneq}[3]{#1 \neq_{#3} #2}
+\newcommand{\NUPRLlistterm}[1]{[#1]}
+\newcommand{\NUPRLlistsep}{;}
+\newcommand{\NUPRLatclass}[2]{#1\textbf{\texttt{@}}#2}
+\newcommand{\NUPRLparallelclass}[2]{#1\CONSparallelSYMB#2}
+\newcommand{\NUPRLclassrel}[5]{#5\in#4(#2)}
+\newcommand{\NUPRLclassreln}[6]{#5\##6\in#4(#2)}
+\newcommand{\NUPRLespredSYMB}{\NUPRLC{pred}}
+\newcommand{\NUPRLespred}[2]{\NUPRLespredSYMB(#2)}
+\newcommand{\NUPRLesfirst}[2]{\NUPRLC{first}(#2)}
+\newcommand{\NUPRLlastnonemptySYMB}{\NUPRLC{last\mbox{-}non\mbox{-}empty}}
+\newcommand{\NUPRLlastnonempty}[3]{\NUPRLlastnonemptySYMB(#1,#2,#3)}
+\newcommand{\NUPRLprior}[1]{\NUPRLC{Prior}(#1)}
+\newcommand{\NUPRLprioropt}[2]{\NUPRLC{Prior}(#1)\textbf{\texttt{?}}#2}
+\newcommand{\NUPRLdisju}[2]{#1+#2}
+\newcommand{\NUPRLinlSYMB}{\NUPRLC{inl}}
+\newcommand{\NUPRLinrSYMB}{\NUPRLC{inr}}
+\newcommand{\NUPRLinl}[1]{\NUPRLinlSYMB(#1)}
+\newcommand{\NUPRLinr}[1]{\NUPRLinrSYMB(#1)}
+\newcommand{\NUPRLoutlSYMB}{\NUPRLC{outl}}
+\newcommand{\NUPRLoutrSYMB}{\NUPRLC{outr}}
+\newcommand{\NUPRLoutl}[1]{\NUPRLoutlSYMB(#1)}
+\newcommand{\NUPRLoutr}[1]{\NUPRLoutrSYMB(#1)}
+\newcommand{\NUPRLislSYMB}{\NUPRLC{isl}}
+\newcommand{\NUPRLisrSYMB}{\NUPRLC{isr}}
+\newcommand{\NUPRLisl}[1]{\NUPRLislSYMB(#1)}
+\newcommand{\NUPRLisr}[1]{\NUPRLisrSYMB(#1)}
+\newcommand{\NUPRLunit}{\NUPRLC{()}}
+\newcommand{\NUPRLunitty}{\NUPRLC{Unit}}
+\newcommand{\NUPRLsquashSYMB}{\NUPRLC{\downarrow}}
+\newcommand{\NUPRLsquash}[1]{\NUPRLsquashSYMB#1}
+\newcommand{\NUPRLexistsSYMB}{\exists}
+\newcommand{\NUPRLexists}[3]{\NUPRLexistsSYMB#1:#2.\ #3}
+\newcommand{\NUPRLexistsbag}[3]{\NUPRLexistsSYMB#1\in#2.\ #3}
+\newcommand{\NUPRLexistsp}[3]{\begin{array}[t]{l}\NUPRLexistsSYMB#1:#2.\\\hspace*{0.15in}#3\end{array}}
+\newcommand{\NUPRLexistsn}[5]{\NUPRLexistsSYMB#1:#2.\cdots\NUPRLexistsSYMB#3:#4.\ #5}
+\newcommand{\NUPRLexistsbagn}[5]{\NUPRLexistsSYMB#1\in#2.\cdots\NUPRLexistsSYMB#3\in#4.\ #5}
+\newcommand{\NUPRLexistsnp}[5]{\begin{array}[t]{l}\NUPRLexistsSYMB#1:#2.\cdots\NUPRLexistsSYMB#3:#4.\\\hspace*{0.15in}#5\end{array}}
+\newcommand{\NUPRLexistsbagnp}[5]{\begin{array}[t]{l}\NUPRLexistsSYMB#1\in#2.\cdots\NUPRLexistsSYMB#3\in#4.\\\hspace*{0.15in}#5\end{array}}
+\newcommand{\NUPRLexistslocl}[3]{\NUPRLexistsSYMB\NUPRLeslocl{#1}{#2}.\ #3}
+\newcommand{\NUPRLexistscausl}[3]{\NUPRLexistsSYMB\NUPRLescausl{}{#1}{#2}.\ #3}
+\newcommand{\NUPRLall}[3]{\forall#1:#2.\ #3}
+\newcommand{\NUPRLallp}[3]{\begin{array}[t]{l}\forall#1:#2.\\\hspace*{0.15in}#3\end{array}}
+\newcommand{\NUPRLalln}[5]{\forall#1:#2.\cdots\forall#3:#4.\ #5}
+\newcommand{\NUPRLallnp}[5]{\begin{array}[t]{l}\forall#1:#2.\cdots\forall#3:#4.\\\hspace*{0.15in}#5\end{array}}
+\newcommand{\NUPRLalllocl}[3]{\forall\NUPRLeslocl{#1}{#2}.\ #3}
+\newcommand{\NUPRLallpair}[2]{\forall#1\!:#2.\ }
+\newcommand{\NUPRLalls}[2]{\begin{array}{l}#1\\\hspace*{0.2in}#2\end{array}}
+\newcommand{\NUPRLallss}[2]{\begin{array}{l}#1\\\hspace*{0.1in}#2\end{array}}
+\newcommand{\NUPRLiff}[2]{#1\ \iff\ #2}
+\newcommand{\NUPRLiffp}[2]{\begin{array}[t]{l}#1\\\iff\\#2\end{array}}
+\newcommand{\NUPRLiffpc}[2]{\begin{array}[t]{c}#1\\\iff\\#2\end{array}}
+\newcommand{\NUPRLand}[2]{#1\ \wedge\ #2}
+\newcommand{\NUPRLandp}[2]{\begin{array}[t]{ll}&#1\\\wedge&#2\end{array}}
+\newcommand{\NUPRLandpp}[2]{\left(\begin{array}{ll}&#1\\\wedge&#2\end{array}\right)}
+\newcommand{\NUPRLandcp}[3]{\begin{array}[t]{ll}&#1\\\wedge&#2\\\wedge&#3\end{array}}
+\newcommand{\NUPRLor}[2]{#1\ \vee\ #2}
+\newcommand{\NUPRLorc}[3]{#1\ \vee\ #2\ \vee\ #3}
+\newcommand{\NUPRLorp}[2]{\begin{array}[t]{ll}&#1\\\vee&#2\end{array}}
+\newcommand{\NUPRLorcp}[3]{\begin{array}[t]{ll}&#1\\\vee&#2\\\vee&#3\end{array}}
+\newcommand{\NUPRLorcpp}[3]{\left(\begin{array}{ll}&#1\\\vee&#2\\\vee&#3\end{array}\right)}
+\newcommand{\NUPRLimplies}[2]{#1\ \Rightarrow\ #2}
+\newcommand{\NUPRLimpliesp}[2]{\begin{array}[t]{l}#1\\\Rightarrow\ #2\end{array}}
+\newcommand{\NUPRLimpliespp}[2]{\left(\begin{array}{l}#1\\\Rightarrow\ #2\end{array}\right)}
+\newcommand{\NUPRLdepprod}[3]{#1\ \NUPRLC{:}\ #2\times#3}
+\newcommand{\NUPRLdepprodp}[3]{\begin{array}[t]{l}#1\ \NUPRLC{:}\ #2\\\times\ #3\end{array}}
+\newcommand{\NUPRLprod}[2]{#1\times#2}
+\newcommand{\NUPRLprodd}[4]{#1\times#2\times#3\times#4}
+\newcommand{\NUPRLprodn}[2]{#1\times\dots\times#2}
+\newcommand{\NUPRLprodp}[2]{\begin{array}[t]{l}#1\\\hspace*{0.05in}\times\ #2\end{array}}
+\newcommand{\NUPRLdep}[2]{#1\ \NUPRLC{:}\ #2}
+\newcommand{\NUPRLproddp}[4]{\begin{array}[t]{ll}& #1\\\times\ & #2\\\times\ & #3\\\times\ & #4\end{array}}
+\newcommand{\NUPRLunion}[2]{#1\ \NUPRLC{+}\ #2}
+\newcommand{\NUPRLpermutationSYMB}{\NUPRLC{permutation}}
+\newcommand{\NUPRLpermutation}[3]{\NUPRLpermutationSYMB(#1,#2,#3)}
+\newcommand{\NUPRLlmember}[3]{#1\in_{#3}#2}
+\newcommand{\NUPRLtrue}{\NUPRLC{True}}
+\newcommand{\NUPRLindepset}[2]{\{#1\mid#2\}}
+\newcommand{\NUPRLdepset}[3]{\{#1:#2\mid#3\}}
+\newcommand{\NUPRLpair}[2]{\langle#1,#2\rangle}
+\newcommand{\NUPRLpairp}[2]{\begin{array}[t]{l}\langle\,#1\\,\,#2\\\rangle\end{array}}
+\newcommand{\NUPRLtriple}[3]{\langle#1,#2,#3\rangle}
+\newcommand{\NUPRLpaird}[4]{\langle#1,#2,#3,#4\rangle}
+\newcommand{\NUPRLpairn}[2]{\langle#1,\dots,#2\rangle}
+\newcommand{\NUPRLhdr}[1]{{\char18\!\char18}\textit{#1}{\char18\!\char18}}
+\newcommand{\NUPRLit}{\NUPRLC{\cdot}}
+\newcommand{\NUPRLeventordering}{\NUPRLC{EO}}
+\newcommand{\NUPRLnoeventbetweenSYMB}{\NUPRLC{no\mbox{-}events\mbox{-}between}}
+\newcommand{\NUPRLnoeventbetween}[3]{\NUPRLnoeventbetweenSYMB(#1,#2,#3)}
+
+\newenvironment{emlcode}{\vspace*{-0.03in}\begin{center}
+\hspace*{0.1in}
+\begin{tabular}{|l|}
+\hline
+\begin{minipage}[b]{0.9\textwidth}\vspace*{-0.051in}}
+{\vspace*{-0.11in}
+\end{minipage}\\
+\hline
+\end{tabular}
+\end{center}\vspace*{-0.01in}}

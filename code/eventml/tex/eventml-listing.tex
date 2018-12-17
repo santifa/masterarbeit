@@ -1,0 +1,44 @@
+% -*-LaTeX-*-
+
+
+\RequirePackage{listings}
+\RequirePackage{color}
+
+\definecolor{EMLgreen}{cmyk}{0.7,0.1,0.7,0.3}
+\definecolor{EMLpurple}{cmyk}{0,0.56,0.14,0.29}
+\definecolor{EMLpeach}{cmyk}{0,0.4,0.8,0.2}
+\definecolor{EMLred}{cmyk}{0,1,1,0.1}
+%\definecolor{EMLblue}{cmyk}{0.31,0.18,0.0,0.41}
+\definecolor{EMLblue}{cmyk}{0.48,0.20,0.0,0.50}
+
+\lstdefinelanguage
+    {EventML}
+    {
+      basicstyle=\sffamily,
+      %basicstyle=\small\sffamily,
+      %basicstyle=\small\bfseries,
+      %basicstyle=\small\ttfamily,
+      morekeywords=[1]{or,if,then,else,let,letrec,in,match,of,infix,infixr,%
+        parameter,constant,import,export,input,output,internal,base,send,%
+        main,type,Prior,self,specification,broadcast,Once,where,with,%
+        case,op,class,classrec,until,OnLoc,Skip,invariant,progress,ordering,%
+        on,variable,Output,forall,exists,locations,parameters,messages,o,O,%
+        consistency,memory,and,options,abstype,assume,observes,guarantee,%
+        State,Memory},
+      keywordstyle=[1]\color{EMLpurple},
+      morekeywords=[2]{Bag,Loc,List,Int,Bag,Bool,Unit,Deq,Type,Prop,Event,Tok},
+      keywordstyle=[2]\color{EMLgreen},
+      morekeywords=[3]{fst,snd,inl,inr,isl,fix,not,before,location},
+      keywordstyle=[3]\color{EMLblue},
+      alsoletter={'},
+      sensitive,%
+      morecomment=[n]{(*}{*)},
+      commentstyle=\color{EMLred},
+      morestring=[b]",
+      moredelim=[s][\color{EMLpeach}]{``}{``},
+      %morecomment=[n]{`}{`},
+      literate=*{/}{$/$}1 {-}{$\mbox{-}$}1, %{->}{$\rightarrow$ }2,% {=>}{$\Rightarrow$ }2,
+      %=\color{lightgray},
+      %backgroundcolor=\color{lightgray},
+      %moredirectives={open,close,include}%
+    }

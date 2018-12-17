@@ -1,0 +1,13 @@
+(* request a token (from a proc to a proc) *)
+internal (``request``  : Unit, base Request, send send_request)
+(* send the token over (from a proc to a proc) *)
+internal (``token``    : Unit, base Token,   send send_token)
+(* sent by the shared resource when a proc leaves it *)
+input    (``leave sr`` : Unit, base LeaveSR)
+(* sent by a proc to the sr to enter it *)
+output   (``enter sr`` : Loc,  send send_enter_sr)
+(* sent to a proc by a user to request the use of the shared resource *)
+input    (``use sr``   : Loc,  base UseSR)
+(* sent when getting ``use sr`` messages while still working on
+   former ones *)
+output   (``busy``     : Unit, send send_busy)

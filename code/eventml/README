@@ -1,0 +1,28 @@
+--------------------------------------------------
+--- How to install EventML?
+
+Read the instructions in the INSTALL file.
+
+
+--------------------------------------------------
+--- How to run EventML?
+
+In Emacs:
+
+Once you have installed Emacs and EventML, you should be able to open
+in Emacs any file with the extension ".eml" and start using the tool.
+You can type declarations in your eml file and evaluate expressions
+in an EventML session.  To start a session on an eml file, click on
+the "EventML" button that should be next to the "Help" button and then
+on "Session".
+
+In a terminal:
+
+To start a session in a terminal, run:
+  eventml file.eml --lib path_to_your_alldefs.eml
+                   --nuprl-defs path_to_your_alldefs
+                   --session
+
+The alldefs file is provided in the source archive.  The alldefs.eml
+file is generated when you run "make" (after configure -- see the
+INSTALL file for more details on how to install EventML).

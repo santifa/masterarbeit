@@ -1,0 +1,42 @@
+letrec length lst =
+  case lst of [] => 0
+           of x . xs => 1 + length xs;;
+
+let null lst = case lst of [] => true
+                        of x . xs => false;;
+
+let id x = x;;
+
+let o f g x = g (f x);;
+infix o;;
+
+let app f x = f x;;
+
+let app' = \f. \x. f x;;
+
+let my_or a b = a or b ;;
+
+let plus_one : Int -> Int = \x. x + 1;;
+
+(**** functions can take integers as arguments: ****)
+
+let plus_three x = x + 3;;
+
+(* plus_three 2;; *)
+
+
+
+(**** function can build functions ****)
+
+let myplus x = \y. x + y ;;
+let p3 = myplus 3 ;;
+
+(* p3 4 *)
+
+
+(**** untypable ****)
+(* 8 6;; *)
+(* true = 1;;*)
+
+
+import hd;;

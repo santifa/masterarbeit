@@ -1,0 +1,222 @@
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-06-13)
+o
+
+Many of the mk_env_depvar in CsGeneration.sml lead to finding false
+errors because when we _try_ to slice them out, the environment
+variables are kept while the links between them and the binders are
+discarded which leads to shadowing the whole environment prior to the
+variables, including List, Int, ... (the prelude).  This does not lead
+to free variables errors because the environment variables shadow the
+prior environment, but it leads to overloading error because, e.g.,
+explicit types are used to avoid such error and if List is not bound
+anymore to its binding, the explicit type does not exists anymore.
+
+Consider:
+
+  constant map : 'a with 'a in {'b List, 'b Bag} ;;
+  let lifting1 = map ;;
+
+  constant append (x : 'b) : 'b with 'b in {'a List, 'a Bag} ;;
+  let onvote (missing : Int List) = append missing ;;
+
+If for map, only the environment variable is kept, it's going to
+shadow List and Int which are used in the explicit type on missing
+(this explicit type is needed to avoid an overloading error).
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-04-13)
+o
+
+Need to get better match errors in CsGeneration.
+
+Need to re-do the export of matches in ToNurpl.
+  --> Partially done that: need the bag cases.
+
+In Enumeration, I need to contaminate types with equality constraints
+when the calling updateUniEnvSub... function.
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-14)
+o
+
+Document fixity declarations.
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-16)
+o
+
+We should not allow "a b" to be a list of atoms.
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-14) --DONE--
+o
+
+There is a problem with the enumerator because it finds only one error
+given that:
+
+  let infix || x y = x + y;;
+  let _ = true || true;;
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-14)
+o
+
+If we add fixity, we might need nonfix and op.  We might not actually,
+this is not vital.
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-12)
+o
+
+We need equality in type sequence variables as we have for internal
+type variables.  Same for type constructor variables?
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-12) --DONE--
+o
+
+Some way to speed up enumeration?   Look at smltes.
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-11)
+o
+
+Check redundancy and exhaustivity in cases and matches.
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-10)
+o
+
+This should not be typable because 'a is bound at the outter let:
+
+  let _ = let f x : 'a = x
+          in (\x. x : 'a, f 1);;
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-10)
+o
+
+Some typable files:
+    - Acceptor_Mar9.esharp
+    - Paxos_Mar10.esharp
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-09)
+o
+
+Work on the pretty printing of type schemes.
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-09)
+o
+
+The following piece of code should not be typable:
+
+    type 'a Pair = 'a * 'a;;
+    let _ = (1, 1) : 'b Pair;;
+
+because 'b is bould to the let _ declaration and therefore is
+considered as a constant and not a variable inside the declaration.
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-02) --DONE--
+o
+
+We can always transform a List into a Bag but we can't always
+transform a Bag into a List, because we can't always select a member
+from a Bag.  Therefore, we could use size on Lists by transforming a
+List into a Bag and calculating the size of the Bag.  What about
+defining:
+
+    bagsize (lst/~) = size (lst)
+
+It would actually means that we have a way to get the underlying List
+f a Bag, but we can't always do that.  What about having {x1, ...,
+xn}?  Doesn't it mean that we can pick an element for any kind of Bag
+by just picking one of the xi?
+
+Once again From the List
+    [x1; ...; xn],
+we can generate the Bag
+    {x1, .., xn},
+but from the Bag {x1, .., xn}, we can't always generate a List.
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-02): --DONE--
+o
+
+We use /~ to transform a List into a Bag.  Having expressions exp/~
+allows transforming Lists into Bags which OK, but having pattern pat/~
+allows getting Lists from Bags which is not OK.
+
+(2011-03-10) We don't have these forms anymore.
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-02) --DONE--
+o
+
+Parsing issue with
+    let f x y z = x|y|z|| ;;
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-01)
+o
+
+We need implicit bindings for explicit type variables at bindings.  We
+need not to generate several binders when there are several
+occurrences of a type variable.
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-03-01) --DONE--
+o
+
+We need no arity constraints on exp|exp;exp;exp| forms.
+
+
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o (2011-02-28) --DONE--
+o
+
+In ESharp.grm we've got 'COLON typ' as an exp.  I've added the COLON
+to avoid conflicts.  This is to fix.  With this COLON we don't
+actually need to have PROD instead of STAR and DISJU instead of PLUS.
+We also have parentheses around lhs of dependent products.
+
+(2011-03-10) We don't have types as expressions anymore

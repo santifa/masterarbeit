@@ -1,0 +1,64 @@
+This piece of software tries to describe aspekts of the `logic of events`.
+The description is written in german because i need a grasp on the logic.
+
+## A logic of events
+
+Der Ansatz zur Beschreibung der Logik ist die Martin-Löf Typentheorie.
+Dabei wird zuerst das Rechenmodel vorgestellt und danach Typen und Logik auf
+dessen Basis eingeführt.  
+Als Basismodel werden Nachrichtenautomaten benutzt die auf IO Automaten von Lynch
+und Turtle sowie den aktiven Objekten von Chandy basieren.
+Der Automat reagiert dabei auf eingehende Nachrichten und versendet selber Nachrichten.
+Aus der operationsweise dieses Automaten  kann eine mögliche Logik und Typen abgeleitet werden.
+
+Daraus resultiert das Eventsystem, dass als Rechenmodell, die `Logic of events` abbildet.
+> #![allow(dead_code)]
+> mod utils;
+> use crate::utils::fifo::FifoQueue;
+
+### Nachrichtenautomat
+
+Ein Nachrichtenautomat ist eine nichtdeterminister Automat und besteht aus dem Tripel
+Zustand, Aktion, Nachricht sowie den Funktionen `send` und `f` (recieve) MA = (St,Act,Msg,f,send).
+
+> struct MessageAutomaton {
+>    state: Box<St<State>>, // allocate as heap object behind an interface
+>    action: Act,
+>    message: Msg,
+> }
+
+Eine Nachricht ist dabei ein normaler String oder Text.
+> type Msg = String;
+> type MsgList = Vec<String>;
+
+Ein Event ist entweder eine Aktion oder eine Nachricht.
+> type Event = Result<Act, Msg>;
+
+Eine Aktion ist eine interne Zustandsänderung
+> enum Act {}
+
+Um Zustandsimplementierung auszutauschen werden diese hinter einem einfachen Interface versteckt.
+> trait St<T> {} // define an interface to use every possible state implementation
+
+Ein State ist entweder ein Intialzustand oder ein Folgezustand.
+Ein Folgezustand enthält einen Zeitpunkt und eine Nachricht.
+> enum State {
+>     Init,
+>     ConsequentState(i32, Msg),
+> }
+
+Ein Nachrichtenautomat besitzt Funktionen zum Verarbeiten von internen und externen Nachrichten
+> trait MessageAutomata<T> {
+      Beim Eingang einer Nachricht wird der interne Zustand in Abhängigkeit zur Nachricht und Aktion geändert.
+>     fn f(e: Event, s: St<T>) -> St<T>;
+      Beim senden wird eine Liste von Nachrichten aus dem aktuellen Zustand abgeleitet.
+>     fn send(e: Event, s: St<T>) -> MsgList;
+> }
+
+Eine Berechnungsabfolge ist eine Reihe von Tripeln (state_0,queue_0,event_0)(...)(...)
+> type Computation<T, S> = Vec<(St<S>, FifoQueue<T>, Event)>;
+
+
+> fn main() {
+>     println!("Logic of events");
+> }

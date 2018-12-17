@@ -1,0 +1,19 @@
+let getOtherProc (l : Loc) = if l = proc1 then proc2 else proc1 ;;
+
+let onRequest @ () (interested,token,toreply) = (interested,
+                                                 token & interested,
+                                                 interested) ;;
+let onToken   @ () (interested,token,toreply) = (interested,true,toreply) ;;
+let onUseSR   @ @  (interested,token,toreply) = (true,token,toreply) ;;
+let onLeaveSR @ () (interested,token,toreply) = (false,token,false) ;;
+
+let initState l = {(false,initial_token = l,false)};;
+
+class State =
+  SM4-class-du initState
+               (onRequest, Request)
+               (onToken,   Token)
+               (onUseSR,   UseSR)
+               (onLeaveSR, LeaveSR) ;;
+
+class PrState = Prior(State)?initState ;;

@@ -1,0 +1,343 @@
+% -*-LaTeX-*-
+
+
+%%%% DOCUMENTCLASS
+
+
+\documentclass[12pt,red]{beamer}
+
+
+%%%% PACKAGES
+
+
+\usepackage{{../../tex/bsymb}}
+\usepackage{{../../tex/nuprl}}
+\usepackage{color}
+\usepackage{pstricks,pst-node,pst-tree}
+\usepackage{amsmath}
+\usepackage{proof}
+\usepackage{pifont}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+
+
+%% \usepackage{pgfpages}
+%% \pgfpagesuselayout{4 on 1}[border shrink=5mm]
+
+
+%%%% THEME
+
+
+\usetheme{default}
+%\setbeamercolor{footline}{fg=white,bg=blue}
+%\setbeamertemplate{footline}[frame number]
+%\insertframenumber
+%\inserttotalframenumber
+\usefonttheme{default}
+%\usecolortheme{whale}
+%\setbeamertemplate{navigation symbols}{}
+
+\setbeamercolor{uppercolT}{fg=white,bg=gray}%
+\setbeamercolor{lowercolT}{fg=white,bg=gray}%
+
+
+%%%% LISTING
+
+
+\input{../../tex/eventml-listing}
+\lstset{language=EventML}
+
+
+%%%% TABLES
+
+
+\setlength{\tabcolsep}{1.0pt}
+\setlength{\arraycolsep}{1.0pt}
+
+
+%%%% HEADER AND FOOTER
+
+
+\setbeamertemplate{footline}{\leavevmode%
+\begin{beamercolorbox}[wd=.30\paperwidth,center,ht=2.25ex,dp=1ex,rightskip=4pt plus 1pt]{subsection in head/foot}
+  \insertshortauthor%\ (\insertshortinstitute)
+\end{beamercolorbox}%
+\begin{beamercolorbox}[wd=.40\paperwidth,center,ht=2.25ex,dp=1ex]{section in head/foot}
+  \usebeamercolor[fg]{section in foot/head}
+  \insertshorttitle
+\end{beamercolorbox}%
+\begin{beamercolorbox}[wd=.30\paperwidth,center,ht=2.25ex,dp=1ex,leftskip=4pt plus 1pt,rightskip=4pt plus 1pt]{subsection in head/foot}
+  \insertshortdate\hfill\insertpagenumber/\insertpresentationendpage
+\end{beamercolorbox}%
+}
+%\insertframenumber/\inserttotalframenumber
+
+
+%%%% MACROS
+
+
+%% \input{../../share/colors}
+%% \input{../../share/macros}
+%% %\input{../../share/notes}
+
+\input{../../tex/macros}
+
+\newcommand{\cemph}[1]{\textcolor{blue}{\textbf{#1}}}
+\newcommand{\remph}[1]{\textcolor{red}{\textbf{#1}}}
+\renewcommand{\mdownarrow}[1]{}
+
+%%%% TITLEPAGE
+
+
+\title[\eml]{Interfacing with Proof Assistants for Domain Specific Programming Using \eml}
+\author[\prl\ team]{{\small Vincent Rahli}}
+\institute{Cornell University}
+\date{\today}
+
+
+\begin{document}
+
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Credits}
+  \begin{itemize}
+  \item Mark Bickford
+  \item Robert Constable
+  \item David Guaspari
+  \item Richard Eaton
+  \item Vincent Rahli
+  \item Robbert Van Renesse
+  \item Nicolas Schiper
+  \item Jason Wu
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Problem}
+
+  \remph{Problem: unverified protocols are wrong.}
+
+  \vspace{0.2in}
+
+  \cemph{Goal: automatic synthesis of verified diversifiable
+    distributed systems.}
+
+  \vspace{0.2in}
+
+  \cemph{Our solution: building tools that cooperate with a Logical
+    Programming Environment (e.g., a constructive theorem prover).}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{\eml: specification and programming language}
+
+  \begin{small}
+  \begin{itemize}
+  \item A \ML-like \cemph{functional} programming language.
+
+  \item Features logical constructs (\cemph{\logicE} combinators).
+
+  \item To \cemph{specify/code} distributed protocols.
+
+  %% \item Properties of distributed systems can be naturally expressed
+  %%   in the \logicE.
+
+  %% \item Protocols can be given a \cemph{defining} \eml\ specification.
+
+  \item \eml\ \cemph{translates} specifications into event classes.
+
+    \hspace{0.2in}\cemph{Logical aspect}
+
+  \item \eml\ \cemph{synthesizes} distributed programs (in the model
+    underlying the \logicE) from specifications.
+
+    \hspace{0.2in}\cemph{Computational aspect}
+  \end{itemize}
+  \end{small}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Cooperation with a Logical Programming Environment}
+
+  \includegraphics[width=1.0\textwidth]{../images/coop-eml-nuprl}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Accomplishments}
+
+  We have specified many distributed protocols.
+
+  We have proved the correctness of the following protocols:
+  \begin{itemize}
+  \item Leader election in a ring.
+  \item Two-thirds consensus protocol.
+  \item Paxos (in progress).
+  \end{itemize}
+
+  \vspace{0.1in}
+
+  \cemph{The methodology works!}
+
+  \vspace{0.3in}
+
+  \begin{wrapfigure}{r}{0.4\textwidth}
+    \vspace*{-0.5in}
+    \begin{center}
+      \includegraphics[width=2in]{Slide1}
+    \end{center}
+    %\caption{A gull}
+  \end{wrapfigure}
+  Nicolas Schiper (Cornell postdoc) has implemented a replicated
+  database (ShadowDB) on top of our synthesized two-thirds consensus
+  protocol.
+
+
+  \vspace{0.1in}
+  \cemph{It is used!}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{An example: Maximum using Memory}
+
+  \cemph{We have defined state machines in the \logicE.}
+
+  \vspace{0.1in}
+
+  E.g., \lstinline{Memory1}.
+
+  \vspace{0.5in}
+
+  \cemph{We have automated some reasoning on state machines.}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Maximum}
+
+\begin{emlcode}
+\begin{lstlisting}
+input int : Int
+
+class Maximum =
+  Memory1 (\loc.{0})
+          (\loc.\x.\s. imax x s)
+          int'base
+;;
+\end{lstlisting}
+\end{emlcode}
+
+Intuition: at any event, computes the maximum of the integers received
+in the past.
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Maximum}
+
+  \begin{columns}
+    \column{.50\textwidth}
+    \begin{center}
+      \includegraphics[scale=0.35]{../images/maximum.eps}
+    \end{center}
+    \column{.50\textwidth}
+    \begin{center}
+      \vspace*{1in}
+      \includegraphics[scale=0.3]{../images/maximum_sm.eps}
+    \end{center}
+  \end{columns}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Maximum}
+
+  \begin{center}
+    \includegraphics[scale=0.35]{../images/maximum_obs.eps}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Maximum}
+
+  \begin{center}
+    \includegraphics[scale=0.24]{../images/maximum_obs_react.eps}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Maximum}
+
+  \begin{center}
+    \includegraphics[scale=0.3]{../images/maximum_2loc.eps}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Maximum}
+
+  \begin{center}
+    \includegraphics[scale=0.4]{../images/maximum_2loc_sp.eps}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Maximum}
+
+One can specify state machine invariants in \eml:
+\begin{lstlisting}[basicstyle=\small]
+invariant pos_max on n in Maximum
+  == n >= 0;;
+
+progress inc_max on n1 then n2 in Maximum
+  with n in int'base and s => n > s
+  == n2 > n1;;
+
+memory mem_max on n1 then n2 in Maximum
+  with n in int'base
+  == n2 >= n /\ n2 >= n1;;
+\end{lstlisting}
+
+\vspace{0.1in}
+
+\cemph{\nuprl\ automatically proves these invariants.}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What's next?}
+
+  \begin{itemize}
+  \item Automation.
+
+    \vspace{0.2in}
+
+  \item Correct-by-construction optimizations.
+
+    \vspace{0.2in}
+
+  \item More expressive types: refinement types, dependent types...
+  \end{itemize}
+\end{frame}
+
+
+
+\end{document}

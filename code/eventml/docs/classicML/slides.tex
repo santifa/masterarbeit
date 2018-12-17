@@ -1,0 +1,1360 @@
+% -*-LaTeX-*-
+
+%%  Copyright (C) 2011 Vincent Rahli
+%%  Permission is granted to copy, distribute and/or modify this document
+%%  under the terms of the GNU Free Documentation License, Version 1.3
+%%  or any later version published by the Free Software Foundation;
+%%  with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+%%  A copy of the license is included in the section entitled "GNU
+%%  Free Documentation License".
+
+
+%%%% DOCUMENTCLASS
+
+
+\documentclass[12pt,red]{beamer}
+
+
+%%%% PACKAGES
+
+
+\usepackage{color}
+\usepackage{{../../tex/bsymb}}
+\usepackage{verbatim}
+\usepackage{pstricks,pst-node,pst-tree}
+\usepackage{amsmath}
+\usepackage{proof}
+\usepackage{pifont}
+\usepackage[final]{listings}
+
+%% \usepackage{pgfpages}
+%% \pgfpagesuselayout{4 on 1}[border shrink=5mm]
+
+
+%%%% THEME
+
+
+\usetheme{default}
+%\setbeamercolor{footline}{fg=white,bg=blue}
+%\setbeamertemplate{footline}[frame number]
+%\insertframenumber
+%\inserttotalframenumber
+\usefonttheme{default}
+%\usecolortheme{whale}
+%\setbeamertemplate{navigation symbols}{}
+
+\setbeamercolor{uppercolT}{fg=white,bg=gray}%
+\setbeamercolor{lowercolT}{fg=white,bg=gray}%
+
+
+%%%% LISTING
+
+
+\input{../../tex/eventml-listing}
+\lstset{language=EventML}
+
+
+%%%% BIBLIOGRAPHY
+
+\bibliographystyle{alpha}
+
+
+%%%% TABLES
+
+
+\setlength{\tabcolsep}{1.0pt}
+\setlength{\arraycolsep}{1.0pt}
+
+
+%%%% HEADER AND FOOTER
+
+
+\setbeamertemplate{footline}{\leavevmode%
+\begin{beamercolorbox}[wd=.30\paperwidth,center,ht=2.25ex,dp=1ex,rightskip=4pt plus 1pt]{subsection in head/foot}
+  \insertshortauthor%\ (\insertshortinstitute)
+\end{beamercolorbox}%
+\begin{beamercolorbox}[wd=.40\paperwidth,center,ht=2.25ex,dp=1ex]{section in head/foot}
+  \usebeamercolor[fg]{section in foot/head}
+  \insertshorttitle
+\end{beamercolorbox}%
+\begin{beamercolorbox}[wd=.30\paperwidth,center,ht=2.25ex,dp=1ex,leftskip=4pt plus 1pt,rightskip=4pt plus 1pt]{subsection in head/foot}
+  \insertshortdate\hfill\insertpagenumber/\insertpresentationendpage
+\end{beamercolorbox}%
+}
+%\insertframenumber/\inserttotalframenumber
+
+
+%%%% MACROS
+
+
+%% \input{../../share/colors}
+%% \input{../../share/macros}
+%% %\input{../../share/notes}
+
+\input{../../tex/macros}
+
+\newcommand{\cemph}[1]{\textcolor{blue}{\textbf{#1}}}
+
+
+%%%% TITLEPAGE
+
+
+\title[\cml]{\huge{\mbox{\cml}}\\\vspace*{0.05in}{\small CS 5860 -
+    Introduction to Formal Methods}}
+\author[\nuprl\ team]{{\scriptsize Vincent Rahli}\\\vspace*{0.1in}\nuprl\ team}
+\institute{Cornell University}
+\date{\today}
+
+
+\begin{document}
+
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+
+\section{Classic ML an EventML}
+
+
+\begin{frame}
+  \frametitle{\cml\ and \eml}
+
+  During this lecture, we are going to learn about a programming
+  language called \cemph{\cml}.
+
+  \vspace{0.3in}
+
+  We will actually use a language called \cemph{\eml} (developed by
+  the \nuprl\ team~\cite{Constable+al:1986,Kreitz:02,Allen+al:2006}).
+  \eml\ is based on \cml\ and a logic called the
+  \logicE~\cite{Bickford:2009,Bickford+Constable:2008,Bickford+Constable+Guaspari:2011a}.
+
+  \vspace{0.3in}
+
+  We will focus at the \CML\ part of \EML.
+\end{frame}
+
+
+\section{Where does ML come from?}
+
+
+\begin{frame}
+  \frametitle{Where does \ML\ come from?}
+
+  \ML\ was originally designed, as part of a proof system called
+  \LCF\ (Logic for Computable Functions), to perform proofs within
+  \PPL\ (Polymorphic Predicate $\lambda$-calculus), a formal logical
+  system~\cite{Gordon+Milner+Morris+Newey+Wadsworth:1978,Gordon+Milner+Wadsworth:1979}.
+
+  \vspace{0.2in}
+
+  By the way, what does \ML\ mean?  It means \cemph{Meta Language}
+  because of the way it was used in \LCF.
+
+  \vspace{0.2in}
+
+  We refer to this original version of \ML\ as \CML.
+
+  \vspace{0.2in}
+
+  Many modern programming languages are based on \CML: \SML\ (\StdML),
+  \OCAML\ (object-oriented programming language), \fsharp\ (a
+  Microsoft product)...
+
+  Nowadays \ML\ is often used to refer to the collection of these
+  programming languages.
+
+\end{frame}
+
+
+\section{Where is ML used?}
+
+
+\begin{frame}
+  \frametitle{Where is \ML\ used?}
+
+  \begin{itemize}
+  \item \fsharp\ is a Microsoft product used, e.g., in the .NET
+    framework.
+
+    \vspace{0.1in}
+
+  \item \OCAML\ is developed by the INRIA.  It has inspired \fsharp.
+    The \COQ\ theorem prover is written in \OCAML.
+    It has been used in the implementation of
+    \ENSEMBLE~\cite{Hayden:98a,Birman+al:2000a}.
+    It is also used by companies.
+
+    \vspace{0.1in}
+
+  \item \SML\ has formally defined static and dynamic semantics.  The
+    \HOL\ theorem prover is written in \SML.  It is nowadays mainly
+    used for teaching and research.
+  \end{itemize}
+\end{frame}
+
+
+\section{What is Classic ML?}
+
+
+\begin{frame}
+  \frametitle{What is \CML\ (or just \ML\ for short)?}
+
+  \ML\ is a strongly typed higher-order impure functional programming language.
+
+  \vspace{0.2in}
+
+  What does it mean?
+
+  \vspace{0.8in}
+
+  \begin{footnotesize}
+    (Nowadays, \ML\ often refers to a family of languages such as \CML,
+    \SML, \CAML, \fsharp...)
+  \end{footnotesize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What is \ML?}
+
+  \framesubtitle{Higher-order.}
+
+  Functions can do nothing (we will come back to that one):
+  \vspace*{0.05in}
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+      \lstinline{\\x. x}
+    \end{center}
+  \end{beamerboxesrounded}
+
+  \vspace{0.3in}
+
+  Functions can take numerical arguments:
+  \vspace*{0.05in}
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+      \lstinline{\\x. x + 1}
+    \end{center}
+  \end{beamerboxesrounded}
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+      \lstinline{let plus\_three x = x + 3 ;;}
+    \end{center}
+  \end{beamerboxesrounded}
+
+  \vspace{0.3in}
+
+  Functions can take Boolean arguments:
+  \vspace*{0.05in}
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+      \lstinline{\\a. \\b. a or b}
+    \end{center}
+  \end{beamerboxesrounded}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What is \ML?}
+
+  \framesubtitle{Higher-order.}
+
+  Functions can also take other \cemph{functions as arguments}.
+
+  \vspace{0.2in}
+
+  Function application:
+  \vspace*{0.05in}
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+      \lstinline{let app = \\f. \\x. (f x);;}
+    \end{center}
+  \end{beamerboxesrounded}
+
+  \vspace{0.1in}
+
+  Function composition:
+  \vspace*{0.05in}
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+      \lstinline{let comp g h = \\x. (g (h x)) ;;}
+    \end{center}
+  \end{beamerboxesrounded}
+
+  \vspace{0.1in}
+
+  Note that, e.g, \lstinline{app} can be seen as a function that takes
+  a function (\lstinline{f}) as input and outputs a function
+  (\lstinline{\\x. (f x)}).
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What is \ML?}
+
+  \framesubtitle{Higher-order.}
+
+  BTW, a function of the form \lstinline{\\x.e} (where \lstinline{e}
+  is an expression) is called a $\lambda$-expression.
+
+  \vspace{0.2in}
+
+  The terms of the forms \lstinline{x} (a variable), \lstinline{(e1
+    e2)} (an application), and \lstinline{\\x.e} (a
+  $\lambda$-expression) are the terms of the
+  $\lambda$-calculus~\cite{Church:1932,Barendregt:1984}.
+
+  \vspace{0.2in}
+
+  In 1932, Church~\cite{Church:1932} introduced a system (that led to
+  the $\lambda$-calculus we know) for ``the foundation of formal
+  logic'', which was a formal system for logic and functions.
+
+  %% \vspace{0.2in}
+
+  %% The $\lambda$-calculus is used in programming languages, logic,
+  %% mathematics, and linguistics.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What is \ML?}
+
+  \framesubtitle{Impure and functional.}
+
+  \cemph{Functional.}
+  Functions are first-class objects: functions can build
+  functions, take functions as arguments, return functions...
+
+  \vspace{0.4in}
+
+  \cemph{Impure.}
+  Expressions can have side-effects: references, exceptions.
+
+  \vspace{0.1in}
+
+  (We are only going to consider the pure part of \ML.)
+
+  \vspace{0.4in}
+
+  Other functional(-like) programming language: \haskell\ (pure),
+  \SML\ (impure), \fsharp\ (impure)...
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What is \ML?}
+
+  \framesubtitle{Strongly typed.}
+
+  \cemph{What is a type?}
+
+  \vspace{0.07in}
+
+  A type bundles together ``objects'' (syntactic forms) sharing a same semantics.
+
+  \vspace{0.1in}
+
+  (Types started to be used in formal systems, providing foundations
+  for Mathematics, in the early 1900s to avoid paradoxes
+  (Russell~\cite{Russell:1908}).)
+
+  \vspace{0.1in}
+
+  A \cemph{type system} (typing rules) dictates what it means for a
+  program to have a type (to have a static semantics).
+
+  \vspace{0.15in}
+
+  \cemph{What are types good for?}
+
+  \vspace{0.07in}
+
+  Types are good, e.g., for checking the well-defined behavior of programs
+  (e.g., by restricting the applications of certain functions -- see
+  below).
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What is \ML?}
+
+  \framesubtitle{Strongly typed.}
+
+  What else?
+
+  \vspace{0.1in}
+
+  \cemph{Flexibility}.  One of the best things about \ML\ is that is
+  has almost full type inference (type annotations are sometimes
+  required).  Each \ML\ implementation has a \cemph{type inferencer}
+  that, given a semantically correct program, finds a type.
+
+  \vspace{0.1in}
+
+  This frees the programmer from explicitly writing down types: if a
+  program has a type, the type inferencer will find one.
+
+  \vspace{0.1in}
+
+  Given a semantically correct program, the inferred type provides a
+  \emph{static semantics} of the program.
+
+  \vspace{0.05in}
+
+  Consider \lstinline{\\x. x + 2}.  \lstinline{2} is an integer.
+  \lstinline{+} takes two integers and returns an integer.  This means
+  that \lstinline{x} is constrained to be an integer.
+  \lstinline{\\x. x + 2} is then a function that takes an integer and
+  returns an integer.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What is \ML?}
+
+  \framesubtitle{Strongly typed.}
+
+  Can type inferencers infer more than one type?  Is each type as good
+  as the others?
+
+  \vspace{0.3in}
+
+  In \ML\ it is typical that a program can have several types.  The
+  more general the inferred types are the more flexibility the
+  programmer has (we will come back to that once we have learned about
+  \emph{polymorphism}).
+
+  \vspace{0.3in}
+
+  (\ML's type system has principal type but not principal
+  typing~\cite{Wells:2002} (a typing is a pair type
+  environment/type).)
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What is \ML?}
+
+  \framesubtitle{Strongly typed.}
+
+  Using types, some operations become only possible on values with
+  specific types.
+
+  \vspace{0.2in}
+
+  For example, one cannot apply an integer to another integer:
+  integers are not functions.  The following does not type check (it
+  does not have a type/a static semantics):
+
+  \vspace*{0.05in}
+  \begin{beamerboxesrounded}[upper=uppercolT,lower=lowercolT,shadow=true]{}
+    \begin{center}
+      \lstinline{let fu = (8 6) ;;}
+    \end{center}
+  \end{beamerboxesrounded}
+
+  \vspace{0.2in}
+
+  Another example: using the built-in equality, one cannot check
+  whether a Boolean is equal to an integer.  The following does not
+  type check (and will be refused at compile time):
+
+  \vspace*{0.05in}
+  \begin{beamerboxesrounded}[upper=uppercolT,lower=lowercolT,shadow=true]{}
+    \begin{center}
+      \lstinline{let is\_eq = (true = 1) ;;}
+    \end{center}
+  \end{beamerboxesrounded}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What is \ML?}
+
+  \framesubtitle{Strongly typed.}
+
+  What \emph{does} type check then?
+
+  one can apply our \lstinline{plus\_three} function to integers:
+
+  \vspace*{0.05in}
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+      \begin{tabular}{l}
+        \lstinline{let plus\_three x = x + 3 ;;}\\
+        \lstinline{let fu = plus\_three 6 ;;}
+        \end{tabular}
+    \end{center}
+  \end{beamerboxesrounded}
+
+  \vspace{0.2in}
+
+  One can test whether two integers are equal:
+
+  \vspace*{0.05in}
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+      \begin{tabular}{l}
+        \lstinline{let i1 = 11;;}\\
+        \lstinline{let i2 = 22;;}\\
+        \lstinline{let is\_eq = (i1 = i2) ;;}
+      \end{tabular}
+    \end{center}
+  \end{beamerboxesrounded}
+
+\end{frame}
+
+
+\section{ML types}
+
+
+\begin{frame}
+  \frametitle{\ML\ types}
+
+  \cemph{Integer}.  For example, \lstinline{12 + 3} has type
+  \lstinline{Int}.
+
+  \vspace{0.1in}
+
+  \cemph{Boolean}.  For example, \lstinline{!true} has type
+  \lstinline{Bool} (\lstinline{!} stands for the Boolean negation).
+
+  \vspace{0.1in}
+
+  \cemph{List}.  For example, \lstinline{[1;7;5;3]} has type
+  \lstinline{Int List}.
+
+  \vspace{0.1in}
+
+  \cemph{Function type}.  For example, \lstinline{let plus3 x = x +
+    3;;} has type \lstinline{Int -> Int}.
+
+  \vspace{0.1in}
+
+  \cemph{Product type}.  For example, \lstinline{(true, 3)} has
+  type \lstinline{Bool * Int}.
+
+  \vspace{0.1in}
+
+  \cemph{Disjoint union type}.  For example, \lstinline{inl(1 + 5)}
+  has type \lstinline{Int + Int}.
+
+\end{frame}
+
+
+\section{Polymorphism}
+
+
+\begin{frame}
+  \frametitle{Polymorphism}
+
+  We claimed that \lstinline{inl(1 + 5)} has type \lstinline{Int +
+    Int}.  But it can also have type \lstinline{Int + Bool},
+  \lstinline{Int + Int List}, \dots
+
+  \vspace{0.1in}
+
+  For all type \lstinline{T}, \lstinline{inl(1 + 5)} has type
+  \lstinline{Int + T}.  This can be represented with a
+  \cemph{polymorphic type}: \lstinline{Int + 'a}, where \lstinline{'a}
+  is called a \emph{type variable}, meaning that it can be any type.
+
+  \vspace{0.2in}
+
+  Let us consider a simpler example: \lstinline{let id x = x;;}
+
+  \vspace{0.05in}
+
+  What's its type?
+
+  \vspace{0.05in}
+
+  The action \lstinline{id} performs does not depend on its argument's
+  type.  It can be applied to an integer, a Boolean, a function, \dots\
+  It always returns its argument.  \lstinline{id}'s type cannot be
+  uniquely determined.
+  %
+  To automatically assign a (monomorphic type) to \lstinline{id} one
+  would have to make a non-deterministic choice.
+  %
+  Instead, we assign to \lstinline{id} the polymorphic type:
+  \lstinline{'a -> 'a}.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Polymorphism}
+
+  Formally, this form of polymorphism is expressed using the $\forall$
+  quantification.
+
+  \vspace{0.2in}
+
+  This form of polymorphism is sometimes called \cemph{infinitary}
+  \cemph{parametric}
+  polymorphism~\cite{Strachey:2000,Cardelli+Wegner:1985} and $\forall$
+  types are called type schemes (see, e.g.,
+  system~\SYSTF~\cite{Girard:1971,Girard:1972}).
+
+  \vspace{0.2in}
+
+  Polymorphism complicates type inference but does not make it
+  impossible.
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Polymorphism}
+
+  Polymorphism allows one to express that a single program can have
+  more than one meaning.  Using the $\forall$ quantification, one can
+  express that a single program has an infinite number of meaning,
+  i.e., can be used in an infinite number of ways.
+
+  \vspace{0.2in}
+
+  The following function \lstinline{null} has type \lstinline{'a List -> Bool}:
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+    \begin{lstlisting}
+    let null lst =
+       case lst of [] => true
+                of x . xs => false;;
+    \end{lstlisting}
+    \end{center}
+  \end{beamerboxesrounded}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Polymorphism}
+
+  \lstinline{let} declarations allow one to define polymorphic
+  functions while lambda expression do not.  For example, the
+  following piece of code is typable:
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+    \begin{lstlisting}
+    let x = (\x. x) in (x 1, x true)
+    \end{lstlisting}
+    \end{center}
+  \end{beamerboxesrounded}
+
+  \vspace{0.1in}
+
+  However, the following piece of code is not typable:
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+    \begin{lstlisting}
+    (\x. (x 1, x true)) (\x. x)
+    \end{lstlisting}
+    \end{center}
+  \end{beamerboxesrounded}
+
+  \vspace{0.1in}
+
+  In the first example, the two last \lstinline{x}'s stand for the
+  identity function for two different types.  In the second example,
+  the two bound \lstinline{x}'s in \lstinline{\x. (x 1, x true)} have
+  to be the same function.
+\end{frame}
+
+
+\section{Recursion}
+
+
+\begin{frame}[fragile]
+  \frametitle{Recursion}
+
+  Another important feature of \ML\ (and functional languages in
+  general) is \cemph{recursion}
+
+  \vspace{0.05in}
+
+  Recursion allows functions to call themselves.
+
+  \vspace{0.1in}
+
+  Recursion accomplishes what ``while'' loops accomplish in imperative
+  languages but in a functional way: functions call functions.
+
+  \vspace{0.1in}
+
+  For example, to compute the length of a list, one wants to iterate
+  through the list to count how many elements are in the list.  The
+  following function computes the length of a list:
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+    \begin{lstlisting}
+    letrec length lst =
+       case lst of [] => 0
+                of x . xs => 1 + length xs;;
+    \end{lstlisting}
+    \end{center}
+  \end{beamerboxesrounded}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Recursion}
+
+  Given $x$ and $y$, find $q$ (quotient) and $r$ (remainder) such that
+  $x = (q * y) + r$.
+
+  \vspace{0.1in}
+
+  The ``while'' solution:
+  \begin{verbatim}
+  q := 0; r := x;
+  while r >= y do q := q + 1; r := r - y; od
+  return (q, r);
+  \end{verbatim}
+
+  \vspace*{-0.2in}
+  The recursive solution:
+  \vspace*{-0.1in}
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+    \begin{lstlisting}
+    let quot_and_rem x y =
+       letrec aux q r =
+         if r < y then (q, r)
+         else aux (q + 1) (r - y)
+       in aux 0 x ;;
+    \end{lstlisting}
+    \end{center}
+  \end{beamerboxesrounded}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Recursion}
+
+  Another example: the factorial.
+
+  \vspace{0.1in}
+
+  The ``while'' solution:
+  \begin{verbatim}
+    f := 1; i := 1;
+    while i <= x do
+      f := i * f;;
+      i := i + 1;;
+    od
+  \end{verbatim}
+
+  \vspace*{-0.2in}
+  The recursive solution:
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+    \begin{lstlisting}
+    let f x = if x <= 1
+              then 1
+              else x * f (x - 1);;
+    \end{lstlisting}
+    \end{center}
+  \end{beamerboxesrounded}
+\end{frame}
+
+
+\section{Typing rules}
+
+
+\begin{frame}
+  \frametitle{Typing rules}
+
+  Let us consider the following expression language (sometimes
+  referred to as \COREML:
+  \begin{center}
+    \begin{tabular}{lllrl}
+      $\METAvar$ & $\in$ & $\SETvar$ &       & (a countably infinite set of variables)\\
+      $\METAexp$ & $\in$ & $\SETexp$ & $::=$ & $\METAvar
+                                                \mid\CONSappexp{\METAexp_1}{\METAexp_2}
+                                                \mid\CONSlamexp{\METAvar}{\METAexp}
+                                                \mid\CONSsplet{\METAvar}{\METAexp_1}{\METAexp_2}$
+    \end{tabular}
+  \end{center}
+
+  \vspace{0.1in}
+
+  Let us consider the following type language:
+  \begin{center}
+    \begin{tabular}{lllrl}
+      $\METAtyvar$     & $\in$ & $\SETtyvar$     &       & (a countably infinite set of type variables)\\
+      $\METAity$       & $\in$ & $\SETity$       & $::=$ & $\METAtyvar
+                                                            \mid\CONSarrowty{\METAity_1}{\METAity_2}$\\
+      $\METAityscheme$ & $\in$ & $\SETityscheme$ & $::=$ & $\CONSityschemeb{\{\METAtyvar_1,\dots,\METAtyvar_n\}}{\METAity}$
+    \end{tabular}
+  \end{center}
+
+  \vspace{0.1in}
+
+  Let environments (metavariable $\METAityenv$) be partial functions
+  from program variables to type schemes.  We write environments as follows:
+  $\{\asgn{\METAvar_1}{\METAityscheme_1},\dots,\asgn{\METAvar_n}{\METAityscheme_n}\}$.
+
+  \vspace{0.1in}
+
+  We sometimes write $\asgn{\METAtyvar}{\METAity}$ for
+  $\asgn{\METAtyvar}{\CONSityschemeb{\emptyset}{\METAity}}$.
+
+  \vspace{0.1in}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Typing rules}
+
+  the function $\MEMfreetyvarsSYMB$ computes the set of free type variables in
+  a type or in a type environment.
+
+  \vspace{0.1in}
+
+  We define the domain of an environment as follows:
+  $\MEMdom{\{\asgn{\METAvar_1}{\METAityscheme_1},\dots,\asgn{\METAvar_n}{\METAityscheme_n}\}}
+  =\{\METAtyvar_1,\dots,\METAtyvar_n\}$.
+
+  \vspace{0.1in}
+
+  Let substitutions (metavariable $\METAsub$) be partial functions
+  from type variables to types.  We write substitutions as follows:
+  $\{\asgn{\METAtyvar_1}{\METAity_1},\dots,\asgn{\METAtyvar_n}{\METAity_n}\}$.
+
+  \vspace{0.1in}
+
+  We write substitution in a type as follows:
+  $\MEMsub{\METAity}{\METAsub}$.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Typing rules}
+
+  Let the instantiation of a type scheme be defined as follows:
+  \begin{center}
+    \begin{tabular}{ll}
+      & $\MEMinstance{\METAity}{\CONSityscheme{\METAtyvar_1,\dots,\METAtyvar_n}{\METAity'}}$
+      \\
+      $\iff$
+      &
+      $\existsexp
+      {\METAity_1,\dots,\METAity_n}
+      {
+        (\METAity
+        =\MEMsub
+        {\METAity'}
+        {\{\asgn{\METAtyvar_i}{\METAity_i}\mid{i}\in\{1,\dots,n\}\}})
+      }$
+    \end{tabular}
+  \end{center}
+
+  \vspace{0.1in}
+
+  We also define a function to ``merge'' environments:
+  \begin{center}
+    \begin{tabular}{ll}
+      & $\MEMplusenv{\METAityenv_1}{\METAityenv_2}$
+      \\
+      $=$
+      &
+      $\{\asgn{\METAtyvar}{\METAity}
+      \mid
+      \MEMafunc{\METAityenv_2}{\METAtyvar}=\METAity
+      \mbox{ or }
+      (\MEMafunc{\METAityenv_1}{\METAtyvar}=\METAity
+      \mbox{  and }\METAtyvar\not\in\MEMdom{\METAityenv_2})
+      \}$
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Typing rules}
+
+  (A variant of Damas and Milner's type system, sometimes referred to
+  as the Hindley-Milner type system and therefore often called \DM\ or
+  \HM.)
+
+  \begin{center}
+    \begin{tabular}{c}
+
+      $\infer[]
+      {\MEMtyping{\METAvar}{\METAityenv}{\METAity}}
+      {\MEMinstance{\METAity}{\MEMafunc{\METAityenv}{\METAvid}}}$
+
+      \\
+      \\
+
+      $\infer[]
+      {\MEMtyping{\CONSappexp{\METAexp_1}{\METAexp_2}}{\METAityenv}{\METAity_2}}
+      {
+        \MEMtyping{\METAexp_1}{\METAityenv}{\CONSarrowty{\METAity_1}{\METAity_2}}
+        &
+        \MEMtyping{\METAexp_2}{\METAityenv}{\METAity_1}
+      }$
+
+      \\
+      \\
+
+      $\infer[]
+      {\MEMtyping{\CONSlamexp{\METAvar}{\METAexp}}{\METAityenv}{\CONSarrowty{\METAity}{\METAity'}}}
+      {
+        \MEMtyping{\METAexp}{\MEMplusenv{\METAityenv}{\{\asgn{\METAvar}{\METAity}\}}}{\METAity'}
+      }$
+
+      \\
+      \\
+
+      $\infer[]
+      {\MEMtyping{\CONSsplet{\METAvar}{\METAexp_1}{\METAexp_2}}{\METAityenv}{\METAity'}}
+      {
+        \MEMtyping{\METAexp}{\METAityenv}{\METAity}
+        &
+        \MEMtyping{\METAexp_2}{\MEMplusenv{\METAityenv}{\{\asgn{\METAvar}{\CONSityschemeb{(\MEMfreetyvars{\METAity}\setminus\MEMfreetyvars{\METAityenv})}{\METAity}}\}}}{\METAity'}
+      }$
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Typing rules}
+
+  For example:
+
+  \vspace{0.1in}
+
+  Let
+  $\METAityenv
+  =\{
+  \asgn{\mbox{f}}{(\CONSarrowtyp{\METAtyvar_1}{\METAtyvar_2})},
+  \asgn{\mbox{g}}{(\CONSarrowtyp{\METAtyvar_2}{\METAtyvar_3})},
+  \asgn{\mbox{v}}{\METAtyvar_1}
+  \}$.
+
+  \begin{center}
+    $\infer[]
+    {\MEMtyping
+      {\CONSlamexp
+        {\mbox{f}}
+        {\CONSlamexp
+          {\mbox{g}}
+          {\CONSlamexp
+            {\mbox{v}}
+            {\CONSappexp{\mbox{g}}{(\CONSappexp{\mbox{f}}{\mbox{v}})}}
+          }
+        }
+      }
+      {\emptyset}
+      {\CONSarrowty
+        {(\CONSarrowtyp{\METAtyvar_1}{\METAtyvar_2})}
+        {\CONSarrowty
+          {(\CONSarrowtyp{\METAtyvar_2}{\METAtyvar_3})}
+          {\CONSarrowty
+            {\METAtyvar_1}
+            {\METAtyvar_3}
+          }
+        }
+      }
+    }
+    {\infer[]
+      {\MEMtyping
+        {\CONSlamexp
+          {\mbox{g}}
+          {\CONSlamexp
+            {\mbox{v}}
+            {\CONSappexp{\mbox{g}}{(\CONSappexp{\mbox{f}}{\mbox{v}})}}
+          }
+        }
+        {\{\asgn{\mbox{f}}{(\CONSarrowtyp{\METAtyvar_1}{\METAtyvar_2})}\}}
+        {\CONSarrowty
+          {(\CONSarrowtyp{\METAtyvar_2}{\METAtyvar_3})}
+          {\CONSarrowty
+            {\METAtyvar_1}
+            {\METAtyvar_3}
+          }
+        }
+      }
+      {\infer[]
+        {\MEMtyping
+          {\CONSlamexp
+            {\mbox{v}}
+            {\CONSappexp{\mbox{g}}{(\CONSappexp{\mbox{f}}{\mbox{v}})}}
+          }
+          {
+            \{
+            \asgn{\mbox{f}}{(\CONSarrowtyp{\METAtyvar_1}{\METAtyvar_2})},
+            \asgn{\mbox{g}}{(\CONSarrowtyp{\METAtyvar_2}{\METAtyvar_3})}
+            \}
+          }
+          {\CONSarrowty
+            {\METAtyvar_1}
+            {\METAtyvar_3}
+          }
+        }
+        {\infer[]
+          {\MEMtyping
+            {\CONSappexp{\mbox{g}}{(\CONSappexp{\mbox{f}}{\mbox{v}})}}
+            {\METAityenv}
+            {\METAtyvar_3}
+          }
+          {\infer[]
+            {\MEMtyping
+              {\mbox{g}}
+              {\METAityenv}
+              {\CONSarrowtyp{\METAtyvar_2}{\METAtyvar_3}}
+            }
+            {}
+            &\infer[]
+            {\MEMtyping
+              {\CONSappexp{\mbox{f}}{\mbox{v}}}
+              {\METAityenv}
+              {\METAtyvar_2}
+            }
+            {\infer[]
+              {\MEMtyping
+                {\mbox{f}}
+                {\METAityenv}
+                {\CONSarrowtyp{\METAtyvar_1}{\METAtyvar_2}}
+              }
+              {}
+              &\infer[]
+              {\MEMtyping
+                {\mbox{v}}
+                {\METAityenv}
+                {\METAtyvar_1}
+              }
+              {}
+            }
+          }
+        }
+      }
+    }$
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Typing rules}
+
+  For example:
+
+  \vspace{0.1in}
+
+  Let $\METAityenv
+  =\{\asgn{\mbox{id}}{\CONSityschemeb{\{\METAtyvar\}}{\CONSarrowtyp{\METAtyvar}{\METAtyvar}}}\}$.
+
+  Let $\METAity
+  =\CONSarrowtyp{\METAtyvar_1}{\METAtyvar_1}$
+
+  \begin{center}
+    $\infer[]
+    {\MEMtyping
+      {\CONSsplet
+        {\mbox{id}}
+        {\CONSlamexp{\mbox{id}}{\mbox{id}}}
+        {\CONSappexp{\mbox{id}}{\mbox{id}}}
+      }
+      {\emptyset}
+      {\METAity}
+    }
+    {\infer[]
+      {\MEMtyping
+        {\CONSlamexp{\mbox{id}}{\mbox{id}}}
+        {\emptyset}
+        {\CONSarrowtyp{\METAtyvar}{\METAtyvar}}
+      }
+      {\infer[]
+        {\MEMtyping
+          {\mbox{id}}
+          {\{\asgn{\mbox{id}}{\METAtyvar}\}}
+          {\METAtyvar}
+        }
+        {}
+      }
+      &\infer[]
+      {\MEMtyping
+        {\CONSappexp{\mbox{id}}{\mbox{id}}}
+        {\METAityenv}
+        {\METAity}
+      }
+      {\infer[]
+        {\MEMtyping
+          {\mbox{id}}
+          {\METAityenv}
+          {\CONSarrowtyp{\METAity}{\METAity}}
+        }
+        {}
+        &\infer[]
+        {\MEMtyping
+          {\mbox{id}}
+          {\METAityenv}
+          {\METAity}
+        }
+        {}
+      }
+    }$
+  \end{center}
+\end{frame}
+
+
+\section{Type inference}
+
+
+\begin{frame}
+  \frametitle{Type inference}
+
+  \cemph{Type inference} vs.\ \cemph{type checking}.  Let $S$ be a
+  type system:
+  \begin{itemize}
+  \item Type checking: given a (closed) expression $\METAexp$ and a
+    type $\METAity$, a type checker checks that $\METAexp$ has type
+    $\METAity$ w.r.t.\ $S$.
+  \item Type inference: given a (closed) expression $\METAexp$, a type
+    inferencer infers a type $\METAity$ such that $\METAexp$ has type
+    $\METAity$ w.r.t.\ $S$, or fails if no such type exists.
+  \end{itemize}
+
+  \vspace{0.1in}
+
+  \CML\ has \cemph{decidable} type inference: there exists an
+  algorithm that given an expression $\METAexp$, infers a type for
+  $\METAexp$ which is valid w.r.t.\ the static semantics of \CML.
+
+  \vspace{0.1in}
+
+  \CML\ seats between the simply typed
+  $\lambda$-calculus~\cite{Barendregt:1992} (no polymorphism) and
+  system~\SYSTF~\cite{Girard:1971,Girard:1972} (undecidable type
+  inference).
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Type inference}
+
+  Type inference for \CML\ is exponential in theory.  Many algorithms
+  are \cemph{efficient in practice} (quasi-linear time under some
+  assumptions).
+
+  \vspace{0.1in}
+
+  Milner~\cite{Milner:1978} proposed a type inference algorithm,
+  called the \WALGO\ algorithm, for an extension of \COREML\ and
+  proved it sound.
+
+  \vspace{0.1in}
+
+  Damas (Milner's student) and Milner~\cite{Damas+Milner:1982} later
+  proved the completeness of \WALGO.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Type inference}
+
+  The \WALGO\ algorithm takes two inputs: a type environment
+  $\METAityenv$ and an expression $\METAexp$; and returns two outputs:
+  a type substitution $s$ and a type $\METAity$; such that $\METAexp$
+  has type $\METAity$ in the environment $\MEMsub{\METAityenv}{s}$
+  w.r.t.\ the type system presented above.
+
+  \vspace{0.1in}
+
+  \WALGO\ is defined by induction on the structure of its expression
+  parameter.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Type inference}
+
+  \textbf{Remark 1:} These inference algorithms use \cemph{first-order
+    unification}~\cite{Martelli+Montanari:1982,Baader+Nipkow:1998}.
+
+  \vspace{0.05in}
+
+  Given an application $\CONSappexp{\METAexp_1}{\METAexp_2}$,
+  \WALGO\ produces, among other things, $\METAity_1$ a type for
+  $\METAexp_1$, and $\METAity_2$ a type for $\METAexp_2$.
+  A unification algorithm is then used to unify $\METAity_1$ and
+  $\CONSarrowty{\METAity_2}{\METAtyvar}$ where $\METAtyvar$ is a
+  ``fresh'' type variable (meaning that $\METAity_1$ has to be a
+  function that takes an argument of type $\METAity_2$).
+
+  \vspace{0.1in}
+
+  \textbf{Remark 2:} Many algorithms have been designed since the \WALGO.  In
+  some algorithms constraint generation and unification
+  interleave~\cite{Milner:1978,Damas+Milner:1982,Lee+Yi:1998,McAdam:1999,Yang:2000},
+  in others the constraint generation and constraint solving phases
+  are
+  separated~\cite{Odersky+Sulzmann+Wehr:1999,Pottier:2005,Pottier+Remy:2005}.
+
+  \vspace{0.1in}
+
+  \textbf{Remark 3:} \EML's inferencer is constraint based (second category).
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Type inference}
+
+  Example:
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+      \lstinline{let plus1 x = x + 1 in plus1 3}
+    \end{center}
+  \end{beamerboxesrounded}
+
+  \begin{itemize}
+  \item \lstinline{+} is a function that takes two \lstinline{Int}s
+    and returns an \lstinline{Int}.
+
+  \item \lstinline{1} and \lstinline{x} are constrained to be
+    \lstinline{Int}s.
+
+  \item \lstinline{plus1} is constrained to be a function that takes
+    an \lstinline{Int} and returns an \lstinline{Int}.
+
+  \item \lstinline{plus1 3} is an \lstinline{Int}.
+
+  \item Therefore the whole expression is an \lstinline{Int}.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Type inference}
+
+  Example:
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+      \lstinline{let app f x = f x in app (\\x.x + 1) 3}
+    \end{center}
+  \end{beamerboxesrounded}
+
+  \begin{itemize}
+  \item If \lstinline{x} has type \lstinline{'a} then \lstinline{f} is
+    constrained to have type \lstinline{'a -> 'b}.
+
+  \item \lstinline{app} has polymorphic type \lstinline{('a -> 'b) ->
+    'a -> 'b}.
+
+  \item \lstinline{+} is a function that takes two \lstinline{Int}s
+    and returns an \lstinline{Int}.
+
+  \item \lstinline{1} and \lstinline{x} are constrained to be
+    \lstinline{Int}s.
+
+  \item The function \lstinline{\\x.x + 1} is constrained to have type
+    \lstinline{Int -> Int} and \lstinline{3} is an \lstinline{Int}.
+
+  \item An instance of \lstinline{app}'s type is \lstinline{(Int ->
+    Int) -> Int -> Int}, where both \lstinline{'a} and \lstinline{'b}
+    are instantiated to \lstinline{Int}.  This is the type of
+    \lstinline{app}'s second occurrence.
+
+  \item Therefore the whole expression is an \lstinline{Int}.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Type inference}
+
+  Example:
+  \begin{beamerboxesrounded}[shadow=true]{}
+    \begin{center}
+      \lstinline{let id x = x in id id}
+    \end{center}
+  \end{beamerboxesrounded}
+
+  \begin{itemize}
+  \item \lstinline{id} has polymorphic type \lstinline{'a -> 'a}.
+    Each instance of \lstinline{id}'s type is a functional type.
+
+  \item \lstinline{id}'s first bound occurrence is a function that
+    takes a function as parameter.
+
+  \item Therefore, \lstinline{id}'s first bound occurrence's type is
+    an instance of \lstinline{'a -> 'a} such that \lstinline{'a} is
+    substituted by a functional type.
+
+  \item That functional type has to be an instance of \lstinline{'a ->
+    'a}.
+
+  \item For example, we can assign \lstinline{('b -> 'b) -> ('b ->
+    'b)} to \lstinline{id}'s first bound occurrence, and \lstinline{'b
+    -> 'b} to \lstinline{id}'s second bound occurrence.
+
+  \item Therefore, the whole expression has type \lstinline{'b ->
+    'b}.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Type inference}
+
+  Example:
+  \vspace*{-0.05in}
+
+  \begin{beamerboxesrounded}[shadow=true]{}
+  \begin{center}
+    \begin{lstlisting}
+    let quot_and_rem x y =
+       letrec aux q r =
+         if r < y then (q, r)
+         else aux (q + 1) (r - y)
+       in aux 0 x ;;
+    \end{lstlisting}
+  \vspace*{-0.1in}
+  \end{center}
+  \end{beamerboxesrounded}
+
+  \begin{itemize}
+  \item Because \lstinline{+} and \lstinline{-} both take
+    \lstinline{Int}s and return \lstinline{Int}s, \lstinline{q},
+    \lstinline{r}, and \lstinline{y} are constrained to be
+    \lstinline{Int}s.
+
+  \item \lstinline{aux}'s first bound occurrence is constrained
+    to be a function that takes two \lstinline{Int}'s and returns a
+    pair of \lstinline{Int}'s (\lstinline{aux} has type
+    \lstinline{Int -> Int -> (Int * Int)}).
+
+  \item Because \lstinline{aux} is applied to \lstinline{0} and
+    \lstinline{x} in the last line, \lstinline{x} is constrained to be
+    an \lstinline{Int}.
+
+  \item \lstinline{quot_and_rem} has type
+    \lstinline{Int -> Int -> (Int * Int)}.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[allowframebreaks]
+  \frametitle{References}
+  \begin{tiny}
+    \bibliography{../../tex/biblio}
+  \end{tiny}
+\end{frame}
+
+
+\end{document}

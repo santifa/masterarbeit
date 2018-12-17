@@ -1,0 +1,659 @@
+% -*-LaTeX-*-
+
+
+%%%% DOCUMENTCLASS
+
+
+\documentclass[12pt,red]{beamer}
+
+
+%%%% PACKAGES
+
+
+\usepackage{{../../../tex/bsymb}}
+\usepackage{{../../../tex/nuprl}}
+\usepackage{color}
+\usepackage{pstricks,pst-node,pst-tree}
+\usepackage{amsmath}
+\usepackage{proof}
+\usepackage{pifont}
+\usepackage{listings}
+
+%% \usepackage{pgfpages}
+%% \pgfpagesuselayout{4 on 1}[border shrink=5mm]
+
+
+%%%% THEME
+
+
+\usetheme{default}
+%\setbeamercolor{footline}{fg=white,bg=blue}
+%\setbeamertemplate{footline}[frame number]
+%\insertframenumber
+%\inserttotalframenumber
+\usefonttheme{default}
+%\usecolortheme{whale}
+%\setbeamertemplate{navigation symbols}{}
+
+\setbeamercolor{uppercolT}{fg=white,bg=gray}%
+\setbeamercolor{lowercolT}{fg=white,bg=gray}%
+
+
+%%%% LISTING
+
+
+\input{../../../tex/eventml-listing}
+\lstset{language=EventML}
+
+
+%%%% BIBLIOGRAPHY
+
+\bibliographystyle{alpha}
+
+
+%%%% TABLES
+
+
+\setlength{\tabcolsep}{1.0pt}
+\setlength{\arraycolsep}{1.0pt}
+
+
+%%%% HEADER AND FOOTER
+
+
+\setbeamertemplate{footline}{\leavevmode%
+\begin{beamercolorbox}[wd=.30\paperwidth,center,ht=2.25ex,dp=1ex,rightskip=4pt plus 1pt]{subsection in head/foot}
+  \insertshortauthor%\ (\insertshortinstitute)
+\end{beamercolorbox}%
+\begin{beamercolorbox}[wd=.40\paperwidth,center,ht=2.25ex,dp=1ex]{section in head/foot}
+  \usebeamercolor[fg]{section in foot/head}
+  \insertshorttitle
+\end{beamercolorbox}%
+\begin{beamercolorbox}[wd=.30\paperwidth,center,ht=2.25ex,dp=1ex,leftskip=4pt plus 1pt,rightskip=4pt plus 1pt]{subsection in head/foot}
+  \insertshortdate\hfill\insertpagenumber/\insertpresentationendpage
+\end{beamercolorbox}%
+}
+%\insertframenumber/\inserttotalframenumber
+
+
+%%%% MACROS
+
+
+%% \input{../../share/colors}
+%% \input{../../share/macros}
+%% %\input{../../share/notes}
+
+\input{../../../tex/macros}
+
+\newcommand{\cemph}[1]{\textcolor{blue}{\textbf{#1}}}
+\newcommand{\remph}[1]{\textcolor{red}{\textbf{#1}}}
+\renewcommand{\mdownarrow}[1]{}
+
+%%%% TITLEPAGE
+
+
+\title[\eml]{\eml\ - Programming correct-by-construction protocols in
+  cooperation with \nuprl}
+\author[\prl\ team]{{\small \prl\ team}}
+\institute{Cornell University}
+\date{\today}
+
+
+\begin{document}
+
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Table of contents}
+
+  \tableofcontents
+\end{frame}
+
+
+\section{EventML, specification and programming}
+
+
+\begin{frame}
+  \frametitle{\eml, specification and programming}
+
+  \remph{Problem: one can only assume that unverified protocols are
+    wrong.}
+
+  \vspace{0.2in}
+
+  \cemph{Goal: automatic synthesis of verified diversifiable
+    distributed systems.}
+
+  \vspace{0.2in}
+
+  \cemph{Our solution: building tools that cooperate with a Logical
+    Programming Environment (LPE).}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{\eml, specification and programming}
+
+  \framesubtitle{Protocol specification}
+
+  \begin{itemize}
+  \item \cemph{\eml} is a \ML-like functional programming language.
+
+  \item A language for coding distributed protocols.
+
+  \item It uses high level \emph{combinators} from the
+    \cemph{\logicE}~\cite{Bickford:2009,Bickford+Constable:2008}.
+
+  \item Properties of distributed systems can be naturally expressed
+    in the \logicE.
+
+  \item Protocols can be given a \cemph{defining} specification in
+    \eml.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{\eml, specification and programming}
+
+  \framesubtitle{Simple 2/3 consensus}
+
+  \cemph{The simple (fault-tolerant) 2/3 consensus:}
+  \begin{itemize}
+  \item Commands are issued to replicas.
+
+  \item Replicas may fail (crash failures).
+
+  \item Tolerates $n$ failures using $3n+1$ replicas.
+
+  \item Replicas must come to consensus on the order in which commands
+    are performed.
+
+  \item All replicas must process commands in the same order.
+  \end{itemize}
+
+  \vspace{0.2in}
+
+  We want to prove two kinds of properties:
+  \begin{itemize}
+  \item \cemph{safety}
+  \item \cemph{non-blocking}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{\eml, specification and programming}
+
+  \framesubtitle{Simple 2/3 consensus - safety properties}
+
+  \cemph{Agreement property}
+
+  \vspace{0.1in}
+
+  Decisions are consistent, i.e., if two commands $\NUPRL{c_1}$ and
+  $\NUPRL{c_2}$ are elected to be the $\NUPRL{n}^{th}$ command to be
+  performed then $\NUPRL{c_1}=\NUPRL{c_n}$.
+
+  \begin{scriptsize}
+    \begin{program*}
+      \>rsc\_agreement(Cmd;es) ==\\
+      \>  \mforall{}e1,e2:E. \mforall{}v1,v2:\mBbbZ{} \mtimes{} Cmd.\\
+      \>    (v1 \mmember{} rsc\_notify'base(Cmd)(e1)\\
+      \>    {}\mRightarrow{} v2 \mmember{} rsc\_notify'base(Cmd)(e2)\\
+      \>    {}\mRightarrow{} ((fst(v1)) = (fst(v2)))\\
+      \>    {}\mRightarrow{} ((snd(v1)) = (snd(v2))))
+    \end{program*}
+  \begin{scriptsize}
+
+  \end{scriptsize}
+    \begin{program*}
+      \>\mforall{}parameters...\\
+      \>  ((rsc\_stdma(es;rsc\_main(parameters);rsc\_non\_input\_headers())\\
+      \>  {}\mRightarrow{} bag-no-repeats(Id;locs)\\
+      \>  {}\mRightarrow{} (bag-size(locs) = ((3 * f) + 1))\\
+      \>  {}\mRightarrow{} rsc\_agreement(Cmd;es))
+    \end{program*}
+  \end{scriptsize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{\eml, specification and programming}
+
+  \framesubtitle{Simple 2/3 consensus - safety properties}
+
+  \cemph{Validity property}
+
+  \vspace{0.1in}
+
+  Any proposal decided on must have been proposed.
+
+  \begin{scriptsize}
+    \begin{program*}
+      \>\\
+      \>rsc\_validity(Cmd;es) ==\\
+      \>  \mforall{}e:E. \mforall{}v:\mBbbZ{} \mtimes{} Cmd.\\
+      \>    (v \mmember{} rsc\_notify'base(Cmd)(e)\\
+      \>    {}\mRightarrow{} (\mdownarrow{}\mexists{}e':E. ((e' < e) \mwedge{} v \mmember{} rsc\_propose'base(Cmd)(e'))))\\
+      \>
+    \end{program*}
+  \end{scriptsize}
+  \begin{scriptsize}
+    \begin{program*}
+      \>\\
+      \>\mforall{}parameters...\\
+      \>  ((rsc\_stdma(es;rsc\_main(parameters);rsc\_non\_input\_headers())\\
+      \>  {}\mRightarrow{} rsc\_validity(Cmd;es))\\
+      \>
+    \end{program*}
+  \end{scriptsize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{\eml, specification and programming}
+
+  \framesubtitle{Simple 2/3 consensus - specification}
+
+  High-level structure:
+\begin{lstlisting}
+main         = Replica @ locs
+Replica      = NewVoters >>= Voter
+Voter (n,c)  = Round ((n,0),c)
+             || (Notify n)
+             || ((NewRounds n >>= Round)
+                        until (Notify n))
+Round (ni,c) = SendVotes (ni,c)
+             || Once(Quorum ni)
+\end{lstlisting}
+
+\vspace{0.1in}
+
+\cemph{\lstinline{Quorum (n,i)}} is a state machine that collects
+votes at round \lstinline{(n,i)} (a pair command number/inning) and
+looks for majority.
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{\eml, specification and programming}
+
+  \framesubtitle{Simple 2/3 consensus - quorum}
+
+\begin{lstlisting}[basicstyle=\tiny]
+(* -- filter -- *)
+let newvote ni ((ni',c),sender) (cmds,locs) =
+  ni = ni' & !(deq-member (op =) sender locs);;
+
+(* -- output -- *)
+let roundout loc (((n,i),c),sender) (cmds,_) =
+  if length cmds = 2 * flrs
+  then let (k,x) = poss-maj cmdeq (c.cmds) c in
+         if k = 2 * flrs + 1
+         then { decided'send loc (n,x) }
+         else { retry'send loc ((n,i+1), x) }
+  else {} ;;
+let when_quorum ni loc vote state =
+  if newvote ni vote state then roundout loc vt state else {} ;;
+
+(* -- update -- *)
+let add_to_quorum ni ((ni',c),sender) (cmds,locs) =
+  if newvote ni ((ni',c),sender) (cmds,locs)
+  then (c.cmds, sender.locs)
+  else (cmds,locs);;
+
+(* -- Quorum state -- *)
+class QuorumState ni = Memory-class (add_to_quorum ni) (init (nil,nil)) vote'base ;;
+
+(* -- Quorum observer -- *)
+class Quorum ni = (when_quorum ni) o (vote'base, QuorumState ni) ;;
+\end{lstlisting}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+  \frametitle{\eml, specification and programming}
+
+  \framesubtitle{Simple 2/3 consensus - replica}
+
+\begin{lstlisting}[basicstyle=\tiny]
+(* -- inputs -- *)
+let vote2prop loc (((n,i),c),loc') = {(n,c)} ;;
+class Proposal = propose'base || (vote2prop o vote'base);;
+
+(* -- output -- *)
+let when_new_proposal loc (n,c) (max,missing) =
+  if n > max or deq-member (op =) n missing then {(n,c)} else {} ;;
+
+(* -- update -- *)
+let update_replica (n,c) (max,missing) =
+  if n > max
+  then (n, missing ++ (from-upto (max + 1) n))
+  else if deq-member (op =) n missing
+  then (max, list-diff (op =) missing [n])
+  else (max,missing) ;;
+
+(* -- New votes state -- *)
+class ReplicaState = Memory-class update_replica (init (0,nil)) Proposal ;;
+
+(* -- New votes observer -- *)
+class NewVoters = when_new_proposal o (Proposal, ReplicaState) ;;
+
+(* ---------- Replica ---------- *)
+class Replica = NewVoters >>= Voter;;
+
+(* ---------- Main program ---------- *)
+main Replica @ locs ;;
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{\eml, specification and programming}
+
+  \framesubtitle{Compilation}
+
+  The \logicE\ combinators can be formally compiled into
+  distributed programs (in the model underlying the \logicE).
+
+  \vspace{0.2in}
+
+  \cemph{\eml\ can specify protocols, generate programs satisfying
+    these specifications, and execute programs.}
+\end{frame}
+
+
+\section{EventML, a cooperative language}
+
+
+\begin{frame}
+  \frametitle{Cooperation with a Logical Programming Environment (LPE)}
+
+  \includegraphics[width=1.0\textwidth]{../../images/coop-eml-nuprl}
+
+\end{frame}
+
+
+\section{Event class relation}
+
+
+\begin{frame}
+  \frametitle{Event classes}
+
+  \begin{itemize}
+  \item An \emph{event} is an abstract object triggered by receipt of
+    a message; the data of the message body is called \emph{primitive
+      information\/} of the event.
+
+  \item An \emph{event ordering} corresponds to a single run of a
+    distributed system.
+
+  \item An \emph{event class} effectively partitions the events of an
+    event ordering into those it ``recognizes'' and those it does not,
+    and associates values (called observations) to the events it
+    recognizes.  Formally, an event class $\METAeclass$ is a function
+    of type
+    $\NUPRLclass{\NUPRL{T}}
+    =\NUPRLarrow
+    {\NUPRLeventordering}
+    {\NUPRLarrow
+      {\NUPRLese}
+      {\NUPRLbag{\NUPRL{T}}}
+    }$.
+  \end{itemize}
+
+  \cemph{\eml\ generates event classes.}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Event classes}
+
+  \framesubtitle{Computation and logic}
+
+  Event classes have two facets:
+  \begin{itemize}
+  \item \cemph{computational}: event classes can be seen as processes
+    that aggregate information in an internal state from input
+    messages and past observations, and compute appropriate values for
+    them.
+
+  \item \cemph{logical}: event classes specify information flow on a
+    network of reactive agents by observing the information computed
+    by the agents when events occur, i.e., on receipt of messages.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Event classes}
+
+  \framesubtitle{Programmability}
+
+  An event class $\NUPRL{X}$ is programmable iff there exists a finite
+  location bag $\NUPRL{b}$ such that at each event $\NUPRLevent$
+  occurring at location $\NUPRL{loc}$ in $\NUPRL{b}$ there exists a
+  corresponding process that computes the observations made by
+  $\NUPRL{X}$ at $\NUPRLevent$.
+
+  \vspace{0.2in}
+
+  \cemph{\eml\ generates distributed programs from specifications.}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Event class relation}
+
+  \begin{itemize}
+  \item We reason about observations in terms of the \emph{event class
+    relation}: we say that $\NUPRL{v}$ is observed by the class
+    $\NUPRL{X}$ at event $\NUPRLevent$ (in an event ordering
+    $\NUPRLes$), and write
+    $\NUPRLclassrel{\NUPRLes}{\NUPRLevent}{\NUPRL{T}}{\NUPRL{X}}{\NUPRL{v}}$,
+    if $\NUPRL{v}$ is a member of the bag
+    $(\NUPRLappclass{\NUPRL{X}}{\NUPRLes}{\NUPRLevent})$.
+  \end{itemize}
+\end{frame}
+
+
+\section{Inductive logical forms}
+
+
+\begin{frame}
+  \frametitle{Inductive logical form (ILF)}
+
+  \begin{itemize}
+  \item A first order formula.
+
+  \item Automatically generated in \nuprl\ from an
+    \eml\ specification (event class definitions).
+
+  \item Characterizes completely the observations/responses made by
+    the main class of the specification in terms of the event class
+    relation.
+
+  \item Inductive: characterizes the responses at event $\NUPRLevent$
+    in terms of observations made by a sub-component at a prior event
+    $\NUPRLescausl{\NUPRLes}{\NUPRLevent'}{\NUPRLevent}$.
+
+  \item From an inductive logical form we can prove invariants of the
+    specification by induction on causal order.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Inductive logical form (ILF)}
+
+  \framesubtitle{ILF of the simple 2/3 consensus}
+
+  \begin{tiny}
+\begin{program*}
+\>\\
+\>\mforall{}[Cmd:ValueAllType]. \mforall{}[clients:bag(Id)]. \mforall{}[cmdeq:EqDecider(Cmd)]. \mforall{}[coeff,flrs:\mBbbZ{}]. \mforall{}[locs:bag(Id)].\\
+\>\mforall{}[es:EO']. \mforall{}[e:E]. \mforall{}[rcvr:Id]. \mforall{}[num,rnd:\mBbbZ{}]. \mforall{}[c:Cmd]. \mforall{}[sndr:Id].\\
+\>  (<rcvr, rsc4\_vote'msg(Cmd;<<<num, rnd>, c>, sndr>)> \mmember{} rsc4\_Main(e)\\
+\>  \mLeftarrow{}{}\mRightarrow{} loc(e) \mdownarrow{}\mmember{} locs\\
+\>      \mwedge{} (rcvr \mdownarrow{}\mmember{} locs \mwedge{} (sndr = loc(e)))\\
+\>      \mwedge{} (\mdownarrow{}\mexists{}e':\{e':E| e' \mleq{}loc e \} \\
+\>           ((\mdownarrow{}\mexists{}max:\mBbbZ{}\\
+\>               \mexists{}missing:\mBbbZ{} List\\
+\>                (<max, missing> \mmember{} rsc4\_ReplicaState(Cmd)(e') \mwedge{} ((max < num) \mvee{} (num \mmember{} missing))))\\
+\>           \mwedge{} (\mexists{}c':Cmd\\
+\>               ((\mdownarrow{}((e = e') \mwedge{} (c = c') \mwedge{} (rnd = 0))\\
+\>                  \mvee{} ((\mdownarrow{}\mexists{}e1:\{e1:E| e1 \mleq{}loc e \} \\
+\>                        (((\mdownarrow{}\mexists{}maxr:\mBbbZ{}. (maxr \mmember{} rsc4\_NewRoundsState(Cmd) num(e1) \mwedge{} (maxr < rnd)))\\
+\>                        \mwedge{} (<<num, rnd>, c> \mmember{} rsc4\_retry'base(Cmd)(e1)\\
+\>                          \mdownarrow{}\mvee{} (\mexists{}sndr':Id. <<<num, rnd>, c>, sndr'> \mmember{} rsc4\_vote'base(Cmd)(e1))))\\
+\>                        \mwedge{} (e = e1)))\\
+\>                    \mwedge{} (no rsc4\_Notify(Cmd;clients) num between e' and e)))\\
+\>               \mwedge{} (<num, c'> \mmember{} rsc4\_propose'base(Cmd)(e')\\
+\>                 \mdownarrow{}\mvee{} (\mexists{}rnd':\mBbbZ{}. \mexists{}sndr':Id. <<<num, rnd'>, c'>, sndr'> \mmember{} rsc4\_vote'base(Cmd)(e'))))))))\\
+\>
+\end{program*}
+  \end{tiny}
+\end{frame}
+
+
+%% \begin{frame}[fragile]
+%%   \frametitle{Inductive logical form (ILF)}
+
+%%   \framesubtitle{ILF of the simple 2/3 consensus}
+
+%%   \begin{tiny}
+%%     \begin{program*}
+%%       \>\\
+%%       \>\mforall{}[Cmd:ValueAllType]. \mforall{}[clients:bag(Id)]. \mforall{}[cmdeq:EqDecider(Cmd)]. \mforall{}[coeff,flrs:\mBbbZ{}]. \mforall{}[locs:bag(Id)].\\
+%%       \>\mforall{}[es:EO']. \mforall{}[e:E]. \mforall{}[i:Id]. \mforall{}[m:Message].\\
+%%       \>  \{<i, m> \mmember{} rsc\_main(Cmd;clients;cmdeq;coeff;flrs;locs)(e)\\
+%%       \>  \mLeftarrow{}{}\mRightarrow{} bag-member(Id;loc(e);locs)\\
+%%       \>      \mwedge{} (\mdownarrow{}\mexists{}e':\{e':E| e' \mleq{}loc e \} \\
+%%       \>           \mexists{}cn:\mBbbZ{}\\
+%%       \>            ((\mdownarrow{}\mexists{}max:\mBbbZ{}\\
+%%       \>                \mexists{}missing:\mBbbZ{} List\\
+%%       \>                 (<max, missing> \mmember{} Memory-class(rsc\_update\_replica(Cmd);rsc\_init() <0, []>\\
+%%       \>                                                                         ;rsc\_Proposal(Cmd))(e')\\
+%%       \>                 \mwedge{} ((max < cn) \mvee{} (cn \mmember{} missing))))\\
+%%       \>            \mwedge{} XXX))\}\\
+%%       \>
+%%     \end{program*}
+%%   \end{tiny}
+%% \end{frame}
+
+
+%% \begin{frame}[fragile]
+%%   \frametitle{Inductive logical form (ILF)}
+
+%%   \framesubtitle{ILF of the simple 2/3 consensus}
+
+%% \begin{tiny}
+%% \begin{program*}
+%% \>\\
+%% \>XXX ==\\
+%% \>(\mexists{}c:Cmd\\
+%% \>    (((((((m = make-Msg(``rsc vote``;\mBbbZ{} \mtimes{} \mBbbZ{} \mtimes{} Cmd \mtimes{} Id;<<<cn, 0>, c>, loc(e)>))\\
+%% \>    \mwedge{} bag-member(Id;i;locs))\\
+%% \>    \mwedge{} (e = e'))\\
+%% \>    \mdownarrow{}\mvee{} ((no rsc\_Quorum(Cmd;cmdeq;coeff;flrs) <cn, 0> between e' and e)\\
+%% \>       \mwedge{} <i, m> \mmember{} \{rsc\_Quorum(Cmd;cmdeq;coeff;flrs) <cn, 0>\}(e)))\\
+%% \>    \mvee{} ((no rsc\_decision(Cmd;clients) cn@|Loc, rsc\_decided'base(Cmd)| between e' and e)\\
+%% \>      \mwedge{} <i, m> \mmember{} \{rsc\_decision(Cmd;clients) cn@|Loc, rsc\_decided'base(Cmd)|\}(e)))\\
+%% \>    \mdownarrow{}\mvee{} ((no rsc\_Notify(Cmd;clients) cn between e' and e)\\
+%% \>       \mwedge{} (\mdownarrow{}\mexists{}e1:\{e1:E| e1 \mleq{}loc e \} \\
+%% \>            \mexists{}cn1,inning1:\mBbbZ{}\\
+%% \>             ((\mdownarrow{}\mexists{}b:\mBbbZ{}\\
+%% \>                 (b \mmember{} Memory-class(rsc\_update\_round(Cmd) cn;rsc\_init() \\
+%% \>                                                            0;rsc\_RoundInfo(Cmd))(e1)\\
+%% \>                  \mwedge{} (b < inning1)))\\
+%% \>             \mwedge{} (\mexists{}c1:Cmd\\
+%% \>                 (((((m\\
+%% \>                 = make-Msg(``rsc vote``;\mBbbZ{} \mtimes{} \mBbbZ{} \mtimes{} Cmd \mtimes{} Id;<<<cn1, inning1>, c1>, loc(e)>))\\
+%% \>                 \mwedge{} bag-member(Id;i;locs))\\
+%% \>                 \mwedge{} (e = e1))\\
+%% \>                 \mdownarrow{}\mvee{} ((no rsc\_Quorum(Cmd;cmdeq;coeff;flrs) <cn1, inning1> between e1 and e)\\
+%% \>                    \mwedge{} <i, m> \mmember{} \{rsc\_Quorum(Cmd;cmdeq;coeff;flrs) <cn1, inning1>\}(e)))\\
+%% \>                 \mwedge{} (<<cn1, inning1>, c1> \mmember{} Base(``rsc retry``;\mBbbZ{} \mtimes{} \mBbbZ{} \mtimes{} Cmd)(e1)\\
+%% \>                   \mdownarrow{}\mvee{} (\mexists{}loc1:Id\\
+%% \>                        <<<cn1, inning1>, c1>, loc1> \mmember{} Base(``rsc vote``;\mBbbZ{} \mtimes{} \mBbbZ{} \mtimes{} Cmd \mtimes{} Id)(\\
+%% \>                                               e1)))))))))\\
+%% \>       \mwedge{} (<cn, c> \mmember{} Base([propose];\mBbbZ{} \mtimes{} Cmd)(e')\\
+%% \>         \mdownarrow{}\mvee{} (\mexists{}inning:\mBbbZ{}\\
+%% \>              \mexists{}loc:Id. <<<cn, inning>, c>, loc> \mmember{} Base(``rsc vote``;\mBbbZ{} \mtimes{} \mBbbZ{} \mtimes{} Cmd \mtimes{} Id)(e')))))\\
+%% \>
+%% \end{program*}
+%% \end{tiny}
+%% \end{frame}
+
+
+\begin{frame}
+  \frametitle{Inductive logical form (ILF)}
+
+  \framesubtitle{Generating and automatically proving ILFs?}
+
+\end{frame}
+
+
+\section{Memory}
+
+
+\begin{frame}[fragile]
+  \frametitle{Memory}
+
+  definition...
+
+  automation of reasoning on state machines...
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Memory}
+
+  \framesubtitle{Invariants}
+
+  One can specify state machine invariants in \eml:
+  \begin{lstlisting}[basicstyle=\tiny]
+    invariant positive on (max,missing) in ReplicaState =
+         max >= 0
+      /\ forall x : Int, int-list-member x missing => 0 < x /\ x < max
+  \end{lstlisting}
+
+  \vspace{0.1in}
+
+  \cemph{\nuprl\ automatically proves these invariants.}
+\end{frame}
+
+
+\section{Future work}
+
+
+\begin{frame}
+  \frametitle{Future work}
+
+  \begin{itemize}
+  \item Variants of simple consensus.
+  \item Byzantine simple consensus.
+  \item Paxos.
+  \item Automatic generation of more forms of invariants/class
+    properties (+ tactics to automatically prove these properties).
+  \item Support of some dependent types in \eml.
+  \item Faster evaluators.
+  \item Messages inboxes/outboxes.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[allowframebreaks]
+  \frametitle{References}
+  \begin{tiny}
+    \bibliography{../../../tex/biblio}
+  \end{tiny}
+\end{frame}
+
+\end{document}

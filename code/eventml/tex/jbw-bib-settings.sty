@@ -1,0 +1,63 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{jbw-bib-settings}%[YYYY/MM/DD Description]
+
+\let\jbwbf@oldthebibliography=\thebibliography
+
+\renewcommand{\thebibliography}[1]
+  {\let\jbwbf@oldlist=\list
+   \let\jbwbf@oldsection=\section
+   %\renewcommand{\list}[2]{\jbwbf@list{##1}{##2}}%
+   \let\list=\jbwbf@list
+   \let\section=\jbwbf@section
+   \jbwbf@oldthebibliography{#1}}%
+
+\newcommand{\jbwbf@list}
+  {\let\list=\jbwbf@oldlist% restore normality for rest of document
+   \relax% avoid expanding next line until previous line has taken effect
+   \list}
+
+\newcommand{\jbwbf@section}
+  {\let\section=\jbwbf@oldsection% restore normality for rest of document
+   \relax% avoid expanding next line until previous line has taken effect
+   \section}
+
+\newcommand*{\bibsettings}[1]
+  {\renewcommand{\jbwbf@list}[2]
+     {\let\list=\jbwbf@oldlist% restore normality for rest of document
+      \relax% avoid expanding next line until previous line has taken effect
+      % on next line we add in the extra list settings in the right place
+      \list{##1}{##2#1}}}
+
+\newcommand{\numberbibsection}
+  {\renewcommand{\jbwbf@section}[1]
+     % gobble "*" argument given by \thebibliography
+     {\let\section=\jbwbf@oldsection% restore normality for rest of document
+      \relax% avoid expanding next line until previous line has taken effect
+      \section}}
+
+\newcommand{\tinybibsettings}
+  {%
+   %\fontsize{8}{9.5}% same as \small
+   \fontsize{7}{8}% same as \scriptsize
+   %\fontsize{5}{6}% same as \tiny, really too small
+   \selectfont
+   \setlength{\topsep}{4pt plus 2pt minus 2pt}%
+   \setlength{\itemsep}{0.5pt plus 2pt minus 1pt}%
+   % must recalculate \labelwidth after changing font
+   \settowidth{\labelwidth}{[20]}%
+   % put the labels flush left
+   \renewcommand{\makelabel}[1]{##1\hfil}
+   % usually \leftmargin = \labelwidth+\labelsep
+   \setlength{\leftmargin}{0pt}%{0.5em}%
+   % must recalculate \itemindent after changing \labelwidth or \leftmargin
+   \setlength{\itemindent}{\labelwidth}%
+   \addtolength{\itemindent}{-\leftmargin}%
+   \addtolength{\itemindent}{\labelsep}%
+   % no vertical space between items
+   \setlength{\parsep}{0pt}%
+   %\setlength{\listparindent}{\itemindent}% ignored for 1st paragraph in item
+  }
+
+
+\newcommand{\tinybib}
+  {\bibsettings{\tinybibsettings}}

@@ -1,0 +1,295 @@
+(* ------ IMPORTS ------ *)
+
+import SM2-class-du SM4-class-du Threshold-Combinator
+import pi1 outl outr null hd tl map length select reduce deq-member list_accum
+
+(* ------ PARAMETERS ------ *)
+
+parameter Channel, eqCh : Type * Channel Deq;; (* the channel type *)
+
+parameter lcomm    : Loc          (* location of the communication server *)
+parameter lServer  : Loc          (* location of the location server *)
+parameter nServer  : Loc          (* location of the channel server  *)
+parameter channels : Channel List (* initial list of fresh channels  *)
+parameter locs     : Loc List     (* initial list of fresh locations *)
+
+parameter p        : Loc          (* location of the initial process *)
+
+(* ------ TYPE MACROS AND DATATYPES ------ *)
+
+type Variable = Channel
+type Value    = Channel
+
+type Pref = Channel * (Variable (* input *) + Value (* output *))
+
+data Process = Null of Unit
+             | Sum  of (Pref * Process) List
+             | Par  of Process * Process
+             | Rep  of Process
+	     | New  of Variable * Process
+
+(* ------ MESSAGES ------ *)
+
+MSGS
+ internal (``fire`` : Unit,
+               base Fire,
+               send fire)
+ internal (``get new channel`` : Loc,
+               base GetNewChannel,
+               send get_new_channel)
+ internal (``new channel``     : Channel,
+               base NewChannel,
+               send new_channel)
+ internal (``get new location`` : Loc,
+               base GetNewLocation,
+               send get_new_location)
+ internal (``new location`` : Loc,
+               base NewLocation,
+               send new_location)
+ internal (``install`` : Process,
+               base Install,
+               send install)
+ internal (``actions`` : Loc * Pref List,
+               base Actions,
+               send actions)
+ internal (``vote`` : Channel * ((Loc * Int * Variable) * (Loc * Int * Value)),
+               base Vote,
+               send vote)
+ internal (``found`` : Loc * Loc,
+               base Found,
+               send found)
+ internal (``choice`` : Int * Value,
+               base Choice,
+               send choice)
+
+(* ------ CLASSES ------ *)
+
+(* Channel Server *)
+
+let onGetNewChannel @ lst = tl lst;;
+let outputNewChannel slf loc lst = {new_channel loc (hd lst)};;
+
+class ChannelServer =
+  Threshold-Combinator
+     (\_.\s.!(null s))
+     GetNewChannel
+     (\_.{channels})
+     onGetNewChannel
+     outputNewChannel
+;;
+
+(* Location server *)
+
+let onGetNewLocation @ lst = tl lst ;;
+let outputNewLocation slf loc lst = {new_location loc (hd lst)};;
+
+class LocationServer =
+  Threshold-Combinator
+     (\_.\s.!(null s))
+     GetNewLocation
+     (\_.{locs})
+     onGetNewLocation
+     outputNewLocation
+;;
+
+(* Communication server *)
+
+let inDom (x : Loc) lst = deq-member (op =) x (map pi1 lst);;
+
+let initCommServer @ = {(0,[])};;
+
+let onActions slf (loc,prefixes) (n,lst) =
+  if inDom loc lst
+  then (n,lst) (* This shouldn't happen *)
+  else (n + 1,(loc,prefixes).lst)
+;;
+
+let onFound slf (loc1,loc2) (n,lst) =
+  let lst' =
+    list_accum (\lst.\(loc:Loc,pfs).
+                   if loc = loc1 or loc = loc2
+                   then lst
+      	       	   else (loc,pfs).lst)
+               []
+               lst
+  in (n, lst')
+;;
+
+class CommServerState =
+  SM2-class-du
+    initCommServer
+    (onActions, Actions)
+    (onFound,   Found) ;;
+
+class PrCommServerState = Prior(CommServerState)?initCommServer;;
+
+let getPairs state =
+  let eqLoc (loc1:Loc,_) (loc2,_) = loc1 = loc2 in
+  let comm loc1 n1 (c1,d1) loc2 n2 (c2,d2) =
+    if (eqof eqCh) c1 c2
+    then if isl d1 & !(isl d2)
+         then [(c1,((loc1,n1,outl(d1)),(loc2,n2,outr(d2))))]
+         else if !(isl d1) & isl d2
+         then [(c1,((loc2,n2,outl(d2)),(loc1,n1,outr(d1))))]
+         else []
+    else [] in
+  let comm_prefs (loc1, prefs1) (loc2, prefs2) lst =
+    let F n1 p1 (lst,n2) p2 = ((comm loc1 n1 p1 loc2 n2 p2) ++ lst,n2+1) in
+    let G (lst,n) p1 = (pi1 (list_accum (F n p1) (lst,0) prefs2),n+1) in
+      pi1 (list_accum G (lst,0) prefs1) in
+  let (lst,_) =
+     reduce
+       (\p1.\ (lst,state').
+          let F p2 lst = if eqLoc p1 p2 then lst else comm_prefs p1 p2 lst in
+          let lst' = reduce F lst state' in
+            (lst',p1.state'))
+       ([],[])
+       state
+  in lst
+;;
+
+class HandleVote (n,actions) =
+  let F slf (ch,((loc1,n1,var),(loc2,n2,val))) state =
+    { choice loc1 (n1,val)
+    ; choice loc2 (n2,val)
+    ; found slf (loc1,loc2)
+    }
+  in F o (Vote,PrCommServerState)
+;;
+
+class SendVotes (n,votes) = Output(\slf.(map (\v.vote slf v) votes)/~);;
+
+class HandleActions x = SendVotes x || Once(HandleVote x);;
+
+class NewSum =
+  let F slf (loc,prefixes) (n,lst) =
+    if inDom loc lst
+    then {}
+    else {(n,getPairs ((loc,prefixes).lst))}
+  in F o (Actions,PrCommServerState)
+;;
+
+class CommServer = NewSum >>= HandleActions ;;
+
+(* A Process *)
+
+letrec subst_channel v ch proc =
+  if is_Null proc
+  then proc
+  else if is_Sum proc
+  then proc (* Do something else *)
+  else if is_Par proc
+  then let (p,q) = get_Par proc
+       in Par (subst_channel v ch p, subst_channel v ch q)
+  else if is_Rep proc
+  then let p = get_Rep proc
+       in Rep (subst_channel v ch p)
+  else if is_New proc
+  then let (c,p) = get_New proc in
+         if (eqof eqCh) c v or (eqof eqCh) c ch (* Do something else *)
+         then proc
+         else New (c, subst_channel c ch proc)
+  else proc
+;;
+
+let initState l = {Null ()};;
+
+let onNewChannel loc ch proc =
+  if is_New proc
+  then let (v, proc') = get_New proc
+       in subst_channel v ch proc'
+  else proc
+;;
+
+let onNewLocation loc ch proc =
+  if is_Par proc
+  then let (p,_) = get_Par proc in p
+  else proc
+;;
+
+let onInstall loc new_proc old_proc = new_proc;;
+
+let onChoice loc (i,v) proc =
+  if is_Sum proc
+  then let parts = get_Sum proc in
+         if i <= length parts & i > 0
+         then let ((c,d),P) = select (i - 1) parts in
+                if isl d (* then it's a c(x) else it's an output *)
+                then let x = outl d in
+                       subst_channel x v P
+                else P
+         else proc (* This should be impossible *)
+  else proc
+;;
+
+class State =
+  SM4-class-du
+    initState
+    (onNewChannel,  NewChannel)
+    (onNewLocation, NewLocation)
+    (onInstall,     Install)
+    (onChoice,      Choice)
+;;
+class PrState = Prior(State)?initState;;
+
+class HandleNewChannel =
+  let F slf ch proc =
+    if is_New proc
+    then {fire slf ()}
+    else {}
+  in F o (NewChannel,PrState)
+;;
+
+class HandleNewLocation =
+  let F slf loc proc =
+    if is_Rep proc
+    then let proc' = get_Rep proc in {install loc proc'}
+    else if is_Par proc
+    then let (_,q) = get_Par proc in {install loc q; fire slf ()}
+    else {}
+  in F o (NewLocation,PrState)
+;;
+
+class HandleChoice =
+  let F slf _ proc =
+    if is_Sum proc
+    then {fire slf ()}
+    else {}
+  in F o (Choice,PrState)
+;;
+
+class HandleInstall =
+  let F slf _ _ = {fire slf ()}
+  in F o (Install,PrState)
+;;
+
+class HandleFire =
+  let F slf () proc =
+    if is_Null proc
+    then {}
+    else if is_Sum proc
+    then let parts = get_Sum proc in
+         let prefixes = map pi1 parts in
+           {actions lcomm (slf,prefixes)}
+    else if is_Par proc
+    then {get_new_location lServer slf}
+    else if is_Rep proc
+    then {get_new_location lServer slf}
+    else if is_New proc
+    then {get_new_channel nServer slf}
+    else {}
+  in F o (Fire,PrState)
+;;
+
+class Proc = HandleFire
+          || HandleNewChannel
+          || HandleNewLocation
+          || HandleChoice
+          || HandleInstall
+;;
+
+main    LocationServer @ {lServer}
+     || ChannelServer  @ {nServer}
+     || CommServer     @ {lcomm}
+     || Proc           @ {p}
+     || Proc           @ ((locs)/~)

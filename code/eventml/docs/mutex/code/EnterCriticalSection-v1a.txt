@@ -1,0 +1,18 @@
+EnterCriticalSection():
+
+busy = true
+
+if (not token)
+	send_requestMSG()
+	wait_for_tokenMSG()
+	token = true
+
+/* Critical Section */
+/* Access Shared Resource */
+
+busy = false
+
+if (needToReply)
+	token = false
+	send_tokenMSG()
+	needToReply = false

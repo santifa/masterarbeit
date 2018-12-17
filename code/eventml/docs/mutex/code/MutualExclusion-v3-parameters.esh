@@ -1,0 +1,5 @@
+parameter proc1 : Loc
+parameter proc2 : Loc
+parameter sr    : Loc
+
+parameter initial_token : Loc
