@@ -6,3 +6,7 @@ edition = "2018"
 build = "build.rs"
 
 [dependencies]
+
+[[bin]]
+name = "loe"
+path = "src/main.rs"
