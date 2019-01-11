@@ -1,3 +1,65 @@
 %
-\section{Aufbau und Inhalt der wissenschaftlichen Arbeit}
-\label{sec_aufbau}
+\section{Eventlogik}
+\label{sec_logik}
+
+%% einleitung %%
+In diesem Kapitel wird die Eventlogik~\cite{bickford2003logic} nach Bickford und
+Constable vorgestellt. Dazu werden die benötigten grundlegenden Logiken
+und Theorien eingeführt.
+
+%% grundlagen %%
+\subsection{grundlegende Logiken}
+% TODO
+% Aussagenlogik
+% Prädikatenlogik
+% Logik 1. Ordnung
+% dynamische Logik?
+% Automatentheorie NEA
+
+%% eventlogik %%
+\subsection{Eventlogik}
+Die Eventlogik nach Bickford und Constable baut auf der intuitunistischen Logik
+auf. Sie verfolgt den ``correct-by-construction'' Ansatz, nach dem ein
+funktionales Programm aus einem konstruktiven Beweis extrahiert werden kann.
+Die Beweise haben die Grundform $\forall x:A.\exists : B.spec(x,y)$. Der konstruktive Beweis
+liefert einen Extraktterm, der eine Realisierung des Beweises darstellt.
+Da die Eventlogik die konstruktive Typentheorie benutzt sind alle
+beweisbaren logischen Aussagen auch programmierbar, in dem Sinne, dass sie einen
+Extraktterm besitzen der die Spezifikation erfüllt.~\cite{bickford2003logic}
+
+% nachrichtenautomat
+Grundlage für die Eventlogik ist ein Nachrichtenautomat. Dieser ist ein
+nichtdeterministischer Automat der auf Nachrichten operiert.
+Er hat die drei Basisoperationen ``senden'', ``empfangen'' und ``interne
+Zustandsänderung''.~\cite{bickford2003logic}
+
+\begin{defi}
+  Ein Event $e=(a+m)$ ist ein Typ $A+M$ der entweder eine interne Aktion $A$ enthält
+  oder eine empfangene Nachrichten $M$.
+\end{defi}
+
+\begin{defi}
+  Ein Nachrichtenautomat ist ein abhängiger Datentyp mit der Struktur:
+  $\{St, Act, Msg: Type, init: St$
+    $f:(Act+Msg)\rightarrow St\rightarrow St$
+    $send:(Act+Msg)\rightarrow St\rightarrow MsgList\}$  
+\end{defi}
+
+% verteilte Nachrichtenautomaten
+Um verteilte Systeme darstellen zu können wird mehr als ein Nachrichtenautomat
+benötigt, da ein Nachrichtenautomatenohne Interaktionen ein normaler
+nichtdeterministischer Automat ist. Ein verteiltes System $V$ ist eine Menge von
+Nachrichtenautomaten die in einem Netzwerk miteinander verknüpft sind.
+Das Netzwerk ist fair, d.h. jede gesendete Nachricht wird auch unverändert
+empfangen.~\cite{bickford2003logic}
+
+\begin{defi}
+  Ein verteiltes System $V$ ist ein Tupel $V=(M,L)$ wobei $m_i\in M$ mit $i\in
+  \mathbb{N}$ die Menge der teilnehmenden Nachritenautomaten ist. $L$ beschreibt
+  ein Kante in einem gerichteten Graphen und besteht aus dem Tupel $L=(s,d,m_i,m_j,Q)$ 
+  mit $i,j\in \mathbb{N} und i \uneq j$. $Q$ ist eine Nachrichtenqueue.
+\end{defi}
+
+
+
+

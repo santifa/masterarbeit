@@ -46,13 +46,13 @@ dargestellt werden und mit Beispielen unterfüttert werden.
 ** Simulation
 
 
-* Notizen/Todos [2/4] [50%]
+* Notizen/Todos [3/5] [60%]
 
  - [X] Zeitplan schreiben
  - [ ] Alup 2 Prüfung innerhalb Masterarbeit
  - [X] Zugang Nuprl Cornell University
  - [ ] PingPong Beispiel
-   + Vincent Rahli wegen PingPong schreiben
+ - [X] Vincent Rahli wegen PingPong schreiben
 
 
 *** EventML installieren
@@ -69,17 +69,34 @@ Makefile öffnen und im Ziel ~install-doc:~ ~esharp-language.pdf~
 zu ~esharp-language.dvi~ ändern. Bei Fehlern die Datei ~docs/manual/esharp-language.tex~
 entsprechend ändern.
 
+`lib/liballdefs` wird nicht gefunden - extrahieren, da es als tgz ausgeliefert wird
+`/etc/ImageMagic-7/policy.xml` ändern und für eps rights="none" -> rights="read | write"
+
+EventML cli:
+als erstes element wird der absolute pfad erwartet
+
+konvertierung von eventml -> nuprl asciiterms
+eventml /home/ratzeputz/Entwicklung/repos/masterarbeit/code/pingpong.el -lib eventml/lib/alldefs.eml -o pingpong.el.nuprl -t 3600000 --nuprl
+
+
 
 ** Umgang mit Nuprl + EventMl 
 
+#+BEGIN_SRC sh   
+  ssh -i .ssh/nuprl.cs.cornell.edu -L 5906:localhost:5906 henrik@nuprl.cs.cornell.edu
+  vinagere
+#+END_SRC
 
-* TODO Zeitplan [0/8] [0%]
+Verbinde mit localhost:5906 mit pw nuprlvnc 
+
+* TODO Zeitplan [1/8] [12%]
 
 Insgesamt stehen 6 Monate zur Verfügung
 in insgesamt 26 Einheiten/KW aufgeteilt. 
 Begin: <2018-10-15 Mo>  42 KW
 
-** TODO Recherche <2018-10-15 Mo>--<2018-11-16 Fr> (5E)
+** DONE Recherche <2018-10-15 Mo>--<2018-11-16 Fr> (5E)
+   CLOSED: [2018-12-17 Mo 16:26]
    - Paxos, Motivationsschreiben
    - Grundlagen Logik
    - Relevante Quellen für EventML (Logik, Programmierung, Beispiele)
@@ -255,3 +272,12 @@ Problem: Mehrere Clients können zum selben Zeitpunkt Kommandos an alle Server s
 
 ** The Byzantine Generals Problem
  
+Erst ab 4 "Generälen" kann man einen Verräter entlarven.
+Dabei bilden die Generäle ein vermaschtes Netzwerk und schicken sich gegenseitig die Befehle,
+die sie von anderen erhalten haben (gleiches Problem: 1 General und 2 Leutnants). Alle Nachrichten von anderen
+Generälen werden als Wahlstimmen angenommen und per Mehrheitsentscheidung wird die Handlung gewählt.
+
+** A Logic of Events - Bickford, Constable - 2003
+
+Einleitung:
+

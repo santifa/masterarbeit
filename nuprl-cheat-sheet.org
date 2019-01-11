@@ -1,0 +1,65 @@
+#+TITLE: NUPRL Cheat Sheet
+#+AUTHOR: Henrik Jürges
+#+EMAIL: juerges.henrik AT gmail DOT com
+#+STARTUP: hidestars
+#+OPTIONS: toc:t
+
+
+* TWM Actions
+
+[[http://www.lastrange.com/work/twm.pdf][TWM]] is an old X window manager which is used for the NUPRL instances.
+Some bindings are:
+
+| Key                                 | Action             | Context      |
+|-------------------------------------+--------------------+--------------|
+| =middle-click=                      | Show bindings      | Background   |
+| =left-click=                        | New window         | Background   |
+| =right-click=                       | Action menu        | Background   |
+| =left-click=                        | Move window        | Window title |
+| =middle-click=                      | Minimize window    | Window title |
+| =right-click=                       | Lower window level | Window title |
+| =S-left-click=                      | Action menu        | Window title |
+| =S-middle-click= / =C-middle-click= | Resize window      | Window       |
+| =middle-click=                      | Minimize window    | Icon menu    |
+
+* NUPRL
+
+Start NUPRl from an emacs terminal with ~nuedd<num>.sbcl~ and enter into the prompt
+~(start-editor "NAME")~. Wait about a hour and enter ~(go-win)~.
+
+** General Actions
+
+| Key       | Function                           | Context           |
+|-----------+------------------------------------+-------------------|
+| =C-q=     | Close window (use always this way) |                   |
+| =C-z=     | Activate object and close window   | Viewing an object |
+| =C-z=     | Save, compile and close window     | Code object       |
+| =C-x C-s= | Save and compile                   | Code object       |
+
+** Mouse Actions
+
+Clicking works on Buttons, ML code, NUPRL terms.
+The behavior is context sensitive.
+
+| Key            | Default                                | Button        | Object      | Term                |
+|----------------+----------------------------------------+---------------+-------------+---------------------|
+| =left-click=   | move position/run                      |               |             |                     |
+| =middle-click= | goto/show more/explode/show definition |               |             |                     |
+| =right-click=  | show documentation                     | Documentation | Action menu | Abstract definition |
+
+** Workflows
+*** Create a theorie
+Use the navigator to go to the preferred location and use ~MkTHY~ to create a new theory object
+which is a directory for theory related objects. Go into the theory object and select the init object.
+Use =C-z/right= click to toggle the action menu and hit the activate button.
+
+*** Scratch Proof
+To create a scratch proof create a copy of some subtree of a existent proof.
+Use the proof editor to move to the root node of the proof to copy and use ==C-M-a psp=
+to create a copy of this node forward.
+
+*** Liveness
+If an object is deactivated it is considered to be commented out. To use an object in another
+context (e.g. proof) the object shall be active. Either activate the object with ==C-z= or use
+the ~activate~ button within the object menu.
+
