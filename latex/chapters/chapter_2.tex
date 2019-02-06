@@ -1,4 +1,8 @@
-%
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../master"
+%%% End:
+
 \section{Eventlogik}
 \label{sec_logik}
 
@@ -8,7 +12,7 @@ Constable vorgestellt. Dazu werden die benötigten grundlegenden Logiken
 und Theorien eingeführt.
 
 %% grundlagen %%
-\subsection{grundlegende Logiken}
+\subsection{Grundlegende Logiken}
 % TODO
 % Aussagenlogik
 % Prädikatenlogik
@@ -18,14 +22,87 @@ und Theorien eingeführt.
 
 %% eventlogik %%
 \subsection{Eventlogik}
-Die Eventlogik nach Bickford und Constable baut auf der intuitunistischen Logik
-auf. Sie verfolgt den ``correct-by-construction'' Ansatz, nach dem ein
-funktionales Programm aus einem konstruktiven Beweis extrahiert werden kann.
-Die Beweise haben die Grundform $\forall x:A.\exists : B.spec(x,y)$. Der konstruktive Beweis
-liefert einen Extraktterm, der eine Realisierung des Beweises darstellt.
-Da die Eventlogik die konstruktive Typentheorie benutzt sind alle
-beweisbaren logischen Aussagen auch programmierbar, in dem Sinne, dass sie einen
-Extraktterm besitzen der die Spezifikation erfüllt.~\cite{bickford2003logic}
+
+Mark Bickford und Richard L. Constable haben in verschiedenen
+Papern~\cite{bickford2003logic, bickford2005causal, bickford2009component} eine Logik zur Beschreibung
+von Ereignissen in verteilten Systemen vorgestellt. Die Eventlogik ist so
+aufgebaut, dass eine breite Menge von Systemen beschrieben werden kann, auch
+außerhalb des eigentlichen Anwendungsgebietes des verteilten Rechnes
+(Distributed Computing).  Die Logik ist auf der
+intuitunistischen Logik aufgebaut und folgt dem ``correct-by-construction''
+Ansatz. Bei diesem Ansatz werden aus Beweisen für Formeln korrekte Implementierungen für
+diese gewonnen.~\cite{bates1985proofs}
+
+Dafür wird eine abstrakte Spezifikationssprache eingeführt welche durch
+ein Berechenbarkeitsmodell repräsentiert wird.
+Schlussfolgerungen in diesem Modell werden durch Inferenzregeln dargestellt und
+ermöglichen es, wenn eine Spezifikation erfüllbar ist, ein ausführbares
+verteiltes System aus dem Modell zu extrahieren.~\cite{bickford2005causal}
+
+\subsubsection{Events}
+Events bilden die Grundbausteine der Eventlogik.
+Sie stellen Aktionen dar die in Raum und Zeit passieren und
+werden ohne Zeitdauer definiert.~\cite{bickford2005causal}
+
+\begin{defi}
+  Ein Event $e$ ist die atomare Einheit und kausal geordnet, d.h.
+  $e\le e'$ wenn $e$ zeitlich vor $e'$ passiert ist.
+\end{defi}
+
+Events sind in einem Eventraum organisiert, der aus diskreten Orten ($loci$)
+oder Entitäten besteht. Events passieren an den $loci$ und dem Eventraum
+können über die Zeit beliebig neue Ort hinzugefügt oder entfernt werden.
+Die verschiedenen $loci$ können beobachtbare Eigenschaften besitzen.~\cite{bickford2005causal}
+
+\begin{defi}
+  Jeder $loci$ ist mit allen anderen $loci$ uber mindestens einem
+  Kommunikationskanal verbunden. Die Kommunikationskanäle müssen
+  nicht zuverlässig sein, aber dürfen die Nachricht nicht verfälschen.
+\end{defi}
+
+Events versenden entweder Nachrichten zu einer anderen Entität oder
+lösen interne Veränderungen aus, wobei $interne$ Events nur unter
+gewissen Voraussetzungen ausgelöst werden. $Externe$ Events
+können vom Empfänger nicht blockiert werden.~\cite{bickford2005causal}
+
+\begin{defi}
+  Eine Entität kann einen Zustand haben der durch eine endliche Folge
+  von Änderungen dargestellt werden kann. $s'=f(s,v)$, wobei
+  $v'$ der Folgezustand und $v$ der Wert eines Events ist.  
+\end{defi}
+
+
+
+\begin{figure}
+  \center
+  \begin{tikzpicture}[node distance=2cm,auto,>=stealth]
+    \node[] (server) {$N_B$};
+    \node[left = of server] (client) {$N_A$};
+    \node[below of=server, node distance=5cm] (server_ground) {};
+    \node[below of=client, node distance=5cm] (client_ground) {};
+    % vertical line
+    \draw (client) -- (client_ground);
+    \draw (server) -- (server_ground);
+    % horizontal lines
+    \draw[->] ($(client)!0.25!(client_ground)$) -- node[above,scale=1,midway]{$m_1$} ($(server)!0.3!(server_ground)$);
+    \draw[<-] ($(client)!0.45!(client_ground)$) -- node[below,scale=1,midway]{$m_2$} ($(server)!0.35!(server_ground)$);
+    \draw[->] ($(client)!0.5!(client_ground)$) -- node[below,scale=1,yshift=5mm]{$m_3$} ($(server)!0.8!(server_ground)$);
+    \draw[<-] ($(client)!0.9!(client_ground)$) -- node[below,scale=1]{$m_4$} ($(server)!0.6!(server_ground)$);
+  \end{tikzpicture}
+  \label{fig:sequence}
+  \caption{Ein einfaches Sequenzdiagramm zwischen zwei Knoten ($N_{A,B}$) die jeweils
+    zwei Nachrichten ($m_i$) übertragen.}
+\end{figure}
+
+
+% Die Eventlogik nach Bickford und Constable baut auf der intuitunistischen Logik
+% auf. Sie verfolgt den ``correct-by-construction'' Ansatz, nach dem ein
+% funktionales Programm aus einem konstruktiven Beweis extrahiert werden kann.
+% Die Beweise haben die Grundform $\forall x:A.\exists : B.spec(x,y)$. Der konstruktive Beweis
+% liefert einen Extraktterm, der eine Realisierung des Beweises darstellt.
+% Da die Eventlogik die konstruktive Typentheorie benutzt sind alle
+% beweisbaren logischen Aussagen auch programmierbar, in dem Sinne, dass sie einen
+% Extraktterm besitzen der die Spezifikation erfüllt.~\cite{bickford2003logic}
 
 % nachrichtenautomat
 Grundlage für die Eventlogik ist ein Nachrichtenautomat. Dieser ist ein
@@ -57,9 +134,5 @@ empfangen.~\cite{bickford2003logic}
   Ein verteiltes System $V$ ist ein Tupel $V=(M,L)$ wobei $m_i\in M$ mit $i\in
   \mathbb{N}$ die Menge der teilnehmenden Nachritenautomaten ist. $L$ beschreibt
   ein Kante in einem gerichteten Graphen und besteht aus dem Tupel $L=(s,d,m_i,m_j,Q)$ 
-  mit $i,j\in \mathbb{N} und i \uneq j$. $Q$ ist eine Nachrichtenqueue.
+  mit $i,j\in \mathbb{N} und i!= j.Q$ ist eine Nachrichtenqueue.
 \end{defi}
-
-
-
-
