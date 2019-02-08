@@ -1,8 +1,3 @@
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "../master"
-%%% End:
-
 \section{Eventlogik}
 \label{sec_logik}
 
@@ -18,7 +13,7 @@ und Theorien eingeführt.
 % Prädikatenlogik
 % Logik 1. Ordnung
 % dynamische Logik?
-% Automatentheorie NEA
+% Automatentheorie NEA?
 
 %% eventlogik %%
 \subsection{Eventlogik}
@@ -39,60 +34,179 @@ Schlussfolgerungen in diesem Modell werden durch Inferenzregeln dargestellt und
 ermöglichen es, wenn eine Spezifikation erfüllbar ist, ein ausführbares
 verteiltes System aus dem Modell zu extrahieren.~\cite{bickford2005causal}
 
+
+\paragraph{typentheoretische Vorbetrachtung}
+Um der Eventlogik eine mathematische Struktur zu geben, werden ihre
+Elemente mit diskreten Typen beschrieben, d.h. dass ihre die Gleichheit
+entscheidbar ist und sie voneinander disjunkt sind.
+
+\begin{defi}
+  $\mathbb{D}$ ist der Typ der alle diskreten Typen enthält $T\in\mathbb{D}$ mit $\{T:Type|\forall x,y : T.x = x\ in\ T \vee\neg (x = y\ in\
+  T)\}$.
+\end{defi}
+
 \subsubsection{Events}
 Events bilden die Grundbausteine der Eventlogik.
 Sie stellen Aktionen dar die in Raum und Zeit passieren und
-werden ohne Zeitdauer definiert.~\cite{bickford2005causal}
+werden ohne Zeitdauer definiert.
+Die Zeitdauer eines Events würde sich auf die physische Zeit der
+Umsetzung beziehen und wurde der zur Vereinfachung
+wegabstrahiert.~\cite{bickford2005causal}
 
 \begin{defi}
   Ein Event $e$ ist die atomare Einheit und kausal geordnet, d.h.
-  $e\le e'$ wenn $e$ zeitlich vor $e'$ passiert ist.
+  $e< e'$ wenn $e$ zeitlich vor $e'$ passiert ist.
 \end{defi}
-
-Events sind in einem Eventraum organisiert, der aus diskreten Orten ($loci$)
-oder Entitäten besteht. Events passieren an den $loci$ und dem Eventraum
-können über die Zeit beliebig neue Ort hinzugefügt oder entfernt werden.
-Die verschiedenen $loci$ können beobachtbare Eigenschaften besitzen.~\cite{bickford2005causal}
 
 \begin{defi}
-  Jeder $loci$ ist mit allen anderen $loci$ uber mindestens einem
-  Kommunikationskanal verbunden. Die Kommunikationskanäle müssen
-  nicht zuverlässig sein, aber dürfen die Nachricht nicht verfälschen.
+  Events $e\in E$ sind in einem Eventraum strukturiert. Dieser besteht
+  aus einzelnen $loci$ oder Entitäten an denen Events passieren.
 \end{defi}
 
-Events versenden entweder Nachrichten zu einer anderen Entität oder
-lösen interne Veränderungen aus, wobei $interne$ Events nur unter
-gewissen Voraussetzungen ausgelöst werden. $Externe$ Events
-können vom Empfänger nicht blockiert werden.~\cite{bickford2005causal}
+Der Eventraum ist dynamisch aufgebaut, so dass über die Zeit neue Entitäten
+hinzugefügt oder entfernt werden können. Damit die Entitäten im Raum
+unterschieden werden können besitzen sie beobachtbare Eigenschaften, wie zum
+Beispiel Koordinaten oder eine ID. Zur theoretischen Betrachtung reicht es aus,
+wenn Entitäten durch einen diskreten Typen und eine ID unterschieden werden können.~\cite{bickford2005causal}
+
+\begin{defi}
+  Jede Entität ist mit jeder anderen Entität über mindestens
+  einen Kommunikationsweg ($link$) verbunden.
+\end{defi}
+
+Für die $links$ wird das nicht-byzantinische Fehlermodell angenommen,
+wobei die Verbindungen unzuverlässig sind, aber die Nachrichten nicht
+verfälschen. Ein Event kann zur Kommunikation Nachrichten über einen
+$link$ versenden.
+
+Da Events an Entitäten gebunden sind, können sie kausal strukturiert werden.
+Damit können Events folgendermaßen formalisiert werden.
+\begin{gather*}
+  \textbf{E:}\mathbb{D}\notag\\
+  \textbf{Loc:}\mathbb{D}\\
+  \textbf{pred?:} E\rightarrow (E+Loc)\\
+  \textbf{sender?:} E\rightarrow (E+Unit)
+\end{gather*}
+
+E ist ein Event und Loc eine Entität. Die Funktion $pred?$ gibt entweder das
+vorherige Event an der Entität zurück oder die Entität, wenn es das erste Event
+war. Die Funktion $sender?$ gibt des Event $e'$ zurück, dass das Event $e$
+ausgelöst hat oder den leeren Typ.~\cite{bickford2005causal}
+
+Mit diesen Grundannahmen können die Funktionen $first?$, die bestimmt ob
+ein Event das Erste ist, dass bei einer Entität passiert und $recv?$,
+dass bestimmt ob ein Event ein Empfangsevent ist, definiert werden.
+
+\begin{gather*}
+  \textbf{first?:}E\rightarrow (E\rightarrow (E+Loc))\rightarrow B\\
+  first?(e,pred?) = if\ is\_left(pred?(e))\ then\ true\ else\ false\\
+  \textbf{recv?:}E\rightarrow (E\rightarrow (E+Unit))\rightarrow B\\
+  recv?(e,sender?) = if\ is\_left(sender?(e))\ then\ true\ else\ false\\
+\end{gather*}
+
+Mit Hilfe dieser Funktionen lässt sich die Eingangserwähnte kausale Ordnung auf Events
+$e < e'$ definieren als:
+\[
+  pred!(e,e') == (\neg first(e')\Rightarrow e = pred?(e')) \vee e = sender(e')
+\]
+$pred!$ bildet eine transitive Hülle und stellt damit eine wohlgeordnete
+entscheidbare Ordnung der Form $e < e'$ dar. Als letztes fehlen noch
+drei Grundaxiome für den geordneten Eventraum.~\cite{bickford2005causal}
+
+\begin{axiom}
+  Wenn ein Event $e$ ein Signal sendet, dann gibt es ein Event $e'$, so dass für
+  jedes Event $e''$ gilt, $e'' = e'$ oder $e'' < e'$.\\
+  \[
+    \forall e:E \exists e':E. \forall e'':E . (recv?(e'') \& sender?(e'')=e)\Rightarrow (e' = e' \vee e'' < e)
+  \]
+\end{axiom}
+
+\begin{axiom}
+  Die Funktion $pred?$ ist injektiv.
+  \[
+    \forall e,e':E.loc(e) = loc(e')\Rightarrow pred?(e) = pred?(e')\Rightarrow e=e'
+  \]
+\end{axiom}
+
+\begin{axiom}
+  Die Funktion $pred!$ bildet eine starke wohlfundierte Ordnung.
+  \[
+    \exists f:E\rightarrow \mathbb{N}.\forall e,e':E.pred!(e,e')\rightarrow f(e)<f(e')
+  \]
+\end{axiom}
+
+\begin{defi}
+  Die folgenden Notationen werden als Abkürzung verwendet, um Events die an einem
+  Ort stattfinden zu quantifizieren.
+  \[
+    \forall e@i.P == \forall e:E.(loc(e) = i\Rightarrow P)
+  \]
+  \[
+    \exists e@i.P == \exists e:E.(loc(e) = i\Rightarrow P)
+  \]
+\end{defi}
+
+\begin{figure}
+  \center
+  \begin{tikzpicture}[node distance=2cm,auto,>=stealth]
+    \node[] (server) {$R$};
+    \node[left = of server] (client) {$S$};
+    \node[below of=server, node distance=3cm] (server_ground) {};
+    \node[below of=client, node distance=3cm] (client_ground) {};
+    % vertical line
+    \draw (client) -- (client_ground);
+    \draw (server) -- (server_ground);
+    % horizontal lines
+    \draw[->] ($(client)!0.2!(client_ground)$) -- node[above,scale=1,midway]{$m_1$} ($(server)!0.3!(server_ground)$);
+    \draw[<-] ($(client)!0.5!(client_ground)$) -- node[below,scale=1,midway]{$m_2$} ($(server)!0.4!(server_ground)$);
+    \draw[->] ($(client)!0.6!(client_ground)$) -- node[below,scale=1,midway]{$m_3$} ($(server)!0.7!(server_ground)$);
+    \draw[<-] ($(client)!0.9!(client_ground)$) -- node[below,scale=1]{$m_4$} ($(server)!0.8!(server_ground)$);
+  \end{tikzpicture}
+  \label{fig:sequence}
+  \caption{Ein einfaches Sequenzdiagramm zwischen zwei Knoten ($S,R$) die jeweils
+    zwei Nachrichten ($m_i$) übertragen.}
+\end{figure}
+
+Abbildung~\ref{fig:sequence} zeigt ein einfaches Beispiel über einen Eventraum,
+der sich mit der bisherigen Theorie spezifizieren lässt. Dort wird eine 1:1
+Kommunikation zwischen zwei Entitäten dargestellt. Jede Nachricht von S wird mit
+einer Antwort von R quitiert, bevor eine neue Nachricht von S bei R eintrifft.
+Diese Modell kann forlgendermaßen formalisiert werden:~\cite{bickford2005causal}
+
+\begin{gather*}
+  \forall s@S.\exists r'@R.s=sender?(r')\\
+  \exists r@S.(s<r\&\exists s''@R.(r'\leq s''\& sender?(r) == s''))\\
+%%  \forall x@S.s<x<r\Rightarrow x wird nicht an R gesendet\\
+  \forall x@S.s<x<r\Rightarrow \neg\exists x'@R.(x=sender?(x'))
+\end{gather*}
+
+Als nächstes werden Events erweitert um Werte und unterschieden nach
+$internen$ und $externen$ Events. Bei einem $externes$ Event sendet ein Sender
+einer Nachricht über einen $link$ zu einem Empfänger. $Interne$ Events können
+ebenfalls Werte übergeben und können durch $guards$ limitiert werden.~\cite{bickford2005causal}
+
+\begin{defi}
+  Der Typ eines Events ist:
+  \[
+    kind == (Act+Top)
+  \]
+  \[
+    kind: E\rightarrow (Act+Top)
+  \]
+  Dabei ist Act ein diskreter Typ um unterschiedle interne Events, zu
+  unterscheiden und Top der Wert eines externen Events.
+\end{defi}
+
+Eine Darstellungsform von Interaktionen und Eventräumen sind Sequenzdiagramme
+mit Nachrichten, wie in Abb.~\ref{fig:sequence} dargestellt.
+% EValues vllt vertiefen, funktionalität beschreiben?
+
 
 \begin{defi}
   Eine Entität kann einen Zustand haben der durch eine endliche Folge
   von Änderungen dargestellt werden kann. $s'=f(s,v)$, wobei
   $v'$ der Folgezustand und $v$ der Wert eines Events ist.  
 \end{defi}
-
-
-
-\begin{figure}
-  \center
-  \begin{tikzpicture}[node distance=2cm,auto,>=stealth]
-    \node[] (server) {$N_B$};
-    \node[left = of server] (client) {$N_A$};
-    \node[below of=server, node distance=5cm] (server_ground) {};
-    \node[below of=client, node distance=5cm] (client_ground) {};
-    % vertical line
-    \draw (client) -- (client_ground);
-    \draw (server) -- (server_ground);
-    % horizontal lines
-    \draw[->] ($(client)!0.25!(client_ground)$) -- node[above,scale=1,midway]{$m_1$} ($(server)!0.3!(server_ground)$);
-    \draw[<-] ($(client)!0.45!(client_ground)$) -- node[below,scale=1,midway]{$m_2$} ($(server)!0.35!(server_ground)$);
-    \draw[->] ($(client)!0.5!(client_ground)$) -- node[below,scale=1,yshift=5mm]{$m_3$} ($(server)!0.8!(server_ground)$);
-    \draw[<-] ($(client)!0.9!(client_ground)$) -- node[below,scale=1]{$m_4$} ($(server)!0.6!(server_ground)$);
-  \end{tikzpicture}
-  \label{fig:sequence}
-  \caption{Ein einfaches Sequenzdiagramm zwischen zwei Knoten ($N_{A,B}$) die jeweils
-    zwei Nachrichten ($m_i$) übertragen.}
-\end{figure}
 
 
 % Die Eventlogik nach Bickford und Constable baut auf der intuitunistischen Logik
@@ -136,3 +250,8 @@ empfangen.~\cite{bickford2003logic}
   ein Kante in einem gerichteten Graphen und besteht aus dem Tupel $L=(s,d,m_i,m_j,Q)$ 
   mit $i,j\in \mathbb{N} und i!= j.Q$ ist eine Nachrichtenqueue.
 \end{defi}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../master"
+%%% End:
