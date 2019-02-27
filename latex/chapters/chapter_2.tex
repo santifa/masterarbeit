@@ -3,17 +3,272 @@
 
 %% einleitung %%
 In diesem Kapitel wird die Eventlogik~\cite{bickford2003logic} nach Bickford und
-Constable vorgestellt. Dazu werden die benötigten grundlegenden Logiken
-und Theorien eingeführt.
+Constable vorgestellt. Dazu werden vorher die benötigten grundlegenden Logiken
+und Theorien eingeführt. Zuerst wird kurz die Aussagenlogik erklärt und die
+darauf aufbauende Prädikatenlogik, welche grundlegend sind um ein Verständnis
+für die späteren Formeln zu liefern. Danach wird auf die intuitionistische
+Interpretationsweise und konstruktive Logik eingegangen. Als weitere Grundlagen
+werden ein Einführung in die Typentheorie und Automatentheorie gegeben, soweit
+dass für das weitere Verständnis der Eventlogik notwendig ist.
+
+\subsection{Grundlegende Logiken}
+Die Mathematische Logik ist eine mathematische Theorie in der andere
+mathematische Modell mit Hilfe "`naiver Logik"' formalisiert werden können.
+Die mathematische Logik bietet damit eine Metasprache zur Untersuchung anderer
+mathematischer Modelle.~\cite{heinemann2013logik}
+
+\paragraph{Aussagenlogik}
+Sie ist die älteste Logik und benutzt aus Grundelement Aussagen (Atome,
+Literale) zur Formalisierung. Aussagen sind können entweder \textbf{wahr}
+oder \textbf{falsch} sein. \textbf{Terme} sind aussagenlogische Formeln
+bei der einzelne Aussagen über \textbf{Junktoren} verbunden sind.~\cite{heinemann2013logik}
+
+\begin{defi}
+  Sei $\Sigma_A := \{V,(,),\neg,\vee,\wedge,\Rightarrow,\Leftrightarrow,\bot,\top\}$ das Alphabet der Aussagenlogik, wobei $\top$ für
+wahr, $\bot$ für falsch, $\neg$ für die Negation, $\vee$ für die Disjunktion, $\wedge$ für die
+Konjunktion , $\Rightarrow$ für die Implikation und $\Leftrightarrow$ für die Äquivalenz steht.
+\begin{itemize}
+\item $V:=\{p_0,p_1,..\}$  ist die Menge der Variablen oder Symbole
+\item $T\subseteq W(\Sigma)$  ist die Menge der Terme die über $\Sigma$ gebildet werden können 
+\end{itemize}
+\end{defi}
+
+\begin{defi}
+  Ein Term ist definiert als
+  \begin{itemize}
+  \item $V\subseteq T$
+  \item $\{\top,\bot\}\subseteq T$
+  \item $\{\neg\alpha,(\alpha\vee\beta),(\alpha\wedge\beta),(\alpha\Rightarrow\beta),(\alpha\Leftrightarrow\beta)\}\subseteq T$, falls $\alpha,\beta\in T$
+  \end{itemize}
+\end{defi}
+
+Als Beispiel kann der Satz "`Wenn X keine Zahl ist, dann kommt danach ein
+Buchstabe."' in die Formel
+\[
+  \neg x_{Z} \Rightarrow x_{B}
+\]
+übersetzt werden.
+
+Terme können ausgewertet werden und ihnen Wahrheitswerte zugeordnet werden.
+Dazu werden Interpretationen für die vorkommenden Variablen angegeben.
+
+\begin{defi}
+  Die Interpretation ist eine mögliche Belegung für einen Term $t$ und
+  wird als $I:L(t)\rightarrow \{wahr,falsch\} \Leftrightarrow t^I$ geschrieben.
+  Eine Interpretation die eine Formel $t^I$ wahr werden lässt, \textbf{erfüllt}
+  diese Formel.
+\end{defi}
+
+Eine besondere Art eines Terms ist die \texttt{Tautologie} bei der jegliche
+Interpretion wahr wird. Eine Tautologie ist eine allgemeingültige Ausage.
+
+\begin{defi}
+  Axiome sind Terme einer Logik, die ohne Angabe von Rechtfertigungen als wahr angenommen
+  werden. Axiome werden zumeist als semantische Tautologien gewählt, wobei sie
+  syntaktisch gesehen formale Terme ohne besondere Bedeutung sind.
+\end{defi}
+
+Aus den Tautologien und Axiomen einer Logik können weitere Terme abgeleitet
+werden. Zur Ableitung weiterer gültiger Terme aus einer Logik werden
+Schlussregeln oder Inferenzregel benutzt. Ein System aus Inferenzregeln zum
+Schließen über Tautologien und möglicherweise Axiomen einer Logik wird Kalkül genannt.
+
+\begin{defi}
+  Sei $\Gamma$ eine endliche Menge von Termen einer Logik und $C$ ein Term der Logik.
+  Dann ist $C$ aus $\Gamma$ ableitbar, wenn es eine Folge von Inferenzregeln
+  $r_0,...,r_n$ und Termen $C_0,...,C_n$ gibt, so dass $C_n = C$ und
+  $\Gamma_0\vdash_{r_0}C_0 ... \Gamma_n\vdash_{r_n}C_n$ wobei $\Gamma_i$ die Menge aller Axiome, Terme
+  aus $\Gamma$ und bisher abgeleiteten Terme enthält.
+\end{defi}
+
 
 %% grundlagen %%
-\subsection{Grundlegende Logiken}
-% TODO
+%\subsection{Aussagenlogik}
+%TODO
 % Aussagenlogik
 % Prädikatenlogik
 % Logik 1. Ordnung
 % dynamische Logik?
 % Automatentheorie NEA?
+
+% Die Aussagenlogik ist die älteste hier vorgestellte Logik und das Fundament für
+% die späteren Logiken. In Ihr werden sind entweder als \texttt{wahr} oder
+% \texttt{falsch} anzusehen. Somit gibt es keine Aussage in der Aussagenlogik, die
+% beides ist, aber Aussagen die nicht überprüfbar sind.~\cite{dassow2005logik}
+
+% \begin{defi}
+%   Die Aussagenlogik kennt Literale $p_0,q,A,B...$ und diesen werden die
+%   Wahrheitswerte, entweder $wahr$ oder $falsch$ zugeordnet.
+% \end{defi}
+
+% Die Literale werden auch Atome oder Variablen genannt und können mit Hilfe
+% verschiedener Symbole (Junktoren) verkettet werden. Diese Verkettung wird
+% Formel genannt und der einfacht halber können Literale ebenfalls Formeln sein.
+% ~\cite{dassow2005logik}
+
+% \begin{defi}
+%   Die Aussagenlogik beschränkt sich auf die Junktoren:\\
+%   $\vee$:Disjunktion,
+%   $\wedge$:Konjunktion,
+%   $\neg$:Negation,
+%   $\Rightarrow$:Implikation,
+%   $\Leftrightarrow$:Äquivalenz,
+% \end{defi}
+
+
+% Um eine Formel auszuwerten muss sie interpretiert werden. Dazu werden die
+% Atome einer aussagenlogische Formeln mit den Werten belegt.~\cite{dassow2005logik}
+
+% \begin{defi}
+%   Die Interpretation für eine Formel $x$ wird als $I:L(x)\rightarrow \{wahr,falsch\} \Leftrightarrow
+%   x^I$ geschrieben. Eine Interpretation die eine Formel $x^I$ wahr werden lässt,
+%   \textbf{erfüllt} diese Formel.
+% \end{defi}
+
+% \begin{defi}
+%   Eine Tautologie ist eine Formel deren mögliche Interpretation
+%   $x^{I_0},..,x^{I_n}$ wahr ergeben. Sie werden als allgemeingültig bezeichnet.  
+% \end{defi}
+
+
+\subsection{Prädikatenlogik}
+Die Prädikatenlogik stellt eine Erweiterung der Aussagenlogik dar.
+Bei der Aussagenlogik werden atomare Aussagen oder Literale mit konkreten
+Wahrheitswerten belegt. In der Aussagenlogik können nicht alle Aussagen
+mit Wahrheitswerten belegt werden, da manche Belegungen von der inneren
+Struktur der Aussage abhängen. Zum Beispiel der Satz "`x ist eine Primzahl"'
+hängt von einer konkreten Belegung $x$ ab und ist in der Aussagenlogik kein
+valides Literal. Diese Abhängigkeit wird durch Prädikate ausgedrückt.~\cite{heinemann2013logik}
+
+\begin{defi}
+  Das Alphabet der Prädikatenlogik ist $\Sigma_P := \{\exists,\forall,F,V,P\} \cup \Sigma_A$, wobei
+  $\exists$ als \texttt{es existiert} und $\forall$ als \texttt{für alle gilt} gelesen wird.
+  $V$ ist die Menge der Variablen, $P$ ist die Menge der Prädikate und $F$ ist die Menge der
+  Funktionen in der Prädikatenlogik.
+\end{defi}
+
+\begin{defi}
+  Ein \textbf{Prädikat} der Stelligkeit \textbf{n} ordnet einem Variablentupel
+  $(x_1,...,x_n)$ der Mengen $M_1,...,M_n$ Wahrheitswerte zu, daraus folgt
+  $P(x_1,...,x_n) \rightarrow \{wahr, falsch\}$ wobei $x_i\in M_i$ für $i\in \{1,...,n\}$.
+\end{defi}
+Ein Prädikat, dass ein Tupel erfüllt, ordnet dem Tupel den Wahrheitswert wahr zu.
+
+\begin{defi}
+  Sei $\mathbb{F}=\Cup^{\infty}_{i=0}\mathbb{F}^i$ für jedes $0\le i$ ein Alphabet von
+  i-stelligen Funktionssymbolen und $\mathbb{V}$ ein Alphabet von Variablen,
+  dann sind Terme der Prädikatenlogik definiert als:
+  \begin{itemize}
+  \item $x\in\mathbb{V}$ ist ein Term
+  \item $f\in\mathbb{F}^0$ ist ein 0-stelliges Funktionssymbole und eine Term der
+    eine Konstante ist
+  \item $t_1,...,t_n$ sind Terme und $f\in\mathbb{F}^n$ ein n-stelliges
+    Funktionssymbol, dann ist $f(t_1,...,t_n)$ ein Term
+  \end{itemize}  
+\end{defi}~\cite{kreitz1994automatisierte}
+
+Zur Darstellung von konkreten Sprachen müssen Bezeichner aus der Menge aller
+Bezeichner aussortiert werden. Damit wird eine konkrete Sprache mit einem Typ
+versehen.
+\begin{defi}
+  Ein Typ $T$ ist eine Paar $(I,J)$ mit $I\subseteq P$ und $J\subseteq F$.
+\end{defi}~\cite{heinemann2013logik}
+
+Damit ist es möglich die Formeln der Prädikatenlogik zu definieren.
+
+\begin{defi}
+  Sei $\mathbb{P}^i$ mit $0\le i$ ein i-stelliges Prädikatenalphabet,
+  $\mathbb{P}=\Cup^{\infty}_{i=0}\mathbb{P}^i$ und $\mathbb{T}$ ein Alphabet von Typen,
+  dann ist eine Formel der Prädikatenlogik definiert als:
+  \begin{itemize}
+  \item $P\in\mathbb{P}^0$ ist ein 0-stelliges Prädikatensymbol und damit P eine
+    atomare Formel oder Aussagenvariable
+  \item $t_1$ und $t_2$ sind Terme, dann ist $t_1 = t_2$ eine atomare Formel,
+    die gewöhnliche Gleichheit ausdrückt.
+  \item $t_1,...,t_n$ mit $n\geq1$ sind Terme und $P\in\mathbb{P}^n$ ein n-stelliges
+    Prädikatensymbol, dann ist $P(t_1,...,t_n)$ eine atomare Formel
+  \item $A,B$ sind Formel, $x\in\mathbb{V}$ eine Variable udn $T\in\mathbb{T}$ ein
+    Typenbezeichner, dann sind $\neg A$, $A\vee B$, $A\wedge B$, $A\Rightarrow B$, $\forall x:T.A$, $\exists
+    x:T.A$ und $(A)$ Formeln
+  \end{itemize}
+\end{defi}~\cite{kreitz1994automatisierte}
+
+Eine Interpretation für eine prädikatenlogische Formel ist lediglich eine
+Erweiterung der aussagenlogischen Interpretation, um die Belegungen von
+n-stelligen Prädikat- und Funktionssymbolen.~\cite{heinemann2013logik}
+
+\paragraph{Bindung}
+Zur besseren Lesbarkeit werden Klammer für die Bindungsstärke von Junktoren
+zumeist weggelassen. Dadurch ergibt sich die implizite Bindungsreihenfolge:
+$\neg,\wedge,\vee,\Rightarrow,\exists,\forall$.~\cite{kreitz1994automatisierte}
+
+Die Prädikatenlogik stellt das Grundgerüst, auf dessen Basis die später
+vorgestellte Eventlogik steht. Sie ermöglicht die Formalisierung von natürlichen
+Aussagen und Theorien, sowie die Überprüfung derer Gültigkeit.
+
+
+\subsection{intuitionistische Logik}
+Bisher wurden die Logik mit ihrer klassischen Interpretation vorgestellt.
+Dabei wird angenommen das eine Aussage entweder wahr oder falsch ist.
+Anders ausgedrückt kann ein mathematische Objekt entweder existieren oder
+nicht. Beweise auf Grundlage dieser Interpretationsansicht erfordern keine
+konstruktive Herleitung, wie ein solches Objekt zu modellieren ist.
+Das Gesetz vom ausgesschlossenen Dritten $A\vee\neg A$, die doppelte Negation $\neg\neg A\Rightarrow
+A$, Wiederspruchsbeweise und "`ex falso sequitur quodlibet"' gehören zu den
+problematischen Beweisansätzen, die keine intrinsische Rechtfertigung
+benötigen.~\cite{sep-logic-intuitionistic}
+
+Brouwer hat 1908 festegestellt, dass $A\vee\neg A$ angewendet auf unendliche
+abzählbare Mengen zu Problemen führt. Ein Beispiel dafür ist die Goldbach
+Vermutung, die annimmt, dass jede Zahl $> 2$ als Summe zweier Primzahlen
+geschrieben werden kann. Diese Aussage ist bis heute unbewiesen. Die klassische
+Logik umschifft solche Probleme in dem sie annimmt, dass weder die Aussage, noch 
+ihr Gegenteil gleichzeitig falsch sein kann, ohne eine konstruktive
+Rechtfertigung dafür zu liefern. Dabei ist es für den geneeigten Leser
+einsichtig, dass keine einfache Funktion, nach der Church-Turing These, 
+gefunden werden kann, die in absehbarer Zeit eine Lösung oder Beweis der
+Aussage liefert.~\cite{sep-logic-intuitionistic, sep-mathematics-constructive}
+
+Der Intuitionismus und die konstruktive Mathematik lehnen diese Art der
+Beweisführung und die Allgemeingültigkeit der vorher erwähnten Gesetze ab.
+Dabei werden verschiedene logische Operationen anders interpretiert.
+Zum Beispiel wird von der Disjunktion $A\vee B$ verlangt, dass sie angeben kann
+welcher Teil beweisbar ist und einen entsprechenden Beweis (Evidenz)
+dafür liefert.~\cite{kreitz1994automatisierte}
+
+\begin{defi}
+  Die intuitionistische Interpretation der Prädikatenlogik setzt sich aus
+  Evidenzen zusammen die in den Teilaussagen gefordert sind.
+  \begin{itemize}
+  \item Jedes Literal $q$ besitzt eine Evidenz $e$
+  \item Um $P\vee Q$ zu beweisen, ist entweder die Evidenz für $P$ oder $Q$
+    notwendig
+  \item Um $P\wedge Q$ zu beweisen, ist die Evidenz von $P$ und $Q$ notwendig
+  \item Um $P\Rightarrow Q$ zu beweisen, muss ein Algorithmus angegeben werden, der jede
+    Evidenz für $P$ in eine Evidenz für $Q$ umwandelt 
+  \item Um $\neg P$ zu beweisen, muss gezeigt werden, dass es keinen Beweis gibt
+  \item Um $\exists x:T.P(x)$ zu beweisen, muss ein Objekt vom Typ $T$ konstruiert
+    und gezeigt werden, dass $P$ hält.
+  \item Um $\forall x\in T.P(x)$ muss gezeigt werden, dass jedes Objekt $x$ den Typ $T$
+    hat und darunter $P$ beweisbar ist.
+  \end{itemize}
+\end{defi}~\cite{sep-mathematics-constructive}
+
+Die intuitionistische Logik ermöglicht damit Kalküle zu entwickeln auf
+deren Grundlage beweisbare logische Schlüsse erzeugt werden können.
+Damit kann sie als eine höhere Programmiersprache angesehen werden.
+Beweise die konstruiert werden können mit Hilfe der Curry-Howard Isomorphie
+in Typsysteme überführt werden und ausprogrammiert werden.~\cite{constable1970constructive}
+
+
+\subsection{Martin-Löf Typentheorie}
+Verschiedene Kalküle wurden für die Prädikatenlogik entwickelt.
+In dieser Arbeit wird nur auf die Typentheorie von Per Martin Löf eingegangen,
+da sie die Grundlage für den interaktiven Theorembeweiser
+NuPRL\footnote{\url{http://www.nuprl.org/Intro/intro.html}} ist. In NuPRL ist
+die später vorgestellte Eventlogik formalisiert und bewiesen worden.
+
+
 
 %% eventlogik %%
 \subsection{Eventlogik}
@@ -24,7 +279,7 @@ von Ereignissen in verteilten Systemen vorgestellt. Die Eventlogik ist so
 aufgebaut, dass eine breite Menge von Systemen beschrieben werden kann, auch
 außerhalb des eigentlichen Anwendungsgebietes des verteilten Rechnes
 (Distributed Computing).  Die Logik ist auf der
-intuitunistischen Logik aufgebaut und folgt dem ``correct-by-construction''
+intuitionistischen Logik aufgebaut und folgt dem ``correct-by-construction''
 Ansatz. Bei diesem Ansatz werden aus Beweisen für Formeln korrekte Implementierungen für
 diese gewonnen.~\cite{bates1985proofs}
 
@@ -55,7 +310,7 @@ wegabstrahiert.~\cite{bickford2005causal}
 
 \begin{defi}
   Ein Event $e$ ist die atomare Einheit und kausal geordnet, d.h.
-  $e< e'$ wenn $e$ zeitlich vor $e'$ passiert ist.
+  $e< e'$ wenn $e$ zeitlich vor $e''$ passiert ist.
 \end{defi}
 
 \begin{defi}
@@ -209,7 +464,7 @@ mit Nachrichten, wie in Abb.~\ref{fig:sequence} dargestellt.
 \end{defi}
 
 
-% Die Eventlogik nach Bickford und Constable baut auf der intuitunistischen Logik
+% Die Eventlogik nach Bickford und Constable baut auf der intuitionistischen Logik
 % auf. Sie verfolgt den ``correct-by-construction'' Ansatz, nach dem ein
 % funktionales Programm aus einem konstruktiven Beweis extrahiert werden kann.
 % Die Beweise haben die Grundform $\forall x:A.\exists : B.spec(x,y)$. Der konstruktive Beweis
