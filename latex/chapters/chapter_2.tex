@@ -1,6 +1,17 @@
 \section{Eventlogik}
 \label{sec_logik}
 
+% TODO
+% Aussagenlogik +
+% Prädikatenlogik 1. Ordnung +
+% intuitionistische Logik +
+% Martin Löf Typentheorie
+% Automatentheorie NEA?
+% Eventlogik +?
+% RAFT Zensusprotokoll
+
+
+
 %% einleitung %%
 In diesem Kapitel wird die Eventlogik~\cite{bickford2003logic} nach Bickford und
 Constable vorgestellt. Dazu werden vorher die benötigten grundlegenden Logiken
@@ -80,56 +91,6 @@ Schließen über Tautologien und möglicherweise Axiomen einer Logik wird Kalkü
   $\Gamma_0\vdash_{r_0}C_0 ... \Gamma_n\vdash_{r_n}C_n$ wobei $\Gamma_i$ die Menge aller Axiome, Terme
   aus $\Gamma$ und bisher abgeleiteten Terme enthält.
 \end{defi}
-
-
-%% grundlagen %%
-%\subsection{Aussagenlogik}
-%TODO
-% Aussagenlogik
-% Prädikatenlogik
-% Logik 1. Ordnung
-% dynamische Logik?
-% Automatentheorie NEA?
-
-% Die Aussagenlogik ist die älteste hier vorgestellte Logik und das Fundament für
-% die späteren Logiken. In Ihr werden sind entweder als \texttt{wahr} oder
-% \texttt{falsch} anzusehen. Somit gibt es keine Aussage in der Aussagenlogik, die
-% beides ist, aber Aussagen die nicht überprüfbar sind.~\cite{dassow2005logik}
-
-% \begin{defi}
-%   Die Aussagenlogik kennt Literale $p_0,q,A,B...$ und diesen werden die
-%   Wahrheitswerte, entweder $wahr$ oder $falsch$ zugeordnet.
-% \end{defi}
-
-% Die Literale werden auch Atome oder Variablen genannt und können mit Hilfe
-% verschiedener Symbole (Junktoren) verkettet werden. Diese Verkettung wird
-% Formel genannt und der einfacht halber können Literale ebenfalls Formeln sein.
-% ~\cite{dassow2005logik}
-
-% \begin{defi}
-%   Die Aussagenlogik beschränkt sich auf die Junktoren:\\
-%   $\vee$:Disjunktion,
-%   $\wedge$:Konjunktion,
-%   $\neg$:Negation,
-%   $\Rightarrow$:Implikation,
-%   $\Leftrightarrow$:Äquivalenz,
-% \end{defi}
-
-
-% Um eine Formel auszuwerten muss sie interpretiert werden. Dazu werden die
-% Atome einer aussagenlogische Formeln mit den Werten belegt.~\cite{dassow2005logik}
-
-% \begin{defi}
-%   Die Interpretation für eine Formel $x$ wird als $I:L(x)\rightarrow \{wahr,falsch\} \Leftrightarrow
-%   x^I$ geschrieben. Eine Interpretation die eine Formel $x^I$ wahr werden lässt,
-%   \textbf{erfüllt} diese Formel.
-% \end{defi}
-
-% \begin{defi}
-%   Eine Tautologie ist eine Formel deren mögliche Interpretation
-%   $x^{I_0},..,x^{I_n}$ wahr ergeben. Sie werden als allgemeingültig bezeichnet.  
-% \end{defi}
-
 
 \subsection{Prädikatenlogik}
 Die Prädikatenlogik stellt eine Erweiterung der Aussagenlogik dar.
