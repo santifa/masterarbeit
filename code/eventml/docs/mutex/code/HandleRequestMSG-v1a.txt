@@ -1,7 +1,0 @@
-HandleRequestMSG():
-
-if (busy)
-	needToReply = true
-else
-	token = false
-	send_tokenMSG()
