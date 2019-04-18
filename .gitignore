@@ -16,5 +16,6 @@ auto/
 *.fdb_latexmk
 *.pdf
 ltximg/
+paper/
 # ignore code files
 target/

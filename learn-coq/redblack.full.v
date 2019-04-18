@@ -61,7 +61,9 @@ Hypothesis comp_refl_iff :
 
 Lemma comp_refl : forall x, comp x x = Eq.
 Proof.
-(* FILL IN HERE *) Admitted.
+intro. rewrite comp_refl_iff. reflexivity.
+Qed.
+(* FILL IN HERE *)
 (** [] *)
 
 (** Finally, we assume that if [x] is less than [y], then [y] is
@@ -90,7 +92,11 @@ Inductive tree :=
     accumulate them in a list. *)
 
 Fixpoint elements (t : tree) : list A :=
-(* FILL IN HERE *) admit.
+ match t with
+  | Leaf => []
+  | Node _ l x r => (elements l) ++ x :: [] ++ (elements r)
+ end.
+(* FILL IN HERE *)
 (** [] *)
 
 (** Before getting into details about the red-black invariants, let's
@@ -119,7 +125,11 @@ Example member_ex :
     comp x y = Lt ->
     member x (Node Black tl y tr) = true.
 Proof.
-(* FILL IN HERE *) Admitted.
+intros c tl y tr.
+intros mem_left x_le_y.
+simpl. rewrite x_le_y. rewrite mem_left. reflexivity.
+Qed.
+(* FILL IN HERE *)
 
 (** [] *)
 
@@ -153,7 +163,7 @@ Proof.
 
   induction t as [|c t1 IH1 x t2 IH2].
   - trivial.
-  - simpl. intros H.
+  - simpl. intros H. 
 
 (** Often, tactics generate multiple subgoals that can be solved
     with simple (or very similar) proofs. We can handle these
@@ -229,7 +239,17 @@ Fixpoint occurs (x : A) (t : tree) : bool :=
 
 Lemma eqb_eq : forall x y, eqb x y = true -> x = y.
 Proof.
-(* FILL IN HERE *) Admitted.
+
+intros x y.
+unfold eqb.
+rewrite <- comp_refl_iff.
+destruct comp eqn:f.
++ trivial.
++ intro. discriminate.
++ intro. discriminate.
+Qed.
+
+(* FILL IN HERE *)
 (** [] *)
 
 (** **** Exercise: 3 stars (none_occurs)  *)
@@ -241,9 +261,141 @@ Proof.
 Lemma none_occurs :
   forall (x : A) (f : A -> bool) (t : tree),
     f x = false ->
-    all f t = true ->
+    all f t = true -> 
     occurs x t = false.
 Proof.
+intros.
+destruct all eqn:H1.
+induction t.
+- trivial.
+- simpl.
+
+simpl in H1.
+destruct (all f t1) eqn:H3; trivial.
+destruct (all f t2) eqn:H4; trivial.
+destruct (f a) eqn:H2; trivial.
+rewrite IHt1 in H1.
+rewrite IHt1.
+rewrite IHt2.
++
+
+
+
+
+
+destruct (all f t1) eqn:H1 in H0; try discriminate.
+simpl in H0.
+destruct (f a) eqn:H2; try discriminate.
+simpl in H0.
+
+apply IHt2 in H0.
+apply IHt1 in H1.
+
+simpl.
+rewrite H0.
+rewrite H1.
+
+simpl.
+unfold eqb.
+rewrite <- H2.
+destruct all eqn:H3.
+destruct all eqn:H4.
+destruct all eqn:H5.
+rewrite <- H.
+destruct comp; trivial.
+- rewrite H. rewrite H2. 
+
+symmetry in IHt1.
+simpl in H0.
+destruct (all f t2) eqn:H2; try discriminate.
+rewrite <- IHt1; trivial.
+simpl.
+rewrite IHt1; trivial.
+rewrite IHt2; trivial.
+
+simpl in H0.
+simpl in H0.
+
+simpl.
+
+rewrite <- H.
+
+
+unfold eqb.
+destruct comp.
+simpl.
+
+apply f.
+destruct eqb eqn:H4.
+simpl.
+destruct (all f t2); try discriminate.
+rewrite <- IHt1; trivial.
+
+
+induction (Node c t1 a t2).
+++
+trivial.  
+++
+
+
+rewrite <- H.
+destruct occurs.
+++
+rewrite <- H.
+apply all.
+rewrite <- IHt2.
+rewrite IHt2.
+
+destruct occurs.
+rewrite IHt1.
+
+destruct all in IHt1.
+
+
+destruct occurs.
+rewrite <- IHt1.
+++
+
+destruct all in IHt2.
+destruct occurs.
+destruct occurs eqn:H2 in IHt2.
+destruct occurs eqn:H1 in IHt1.
+rewrite <- IHt1.
+destruct occurs eqn:H1.
+destruct occurs eqn:H2 in IHt2.
+rewrite <- IHt1.
+rewrite IHt2.
+destruct occurs eqn:H3.
+destruct occurs.
+rewrite <- IHt1.
+++
++++
+rewrite <- H0.
+
+trivial.
+simpl.
+rewrite <- H.
+
+simpl.
+simpl in H0.
+trivial.
+simpl in H0.
+
+++
+destruct H0 eqn:H1.
+++
+simpl.
+
++++
+
+simpl.
+
+unfold occurs.
+
+unfold all in H0.
+++
+
+
 (* FILL IN HERE *) Admitted.
 
 Lemma member_prune_right :

@@ -26,8 +26,9 @@ Inductive bool : Type :=
     something can be true, false and unknown. *)
 
 Inductive trivalue : Type :=
-(* FILL IN HERE *)
-.
+| tru : trivalue
+| fals : trivalue
+| unknown : trivalue.
 (** [] *)
 
 (** We can write functions that operate on [bool]s by simple pattern
@@ -67,7 +68,12 @@ Compute (andb true false).
 (** Define xor (exclusive or). *)
 
 Definition xorb (b1 b2 : bool) : bool :=
-(* FILL IN HERE *) admit.
+  match b1, b2 with
+  | false, false => false
+  | true, true => false
+  | _, _ => true
+  end.
+(* FILL IN HERE *)
 
 Compute (xorb true true).
 (** [] *)
@@ -107,7 +113,10 @@ Qed.
 Theorem orb_true_l :
   forall b, orb true b = true.
 Proof.
-(* FILL IN HERE *) Admitted.
+intros b.
+simpl.
+reflexivity.
+(* FILL IN HERE *) Qed.
 (** [] *)
 
 (** Some proofs require case analysis. In Coq, this is done with the
@@ -161,19 +170,21 @@ Qed.
 (** **** Exercise: 1 star (andb_false_r)  *)
 (** Show that b AND false is always false  *)
 
-Theorem andb_false_r :
-(* FILL IN HERE *) admit.
+Theorem andb_false_r : forall b: bool, andb b false = false.
 Proof.
-(* FILL IN HERE *) Admitted.
+intros b.
+destruct b; simpl; reflexivity.
+(* FILL IN HERE *) Qed.
 (** [] *)
 
 (** **** Exercise: 1 star (xorb_b_neg_b)  *)
 (** Show that b xor (not b) is always true. *)
 
-Theorem xorb_b_neg_b :
-(* FILL IN HERE *) admit.
+Theorem xorb_b_neg_b : forall b: bool, xorb b (negb b) = true.
 Proof.
-(* FILL IN HERE *) Admitted.
+intros b.
+destruct b; simpl; reflexivity.
+(* FILL IN HERE *) Qed.
 
 (** Sometimes, we want to show a result that requires hypotheses. In
     Coq, [P -> Q] means that [P] implies [Q], or that [Q] is true
@@ -219,10 +230,12 @@ Qed.
 (** **** Exercise: 1 star (xorb_same)  *)
 (** Show that if [b1 = b2] then b1 xor b2 is false. *)
 
-Theorem xorb_same :
-(* FILL IN HERE *) admit.
+Theorem xorb_same : forall b1 b2: bool, b1 = b2 -> xorb b1 b2 = false.
 Proof.
-(* FILL IN HERE *) Admitted.
+intros b1 b2 eq.
+rewrite eq.
+destruct b2; simpl; reflexivity.
+(* FILL IN HERE *) Qed.
 
 End Bool.
 
@@ -252,7 +265,7 @@ Inductive list (T : Type) :=
 
 Fixpoint app T (l1 l2 : list T) : list T :=
   match l1 with
-  | nil => l2
+  | nil _ => l2
   | cons h t  => cons h (app t l2)
   end.
 
@@ -295,7 +308,7 @@ Fixpoint app' T (l1 l2 : list T) : list T :=
 (** Define [snoc], which adds an element to the end of a list. *)
 
 Fixpoint snoc T (l : list T) (x : T) : list T :=
-(* FILL IN HERE *) admit.
+  (l ++ (x :: [])).
 
 (** It is easy to show that appending [nil] to the left of a list
     yields the original list.  *)
@@ -373,7 +386,12 @@ Qed.
 
 Lemma snoc_app : forall T (l : list T) (x : T), snoc l x = l ++ [x].
 Proof.
-(* FILL IN HERE *) Admitted.
+intros.
+induction l.
+ - simpl; reflexivity.
+ - 
+  simpl. reflexivity.
+(* FILL IN HERE *) Qed.
 (** [] *)
 
 (** The natural numbers are defined in Coq's standard library as follows:
@@ -415,7 +433,15 @@ Compute length [1; 1; 1].
 Lemma app_length : forall T (l1 l2 : list T),
   length (l1 ++ l2) = length l1 + length l2.
 Proof.
-(* FILL IN HERE *) Admitted.
+intros.
+induction l1.
+induction length.
+simpl; reflexivity.
+simpl; reflexivity.
+
+simpl; rewrite IHl1.
+reflexivity.
+(* FILL IN HERE *) Qed.
 
 (** Often we find ourselves needing to reason about _contradictory_
     hypotheses. Whenever we have a hypothesis that equates two
@@ -452,7 +478,12 @@ Qed.
 Lemma plus_nil_r : forall T (l1 l2 : list T),
   l1 ++ l2 = [] -> l2 = [].
 Proof.
-(* FILL IN HERE *) Admitted.
+intros T l1 l2 H.
+destruct l1 as [| h t].
+ + apply H.
+ + simpl in H.
+   discriminate. 
+(* FILL IN HERE *) Qed.
 (** [] *)
 
 (** Coq, like many other proof assistants, requires functions to
@@ -529,7 +560,12 @@ Qed.
 
 Lemma rev_involutive : forall T (l : list T), rev (rev l) = l.
 Proof.
-(* FILL IN HERE *) Admitted.
+intros.
+induction l as [| h t H].
+ + simpl; reflexivity.
+ + simpl. rewrite rev_app. rewrite H. simpl. reflexivity.
+
+(* FILL IN HERE *) Qed.
 
 (** Notice that the definition of list reversal given above runs in
     quadratic time. Here is a tail-recursive equivalent that runs in

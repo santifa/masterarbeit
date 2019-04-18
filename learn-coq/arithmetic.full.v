@@ -34,7 +34,11 @@ Notation "x * y" := (mult x y) (at level 40, left associativity).
 (** Exercise: Define exponentiation *)
 
 Fixpoint exp (n m : nat) : nat :=
-(* FILL IN HERE *) admit.
+  match m with
+  | O => O
+  | S m' => mult n (exp n m')
+  end.
+(* FILL IN HERE *)
 
 Notation "x ^ y" := (exp x y) (at level 30, right associativity).
 
@@ -50,15 +54,23 @@ Qed.
 (** **** Exercise: 1 star (plus_O_r)  *)
 Lemma plus_O_r: forall n : nat, n + O = n.
 Proof.
-(* FILL IN HERE *) Admitted.
+intros n.
+induction n.
+ + simpl. reflexivity.
+ + simpl. rewrite IHn. reflexivity.
+(* FILL IN HERE *) Qed.
 
 
 (** **** Exercise: 1 star (n_plus_S_m)  *)
 Theorem n_plus_S_m: forall n m, n + S m = S (n + m). 
 Proof.
-(* FILL IN HERE *) Admitted.
+intros n m.
+induction n as [| n' IH].
+ + simpl. reflexivity.
+ + simpl. rewrite IH. reflexivity.
+(* FILL IN HERE *) Qed.
 
-Theorem plus_assoc: forall m n o, m + (n + o) = (m + n) + o.
+Theorem plus_assoc: forall m n o, m + (n + o) = m + n + o.
 Proof.
   intros m n o.
   induction m as [| m' IH]. (* m is the right choice here, since [plus] is defined
@@ -75,11 +87,74 @@ Qed.
 
 Theorem plus_comm: forall n m, n + m = m + n.
 Proof.
-(* FILL IN HERE *) Admitted.
+intros n m.
+induction n as [| n' IH].
+ + simpl. symmetry. apply plus_O_r.
+ + simpl. symmetry. rewrite IH. apply n_plus_S_m.  
+(* FILL IN HERE *) Qed.
 
 (** Additional exercises: Show that mult has an identity 
     [S O], a annihilator [O] and associative, commutative and
     distributive properties. *)
+Theorem mult_id_l: forall n, S O * n = n.
+Proof.
+intros n.
+simpl.
+apply plus_O_r.
+Qed.
+
+Theorem mult_id_r: forall n, n * S O = n.
+Proof.
+intros n.
+induction n as [| n' IH].
+ + simpl. reflexivity.
+ + simpl. rewrite IH. reflexivity.
+Qed.
+
+Theorem mult_annihil_l: forall n, O * n = O.
+Proof.
+intros n. 
+simpl.
+reflexivity.
+Qed.
+
+Theorem mult_annihil_r: forall n, n * O = O.
+Proof.
+intros n.
+induction n as [| n' IH].
+ + simpl. reflexivity.
+ + simpl. rewrite IH. reflexivity.
+Qed.
+
+Theorem mult_comm: forall n m, n * m = m * n.
+Proof.
+induction n.
++ induction m.
+ - reflexivity.
+ - apply IHm.
++ induction m.
+ - simpl. apply mult_annihil_r.
+ - simpl. rewrite <- IHm. rewrite IHn. 
+   simpl. rewrite IHn. rewrite plus_assoc. 
+   rewrite plus_assoc. rewrite (plus_comm n m). reflexivity.
+Qed.
+
+Theorem mult_plus_distr_r : forall n m p : nat,
+  (n + m) * p = (n * p) + (m * p).
+Proof.
+intros n m p.
+induction n.
++ trivial.
++ simpl. rewrite IHn. rewrite plus_assoc. trivial.
+Qed.
+
+Theorem mult_assoc: forall a b c, a * (b * c) = a * b * c.
+Proof.
+intros a b c.
+induction a.
++ trivial.
++ simpl. rewrite IHa. rewrite mult_plus_distr_r. trivial.
+Qed.
 
 (** The next function tests whether a number [m] is equal to [n]. *)
 
@@ -104,6 +179,9 @@ Qed.
 Lemma beq_nat_true :
   forall m n, beq_nat m n = true -> m = n.
 Proof.
+intros m n.
+induction m.
+
 (* FILL IN HERE *) Admitted.
 
 
@@ -134,7 +212,32 @@ Fixpoint ble_nat (m n : nat) : bool :=
   end.
 
 (* Exercises: Show that ble_nat is reflexive, transitive and antisymmetric. *)
+Theorem ble_nat_refl: forall n, ble_nat n n = true.
+Proof.
+intros n.
+induction n.
++ simpl. reflexivity.
++ simpl. rewrite IHn. reflexivity.
+Qed.
 
+Theorem ble_nat_trans: forall a b c, ble_nat a b = true /\ 
+ ble_nat b c = true -> ble_nat a c = true.
+Proof.
+intros a b c.
+induction a.
++ intros H. simpl. reflexivity.
++ induction b.
+ -  intros H. 
+Admitted.
+
+Theorem ble_nat_antisym: forall a b, ble_nat a b = true /\ ble_nat b a = true ->
+  a = b.
+Proof.
+intros a b.
+intros ble_eq.
+induction a.
++ simpl in ble_eq.
+Admitted.
 (** The simple definition of div fails due to Coq's termination checker, 
     so we go with the more complicated one below. *)
 
@@ -177,14 +280,25 @@ Notation "x / y" := (div x y) (at level 40, left associativity).
     
 Lemma n_div_n: forall n, ble_nat (S O) n = true -> n / n = (S O).
 Proof.
+intros n.
+induction n.
+ + simpl. discriminate.
+ + simpl. intro. rewrite <- IHn.
+  -    
 (* FILL IN HERE *) Admitted.
 
 (** **** Exercise: 2 stars (factorial).  *)
 (* The simplest version of factorial also fails. 
    Try to write a strictly decreasing factorial function. *)
 Fixpoint factorial (n : nat) : nat :=
-(* FILL IN HERE *) admit.
-    
+ match n with
+  | O => S O
+  | S n' => mult (S n') (factorial n')
+ end.
+(* FILL IN HERE *)
+
+Compute (factorial (S (S (S O)))).
+
 (** Well done! 
     We know that 2^n <= fact(n) <= n^n for all n>0. 
     For a challenge, try to prove both. *)

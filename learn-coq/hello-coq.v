@@ -441,4 +441,105 @@ Qed.
 End Logic_programming.
 
 Section Modules.
+(* load modules with the require command. module names resemble the fs *)
+Require Import Arith.
 
+(* use Required Export M if the content of the submodule M required
+ * by module N should be visible from the calling module. *)
+
+(* Search facts concerning a given predicate *)
+Search S le.
+
+(* display only lemmas where the predicate is found in the head *)
+SearchHead le.
+
+(* Search allows searching for patterns *)
+Search (_ + _).
+
+End Modules.
+(* End of the coq tutorial which shows the most basics ideas 
+ * and language constructs *)
+
+(* Tutorial: https://coq.inria.fr/tutorial-nahas *)
+Section Tutorial_nahas.
+(* if you have a prove you have a proof *)
+Theorem first_proof: forall A: Prop, A -> A.
+Proof.
+intros.
+trivial.
+Qed.
+
+(* forward proof *)
+Theorem forward_small: forall A B: Prop, A -> (A -> B) -> B.
+Proof.
+intros.
+pose (proof_B := H0 H).
+exact proof_B.
+Qed.
+
+(* backward proof *)
+Theorem backward_huge: forall A B C: Prop, A -> (A -> B) -> (A -> B -> C) -> C.
+Proof.
+intros A B C.
+intros proof_A A_imp_B A_imp_B_imp_C.
+refine (A_imp_B_imp_C _ _).
+ exact proof_A.
+ 
+ refine (A_imp_B _).
+ exact proof_A.
+Qed.
+
+Require Import Bool.
+
+Theorem or_com: forall A B: Prop, A \/ B -> B \/ A.
+Proof.
+intros A B Or.
+case Or.
+ + intros. refine (or_intror H).
+ + intros. refine (or_introl H).
+Qed.
+
+(* mostly like the first tutorial,
+ * so there is nothing really new to note. *)
+
+(* Names:
+"Theorem" starts a proof.
+"Qed" ends a proof.
+"Admitted" ends an incomplete proof.
+"Definition" declares a function.
+"Fixpoint" declares a recursive function.
+"Inductive" declares data types.
+"Notation" creates new operators.
+"Infix" also creates new operators.
+"Show Proof" prints out the current state of the proof.
+"Require Import" reads in definitions from a file.
+"Check" prints out a description of a type.
+"Compute" prints out the result of a function call.
+*)
+
+
+(* Tactics:
+RULE: If the subgoal starts with "(forall <name> : <type>, ..." Then use tactic "intros <name>.".
+RULE: If the subgoal starts with "<type> -> ..." Then use tactic "intros <name>.".
+RULE: If the subgoal matches an hypothesis, Then use tactic "exact <hyp_name>.".
+RULE: If you have an hypothesis "<hyp_name>: <type1> -> <type2> -> ... -> <result_type>" OR an hypothesis "<hyp_name>: (forall <obj1>:<type1>, (forall <obj2>:<type2>, ... <result_type> ...))" OR any combination of "->" and "forall", AND you have hypotheses of type "type1", "type2"..., Then use tactic "pose" to create something of type "result_type".
+RULE: If you have subgoal "<goal_type>" AND have hypothesis "<hyp_name>: <type1> -> <type2> -> ... -> <typeN> -> <goal_type>", Then use tactic "refine (<hyp_name> _ ...)." with N underscores.
+RULE: If your subgoal is "True", Then use tactic "exact I.".
+RULE: If your subgoal is "~<type>" or "~(<term>)" or "(not <term>)", Then use tactic "intros".
+RULE: If any hypothesis is "<name> : False", Then use tactic "case <name>.".
+RULE: If the current subgoal contains a function call with all its arguments, Then use the tactic "simpl.".
+RULE: If there is a hypothesis "<name>" of a created type AND that hypothesis is used in the subgoal, Then you can try the tactic "case <name>.".
+RULE: If the subgoal's top-most term is a created type, Then use "refine (<name_of_constructor> _ ...).".
+RULE: If a hypothesis "<name>" is a created type with only one constructor, Then use "destruct <name> as <arg1> <arg2> ... ." to extract its arguments.
+RULE: If a hypothesis "<name>" contain a function call with all its arguments, Then use the tactic "simpl in <name>.".
+RULE: If you have a subgoal that you want to ignore for a while, Then use the tactic "admit.".
+RULE: If the current subgoal starts "exists <name>, ..." Then create a witness and use "refine (ex_intro _ witness _).".
+RULE: If you have a hypothesis "<name> : <a> = <b>" AND "<a>" in your current subgoal Then use the tactic "rewrite <name>.".
+RULE: If you have a hypothesis "<name> : <a> = <b>" AND "<b>" in your current subgoal Then use the tactic "rewrite <- <name>.".
+RULE: If you have a hypothesis "<name> : (<constructor1> ...) = (<constructor2> ...) OR "<name> : <constant1> = <constant2> Then use the tactic "discriminate <name>.".
+RULE: If there is a hypothesis "<name>" of a created type AND that hypothesis is used in the subgoal, AND the type has a recursive definition Then you can try the tactic "elim <name>.".
+*)
+
+(* last tutorial: https://www.lri.fr/~paulin/LASER/course-notes.pdf 
+ * material: https://www.lri.fr/~paulin/LASER/ *)
+Section Tutorial_nahas.

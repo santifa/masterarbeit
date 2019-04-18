@@ -1,5 +1,68 @@
 
 
+* Neuplanung Masterarbeit
+
+** Thema: Implementierung von RAFT in Velisarios.
+
+RAFT ist ein Zensusprotokoll zur Bestimmung des nächsten Zustands eines
+verteilten System. Es wurde neu entworfen, um bekannte Verständnisprobleme bei
+vorherigen Problemen zu beseitigen.
+
+Velisarios ist eine Erweiterung des Beweissystems COQ um die Logic of Events.
+Damit ist es möglich Programme konstruktiv zu beschreiben und zu beweisen.
+Im letzten Schritt kann aus der Spezifikation Quellcode in verschiedenen 
+Programmiersprachen generiert werden.
+
+** verläufige Gliederung
+
+| Nummer | Titel                               | Kurzbeschreibung                                                                                                   | Seiten |
+|--------+-------------------------------------+--------------------------------------------------------------------------------------------------------------------+--------|
+|      0 | Einleitung                          | Einführung in die Thematik, herleitung aus den Bedürfnissen für verteilte Systeme und ihrer Komplexität.           |    1-2 |
+|      1 | Logikgrundlagen                     | Darstellung der Grundlagen, Aussagenlogik, Prädikatenlogik, Typentheorie, Logic of Events                          |      5 |
+|      2 | RAFT Protokoll                      | Vorstellung & Erklärung des RAFT Protokolls                                                                        |      5 |
+|      3 | Beweissystem COQ                    | Kurze Eingührung in die benutzten Mechanismen in COQ (Programmspezifikation, Quellcodeextraction)                  |      3 |
+|      4 | Implementierung RAFT mit Velisarios | Darstellung von Teilen des Codes, besondere Punkte bei der Implementierung, Extraction in Quellcode und Simulation |      5 |
+|      5 | Auswertung und Simulation[fn:1]     | Analyse des Algorithmus + Statistik und Auswertung nach zu bestimmenden Kriterien                                  |      3 |
+|      6 | Fazit und Schluss                   | Ausblick in nächste Schritte und Zusammenfassung der Arbeit                                                        |    1-2 |
+|  Summe |                                     |                                                                                                                    |     23[fn:2]  |
+
+** Zeitplanung [%]
+
+Neuer Zeitplan von Mitte April bis Ende September,
+eine frühere Fertigstellung wird angestrebt.
+   
+
+*** TODO Einleitung neu schreiben 
+    SCHEDULED: <2019-04-25 Do>
+    Bezug auf Vereteilte System und Wichtigkeit dieser.
+    Schwierigkeiten bei der Implementierung, Verweis auf RAFT Argumente
+*** Zeitraum <2019-04-25 Do>--<2019-09-30 Mo>
+    "Neubegin Masterarbeit"
+
+**** 
+
+
+* Velisarios Notizen
+
+Probleme bei nocrypto:
+
+#+begin_src 
+ocamlfind ocamldep -package cstruct.lwt
+ocamlfind: Package `cstruct.lwt' not found
+#+end_src
+
+Neuinstallieren hilft nicht, nocrypto vorrausetzung für runtime
+
+* Footnotes
+
+[fn:2] Wie viele Seiten Minimum?
+
+[fn:1] Überhaupt auswerten? Welche Kriterien (Geschwindigkeit, Sicherheit)???
+
+
+* -------------------------------------
+  nachfolgender Abschnitt veraltet
+
 * Besprechungen
 
 ** <2018-09-11 Di> Erstbesprechung (Skype)
@@ -22,7 +85,6 @@ vollständige Präsentation über Eigenschaften von verteilten Systemen
 
 <2018-10-15 Mo> Kreitz wieder in Potsdam, Kommunikation davor über Mail
 
-
 * Masterarbeit Gliederung
 
 Thema der Masterarbeit ist die Beschreibung von EventML in seinen einzelnen Bestandteilen
@@ -44,7 +106,6 @@ dargestellt werden und mit Beispielen unterfüttert werden.
 ** Transformation Ml -> Lisp -> Bytecode
 
 ** Simulation
-
 
 * Notizen/Todos [3/5] [60%]
 
@@ -137,9 +198,8 @@ Begin: <2018-10-15 Mo>  42 KW
    - Reinschrift
    - Rechtschreibkontrolle, Gramatik, Verständlichkeit, Index...
 
-
 * Recherche
-
+  
 [[http://www.cs.ru.nl/~freek/100/][100 Theoreme und welche formalisiert sind]]
 [[https://github.com/adjoint-io/raft%0A][Raft Consensus]]
 
@@ -280,4 +340,7 @@ Generälen werden als Wahlstimmen angenommen und per Mehrheitsentscheidung wird 
 ** A Logic of Events - Bickford, Constable - 2003
 
 Einleitung:
+
+
+
 
