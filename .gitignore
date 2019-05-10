@@ -15,6 +15,9 @@ auto/
 *.fls
 *.fdb_latexmk
 *.pdf
+*.vo
+*.glob
+*.d
 ltximg/
 paper/
 # ignore code files

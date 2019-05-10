@@ -9,3 +9,9 @@ thesis:
 
 velisarios:
 	./bootstrap.sh
+
+simulate:
+  cd Velisarios/runtime && ./Simul.native -max 100
+
+run:
+  cd Velisarios/runtime && ./run.sh
