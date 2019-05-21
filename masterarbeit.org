@@ -4,13 +4,13 @@
 
 ** Thema: Implementierung von RAFT in Velisarios.
 
-RAFT ist ein Zensusprotokoll zur Bestimmung des nächsten Zustands 
+RAFT ist ein Zensusprotokoll zur Bestimmung des nächsten Zustands
 einesverteilten System. Es wurde neu entworfen, um bekannte Verständnisprobleme bei
 vorherigen Problemen zu beseitigen.
 
 Velisarios ist eine Erweiterung des Beweissystems COQ um die Logic of Events.
 Damit ist es möglich Programme konstruktiv zu beschreiben und zu beweisen.
-Im letzten Schritt kann aus der Spezifikation Quellcode in verschiedenen 
+Im letzten Schritt kann aus der Spezifikation Quellcode in verschiedenen
 Programmiersprachen generiert werden.
 
 ** verläufige Gliederung
@@ -30,9 +30,9 @@ Programmiersprachen generiert werden.
 
 Neuer Zeitplan von Mitte April bis Ende September,
 eine frühere Fertigstellung wird angestrebt.
-   
 
-*** TODO Einleitung neu schreiben 
+
+*** TODO Einleitung neu schreiben
     SCHEDULED: <2019-04-25 Do>
     Bezug auf Vereteilte System und Wichtigkeit dieser.
     Schwierigkeiten bei der Implementierung, Verweis auf RAFT Argumente
@@ -40,7 +40,7 @@ eine frühere Fertigstellung wird angestrebt.
     "Neubegin Masterarbeit"
 
 **** TODO Programmierung RAFT mit Velisarios <2019-04-25 Do>--<2019-06-15 Sa>
-***** 
+*****
 
 **** TODO Simluation? <2019-06-15 Sa>--<2019-07-06 Sa>
 
@@ -61,7 +61,7 @@ eine frühere Fertigstellung wird angestrebt.
 
 Probleme bei nocrypto:
 
-#+begin_src 
+#+begin_src
 ocamlfind ocamldep -package cstruct.lwt
 ocamlfind: Package `cstruct.lwt' not found
 #+end_src
@@ -74,12 +74,52 @@ Bei der Entwicklung mit Emacs empfiehlt sich [[https://proofgeneral.github.io][P
 
 *** Proof mode zeigt Tooltip und Buffer gleichzeitig                   :TODO:
 
-*** Treemacs davon abhalten Dateien anzuzeigen die in .gitignore sind 
+*** Treemacs davon abhalten Dateien anzuzeigen die in .gitignore sind
 
 #+BEGIN_SRC
 (with-eval-after-load 'treemacs
   (add-to-list 'treemacs-pre-file-insert-predicates #'treemacs-is-file-git-ignored?))
 #+END_SRC
+
+*** Api Outline generieren
+
+Dieses Skript generiert eine "API" oder Outline der Vernacular Dateien im ~src~ Ordner.
+Dabei werden nur ~Definition, Inductive, Instance, Lemma~ zur Generierung benutzt.
+C-c C-c
+
+#+BEGIN_SRC sh
+
+  function get_signatures() {
+      echo "## ${1##*/}" >> "${2}"
+      fmt "${1}" "${2}" "Definition"
+      fmt "${1}" "${2}" "Inductive"
+      fmt "${1}" "${2}" "Instance"
+      fmt "${1}" "${2}" "Lemma"
+  }
+
+  function fmt() {
+      if [[ ! -z $(grep "${3}" "${1}") ]]; then
+          echo -e "### ${3}\n\n" >> "${2}"
+          sed -n "/$3/,/\./p" "${1}" | sed 's/^ */    /g;s/\./\.\n/g' >> "${2}"
+      fi
+  }
+
+  cd raft/
+  find . -name Api.md -delete
+
+  find . -name "*.v" -print0 | while IFS= read -r -d '' file; do
+      api="${file%/*}/Api.md"
+      if [ ! -e "${api}" ]; then
+          echo -e "# API Documentation file\n" > "${api}"
+          echo -e "It gives a rough overview about the provided types, lemmas and definitions.\n" >> "${api}"
+      fi
+      get_signatures "${file}" "${api}"
+  done
+
+#+END_SRC
+
+#+RESULTS:
+
 
 * Footnotes
 
@@ -98,17 +138,17 @@ Bei der Entwicklung mit Emacs empfiehlt sich [[https://proofgeneral.github.io][P
 vollständige Präsentation über Eigenschaften von verteilten Systemen
  - Ziel + Eigenschaften von Kommunikationssystemen
 *** EventML + Logik Paper lesen
-*** EentML zum laufen bringen 
+*** EentML zum laufen bringen
 *** PingPong Beispiel
 
 ** <2018-09-21 Fr> 2. Besprechung (Skype)
-   
+
    Mögliche Themen
    - Beschreibung Prozess
    - Transformation von Lisp zu anderer Sprache
    - Anbindung an anderen Simulator
    - Anbindung anderer Beweiser (GPM + LoE erforderlich)
-  
+
 *** Shar Paper Referenz schicken
 
 <2018-10-15 Mo> Kreitz wieder in Potsdam, Kommunikation davor über Mail
@@ -119,13 +159,13 @@ Thema der Masterarbeit ist die Beschreibung von EventML in seinen einzelnen Best
 mit Vertiefung eines Preozssschrittes. Dabei sollen die einzelnen Teile ausführlich
 dargestellt werden und mit Beispielen unterfüttert werden.
 
-** Motivation: Anwendung in Kommunikationsprotokollen 
+** Motivation: Anwendung in Kommunikationsprotokollen
 *** Paxos Protokoll + Bedeutung + Anwendung + Ziele/Eigenschaften verteilter Systeme
 
 ** Einführung Logik of Events
-*** Prädikatenlogik + Events + konstruktive Eigenschaften 
+*** Prädikatenlogik + Events + konstruktive Eigenschaften
 
-** Paxos Konsens Protokoll 
+** Paxos Konsens Protokoll
 *** Verstehen
 *** Eigenschaften + Beweise
 
@@ -145,7 +185,7 @@ dargestellt werden und mit Beispielen unterfüttert werden.
 
 
 *** EventML installieren
-    
+
 #+BEGIN_SRC sh
   mkdir eventml
   cd eventml
@@ -154,7 +194,7 @@ dargestellt werden und mit Beispielen unterfüttert werden.
   make
 #+END_SRC
 
-Makefile öffnen und im Ziel ~install-doc:~ ~esharp-language.pdf~ 
+Makefile öffnen und im Ziel ~install-doc:~ ~esharp-language.pdf~
 zu ~esharp-language.dvi~ ändern. Bei Fehlern die Datei ~docs/manual/esharp-language.tex~
 entsprechend ändern.
 
@@ -169,19 +209,19 @@ eventml /home/ratzeputz/Entwicklung/repos/masterarbeit/code/pingpong.el -lib eve
 
 
 
-** Umgang mit Nuprl + EventMl 
+** Umgang mit Nuprl + EventMl
 
-#+BEGIN_SRC sh   
+#+BEGIN_SRC sh
   ssh -i .ssh/nuprl.cs.cornell.edu -L 5906:localhost:5906 henrik@nuprl.cs.cornell.edu
   vinagere
 #+END_SRC
 
-Verbinde mit localhost:5906 mit pw nuprlvnc 
+Verbinde mit localhost:5906 mit pw nuprlvnc
 
 * TODO Zeitplan [1/8] [12%]
 
 Insgesamt stehen 6 Monate zur Verfügung
-in insgesamt 26 Einheiten/KW aufgeteilt. 
+in insgesamt 26 Einheiten/KW aufgeteilt.
 Begin: <2018-10-15 Mo>  42 KW
 
 ** DONE Recherche <2018-10-15 Mo>--<2018-11-16 Fr> (5E)
@@ -189,7 +229,7 @@ Begin: <2018-10-15 Mo>  42 KW
    - Paxos, Motivationsschreiben
    - Grundlagen Logik
    - Relevante Quellen für EventML (Logik, Programmierung, Beispiele)
-   
+
 ** TODO Einführung Schreiben <2018-11-16 Fr>--<2018-11-30 Fr> (2E)
    - Motivationsschreiben / Themeneinleitung
    - Grundlagen?
@@ -227,7 +267,7 @@ Begin: <2018-10-15 Mo>  42 KW
    - Rechtschreibkontrolle, Gramatik, Verständlichkeit, Index...
 
 * Recherche
-  
+
 [[http://www.cs.ru.nl/~freek/100/][100 Theoreme und welche formalisiert sind]]
 [[https://github.com/adjoint-io/raft%0A][Raft Consensus]]
 
@@ -240,7 +280,7 @@ wichtige Referenzen:
 *** Protokoll
 _Rahmenbedingungen:_
 
-Annahme: Mehrere Prozesse können Werte vorschlagen. 
+Annahme: Mehrere Prozesse können Werte vorschlagen.
 Ein Konensalgorithumus stellt sicher, dass ein vorgeschlagener Wert gewählt wird.
 Wird kein Wert vorgeschlagen, wird keiner gewählt und wenn einer gewählt wird, dann
 ist dieser Konsens unter allen Prozessen.
@@ -249,7 +289,7 @@ Sicherheitsanforderungen:
  - S1: Nur vorgeschlagene Werte können gewählt werden
  - S2: Nur ein Wert wird gewählt
  - S3: Ein Wert ist erst dann gewählt, wenn er wirklich gewählt ist
-    
+
 Rollen: (ein Prozess kann mehrere Rollen haben)
 Proposer: Schlägt Werte vor
 Acceptor: Akzeptiert Werte
@@ -259,12 +299,12 @@ Kommunikation zwischen Prozessen über Message Passing mit folgenden Einschränk
  - Nachrichten können lange brauchen, dupliziert werden, verloren gehen (nicht korumpiert)
  - Prozesse arbeiten willkürlich schnell, können neustarten oder stoppen
  - Wenn alle Prozesse ausfallen und schon ein Wert gewählt wurde, ist dieser Zustand verloren,
-   solange kein Prozess mehr Informationen hat. 
+   solange kein Prozess mehr Informationen hat.
 
 => Sonderfälle, wie nur ein Acceptor, werden nicht berücksichtigt.
 
 Ein Wert ist gewählt, wenn ein Mehrheit von Acceptors diesen Wert akzeptiert hat.
-Bedingung: dass ein Acceptor nur einen Wert akzeptieren kann. 
+Bedingung: dass ein Acceptor nur einen Wert akzeptieren kann.
 -> Alle zwei Mehrheiten haben ein Akzeptor gemeinsam -> sie sind Teil einer größeren Mehrheit
 
 _Ablauf:_
@@ -272,12 +312,12 @@ _Ablauf:_
 Wert: $v$, Accpetor: $a \in A$ , Proposer: $p \in P$, Learner: $l \in L$,
 
 Eigenschaft 0: Damit ein v gewählt wird, muss eine Mehrheit $A_m \subseteq A$ existieren, die v akzeptiert hat.
-Eigenschaft 1: a akzeptiert den 1. ankommenden Vorschlag 
--> Problem: Gleichzeitigkeit; Wenn jeder $a_n$ ein $v_n$ akzeptiert, dann kann keine Mehrheit entstehen 
+Eigenschaft 1: a akzeptiert den 1. ankommenden Vorschlag
+-> Problem: Gleichzeitigkeit; Wenn jeder $a_n$ ein $v_n$ akzeptiert, dann kann keine Mehrheit entstehen
 -> Lösung: a darf mehrere Vorschläge akzeptieren, Vorschläge werden durchnummeriert
 (disjoint set of numbers per proposer)
 
-Eigenschaft 2: Wenn ein Vorschlag mit Wert v und Nummer i gewählt wurde, 
+Eigenschaft 2: Wenn ein Vorschlag mit Wert v und Nummer i gewählt wurde,
                dann hat jeder Vorschlag i+x auch den Wert v. (Erfüllt S2)
 
 Eigenschaft 2a: Wenn ein Vorschlag mit Wert v und Nummer i gewählt wurde,
@@ -294,7 +334,7 @@ Eigenschaft 2c: Für jeden Vorschlag n mit Wert v, existiert eine Mehrheit $A_S$
 
 => Ein p muss höchste Vorschlagsnummer n erfahren um Vorschlag n+1 zu tätigen.
 
-*Proposer*  
+*Proposer*
 /Prepare Request/
 1. p wählt Vorschlagsnummer n und sendet die Anfrage an eine Menge $a \in A$
 2. Anwtortmöglichkeiten:
@@ -309,7 +349,7 @@ Wenn p von einer Mehrheit (i) zurückbekommt, kann es das akzeptieren des Vorsch
 Eigenschaft 1a: Ein a kann jeden Vorschlag n akzeptieren, wenn und nur wenn es
                 auf keinen Prepare Request i mit i > n geantwortet hat.
 
-Optimierung: 
+Optimierung:
 - a merkt sich nur den höchsten Vorschlag n und ignoriert Prepare Request i < n
 - a ignoriert Prepare Request n, wenn n schon akzeptiert ist
 
@@ -359,7 +399,7 @@ Problem: Mehrere Clients können zum selben Zeitpunkt Kommandos an alle Server s
 
 
 ** The Byzantine Generals Problem
- 
+
 Erst ab 4 "Generälen" kann man einen Verräter entlarven.
 Dabei bilden die Generäle ein vermaschtes Netzwerk und schicken sich gegenseitig die Befehle,
 die sie von anderen erhalten haben (gleiches Problem: 1 General und 2 Leutnants). Alle Nachrichten von anderen
@@ -368,7 +408,3 @@ Generälen werden als Wahlstimmen angenommen und per Mehrheitsentscheidung wird 
 ** A Logic of Events - Bickford, Constable - 2003
 
 Einleitung:
-
-
-
-
