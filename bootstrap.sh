@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Bootstrap velisarios and it's dependencies
+#
+# This script assembles the commands to build velisarios.
+# Build on: Linux naglfar 5.0.13-arch1-1-ARCH #1 SMP PREEMPT x86_64 GNU/Linux
+
+
 branch="raft"
 opam="$(which opam)"
 coq="$(which coq)"
@@ -41,7 +45,7 @@ opam repo add janestreet https://ocaml.janestreet.com/opam-repository
 opam install async ppx_jane core_extended rpc_parallel batteries cppo_ocamlbuild
 
 echo "Install fixed nocrypto..."
-cd nocrypto
+cd ../ocaml-nocrypto
 git checkout 1c4fb7aaefcd9bd78dc6f7c53906eafcd7f94496
 opam install cstruct-lwt cstruct-unix ounit
 sed -i s/Sexplib.Sexp.t/Ppx_sexp_conv_lib.Sexp.t/g src/nocrypto.mli

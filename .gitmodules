@@ -1,3 +1,6 @@
 [submodule "Velisarios"]
 	path = Velisarios
 	url = https://github.com/vrahli/Velisarios.git
+[submodule "ocaml-nocrypto"]
+	path = ocaml-nocrypto
+	url = https://github.com/mirleft/ocaml-nocrypto

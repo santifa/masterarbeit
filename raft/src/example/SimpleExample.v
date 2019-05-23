@@ -52,3 +52,5 @@ Section PingPong.
     (* Given some msg and the current state, the next state is the same but
      * the input message is directed back to all other nodes in the network. *)
     fun state input => (state, [MkDMsg input [PPn] 0]).
+
+End PingPong.

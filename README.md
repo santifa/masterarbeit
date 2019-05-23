@@ -10,7 +10,7 @@ utilize these mechanism to implement the [RAFT](https://raft.github.io) census p
 to be easier to understand then similar protocols like [Paxos](https://lamport.azurewebsites.net/pubs/lamport-paxos.pdf)
 and also easier to implement.
 
-The goal is to produce an implementation using Velisarios and COQ which is stable and robust.
+The goal is to produce an implementation using Velisarios and COQ which is runnable, stable and robust.
 
 ## Using this repository
 
@@ -21,7 +21,7 @@ Note: The used literature is not provided alongside.
 
 The following tools are needed to interact with this repository:
 
-* emacs
+* emacs (for some documentation things)
 * ocaml
 * opam (opam init already run)
 
@@ -29,17 +29,15 @@ Checkout the repository with `git clone --recursive https://github.com/santifa/m
 
     Structure:
     
-    +--- Velisarios (as git submodule)
-    +--+ latex (the master thesis)
-       +-- chapters (the individual thesis chapters)
-       +-- images
-       +-- master.tex
-       +-- bibfile.bib
-    +--- learn-coq (introductions to the COQ system)
-    +--- masterarbeit.org (notes and schedules for the thesis)
+    +--- Velisarios (as reference included)
+    +--- latex (the written master thesis, not further documented)
+    +--- learn-coq (scetches to get used to the COQ system)
+    +--- masterarbeit.org (notes, schedules, some code)
     +--- Makefile
-    +--- bootstrap.sh (contains the bootstrapping process for velisarios)
-    +--- raft (contains the code for the raft protocol)
+    +--- bootstrap.sh (assmbles the commands needed to setup velisarios on arch linux)
+    +--- raft (the actual source code for the examples and raft)
+
+
 
 The Makefile contains the essentials to bootstrap the code
 and build the documentation and thesis. The Velisarios module
