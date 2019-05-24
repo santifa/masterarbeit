@@ -34,7 +34,7 @@ Checkout the repository with `git clone --recursive https://github.com/santifa/m
     +--- learn-coq (scetches to get used to the COQ system)
     +--- masterarbeit.org (notes, schedules, some code)
     +--- Makefile
-    +--- bootstrap.sh (assmbles the commands needed to setup velisarios on arch linux)
+    +--- bootstrap.sh (assembles the commands needed to setup velisarios on arch linux)
     +--- raft (the actual source code for the examples and raft)
 
 

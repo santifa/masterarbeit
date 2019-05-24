@@ -40,7 +40,6 @@ eine frühere Fertigstellung wird angestrebt.
     "Neubegin Masterarbeit"
 
 **** TODO Programmierung RAFT mit Velisarios <2019-04-25 Do>--<2019-06-15 Sa>
-*****
 
 **** TODO Simluation? <2019-06-15 Sa>--<2019-07-06 Sa>
 
