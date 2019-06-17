@@ -22,3 +22,5 @@ ltximg/
 paper/
 # ignore code files
 target/
+_build/
+*#
