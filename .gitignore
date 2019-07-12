@@ -24,3 +24,8 @@ paper/
 target/
 _build/
 *#
+*.native
+*key*
+PbReplica*
+PbftReplica*
+pbft_*

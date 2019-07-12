@@ -38,29 +38,20 @@ Section PrimaryBackup.
   | PBbackup
   | PBc.
 
+  Lemma Deq_PBnode : Deq PBnode.
+  Proof.
+    introv; destruct x, y; prove_dec.
+  Qed.
+
+  Global Instance PB_I_Node : Node := MkNode PBnode Deq_PBnode.
+
   Inductive PBmsg :=
   | PBinput   (n : nat)
   | PBforward (n : nat)
   | PBackn    (n : nat)
   | PBreply   (n : nat).
 
-  (* when primary receives request from client, it state si locked,
-     until backup sends ack *)
-  Inductive PBprimary_status :=
-  | PBlocked
-  | PBfree.
-
-  Inductive PBprimary_state :=
-  | PBpst (status : PBprimary_status) (counter : nat).
-
-  Lemma Deq_PBnode : Deq PBnode.
-  Proof.
-    introv; destruct x, y; prove_dec.
-  Qed.
-
-  Instance PB_I_Node : Node := MkNode PBnode Deq_PBnode.
-
-  Instance PB_I_Msg : Msg := MkMsg PBmsg.
+  Global Instance PB_I_Msg : Msg := MkMsg PBmsg.
 
   Definition PB_msg_status (m : PBmsg) : msg_status :=
     match m with
@@ -70,9 +61,19 @@ Section PrimaryBackup.
     | PBreply _   => MSG_STATUS_INTERNAL
     end.
 
-  Instance PB_I_MsgStatus : MsgStatus := MkMsgStatus PB_msg_status.
+  Global Instance PB_I_MsgStatus : MsgStatus := MkMsgStatus PB_msg_status.
 
-  Definition primary_upd : MSUpdate PBprimary_state :=
+  (* when primary receives request from client, it state si locked,
+     until backup sends ack *)
+  Inductive PBprimary_status :=
+  | PBlocked
+  | PBfree.
+
+  Inductive PB_state :=
+  | PBpst (status : PBprimary_status) (counter : nat)
+  | PBbst (counter : nat).
+  
+  Definition primary_upd : MSUpdate PB_state :=
     fun state input =>
       match state, input with
       (* if locked, then we're waiting for an acknowledgment *)
@@ -89,10 +90,9 @@ Section PrimaryBackup.
       | _, _ => (state, [])
       end.
 
-  Inductive PBbackup_state :=
-  | PBbst (counter : nat).
+  (* Inductive PBbackup_state := *)
 
-  Definition backup_upd : MSUpdate PBbackup_state :=
+  Definition backup_upd : MSUpdate PB_state :=
     fun state input =>
       match state, input with
         (* if we get a forward message then we store the value and send back and acknowledgment *)
@@ -109,16 +109,16 @@ Section PrimaryBackup.
   Arguments sm_state  [S] [I] [O] _.
   Arguments sm_update [S] [I] [O] _ _ _.
 
-  Definition PBprimarySM : MStateMachine PBprimary_state :=
+  Definition PBprimarySM : MStateMachine PB_state :=
     mkSSM primary_upd (PBpst PBfree 0).
 
-  Definition PBbackupSM : MStateMachine PBbackup_state :=
+  Definition PBbackupSM : MStateMachine PB_state :=
     mkSSM backup_upd (PBbst 0).
 
   Definition PBstate (n : name) :=
     match n with
-    | PBprimary => PBprimary_state
-    | PBbackup => PBbackup_state
+    | PBprimary => PB_state
+    | PBbackup => PB_state
     | _ => unit
     end.
 
@@ -181,118 +181,118 @@ Section PrimaryBackup.
       repndors; tcsp; ginv
     end.
 
-  Lemma PBoutput_iff :
-    forall (eo : EventOrdering) e m l d,
-      In (MkDMsg m l d) (output_system_on_event_ldata PBusys e)
-      <->
-      (
-        (
-          exists n,
-            m = PBforward n
-            /\ l = [PBbackup]
-            /\ d = 0
-            /\ loc e = PBprimary
-            /\ if_not_first
-                 e
-                 (exists counter,
-                     state_sm_on_event PBprimarySM (local_pred e)
-                     = Some (PBpst PBfree counter))
-            /\ event_triggered_by_message e (PBinput n)
-        )
+  (* Lemma PBoutput_iff : *)
+  (*   forall (eo : EventOrdering) e m l d, *)
+  (*     In (MkDMsg m l d) (output_system_on_event_ldata PBusys e) *)
+  (*     <-> *)
+  (*     ( *)
+  (*       ( *)
+  (*         exists n, *)
+  (*           m = PBforward n *)
+  (*           /\ l = [PBbackup] *)
+  (*           /\ d = 0 *)
+  (*           /\ loc e = PBprimary *)
+  (*           /\ if_not_first *)
+  (*                e *)
+  (*                (exists counter, *)
+  (*                    state_sm_on_event PBprimarySM (local_pred e) *)
+  (*                    = Some (PBpst PBfree counter)) *)
+  (*           /\ event_triggered_by_message e (PBinput n) *)
+  (*       ) *)
 
-        \/
-        (
-          exists n counter,
-            m = PBreply n
-            /\ l = [PBc]
-            /\ d = 0
-            /\ loc e = PBprimary
-            /\ ~ isFirst e
-            /\ state_sm_on_event PBprimarySM (local_pred e)
-               = Some (PBpst PBlocked counter)
-            /\ event_triggered_by_message e (PBackn n)
-        )
+  (*       \/ *)
+  (*       ( *)
+  (*         exists n counter, *)
+  (*           m = PBreply n *)
+  (*           /\ l = [PBc] *)
+  (*           /\ d = 0 *)
+  (*           /\ loc e = PBprimary *)
+  (*           /\ ~ isFirst e *)
+  (*           /\ state_sm_on_event PBprimarySM (local_pred e) *)
+  (*              = Some (PBpst PBlocked counter) *)
+  (*           /\ event_triggered_by_message e (PBackn n) *)
+  (*       ) *)
 
-        \/
-        (
-          exists n,
-            m = PBackn n
-            /\ l = [PBprimary]
-            /\ d = 0
-            /\ loc e = PBbackup
-            /\ if_not_first
-                 e
-                 (exists counter,
-                     state_sm_on_event PBbackupSM (local_pred e)
-                     = Some (PBbst counter))
-            /\ event_triggered_by_message e (PBforward n)
-        )
-      ).
-  Proof.
-    introv.
-    rewrite in_output_system_on_event_ldata.
-    split; intro h.
+  (*       \/ *)
+  (*       ( *)
+  (*         exists n, *)
+  (*           m = PBackn n *)
+  (*           /\ l = [PBprimary] *)
+  (*           /\ d = 0 *)
+  (*           /\ loc e = PBbackup *)
+  (*           /\ if_not_first *)
+  (*                e *)
+  (*                (exists counter, *)
+  (*                    state_sm_on_event PBbackupSM (local_pred e) *)
+  (*                    = Some (PBbst counter)) *)
+  (*           /\ event_triggered_by_message e (PBforward n) *)
+  (*       ) *)
+  (*     ). *)
+  (* Proof. *)
+  (*   introv. *)
+  (*   rewrite in_output_system_on_event_ldata. *)
+  (*   split; intro h. *)
 
-    - unfold PBusys in h.
-      remember (loc e) as n; destruct n; simpl in *;
-        unfold MStateMachine in *; ginv.
+  (*   - unfold PBusys in h. *)
+  (*     remember (loc e) as n; destruct n; simpl in *; *)
+  (*       unfold MStateMachine in *; ginv. *)
 
-      + apply in_output_sm_on_event in h; simpl in *.
-        dest_cases w; clear Heqw.
+  (*     + apply in_output_sm_on_event in h; simpl in *. *)
+  (*       dest_cases w; clear Heqw. *)
 
-        * in_op_outs te.
-          left.
-          exists n; dands; auto; eauto with eo.
+  (*       * in_op_outs te. *)
+  (*         left. *)
+  (*         exists n; dands; auto; eauto with eo. *)
 
-        * exrepnd; simpl in *.
-          unfold primary_upd, S2Update in h0; simpl in h0.
-          fold DirectedMsgs in h0.
-          destruct s'.
-          destruct status.
+  (*       * exrepnd; simpl in *. *)
+  (*         unfold primary_upd, S2Update in h0; simpl in h0. *)
+  (*         fold DirectedMsgs in h0. *)
+  (*         destruct s'. *)
+  (*         destruct status. *)
 
-          {
-            in_op_outs te.
-            right; left.
-            exists n0 counter; dands; auto.
-          }
+  (*         { *)
+  (*           in_op_outs te. *)
+  (*           right; left. *)
+  (*           exists n0 counter; dands; auto. *)
+  (*         } *)
 
-          {
-            in_op_outs te.
-            left.
-            exists n0; dands; auto.
-            intro xx; exists counter; dands; auto.
-          }
+  (*         { *)
+  (*           in_op_outs te. *)
+  (*           left. *)
+  (*           exists n0; dands; auto. *)
+  (*           intro xx; exists counter; dands; auto. *)
+  (*         } *)
 
-      + apply in_output_sm_on_event in h; simpl in *.
-        dest_cases w; clear Heqw.
+  (*     + apply in_output_sm_on_event in h; simpl in *. *)
+  (*       dest_cases w; clear Heqw. *)
 
-        * in_op_outs te.
-          right; right.
-          exists n; dands; auto; eauto with eo.
+  (*       * in_op_outs te. *)
+  (*         right; right. *)
+  (*         exists n; dands; auto; eauto with eo. *)
 
-        * exrepnd.
-          unfold backup_upd, S2Update in h0; simpl in h0.
-          fold DirectedMsgs in h0.
-          destruct s'.
+  (*       * exrepnd. *)
+  (*         unfold backup_upd, S2Update in h0; simpl in h0. *)
+  (*         fold DirectedMsgs in h0. *)
+  (*         destruct s'. *)
 
-          in_op_outs te.
-          right; right.
-          exists n0; dands; auto.
-          intro xx; exists counter; dands; auto.
+  (*         in_op_outs te. *)
+  (*         right; right. *)
+  (*         exists n0; dands; auto. *)
+  (*         intro xx; exists counter; dands; auto. *)
 
-      + apply MhaltedSM_doesnt_output in h; tcsp.
+  (*     + apply MhaltedSM_doesnt_output in h; tcsp. *)
 
-    - repndors; exrepnd; subst;
-        try match goal with
-            | [ H : if_not_first _ _ |- _ ] => apply if_not_first_implies_or in H
-            end; repndors; exrepnd; subst;
-          try (complete (unfold PBusys; allrw; simpl;
-                         apply in_output_sm_on_event;
-                         dest_cases w; simpl;
-                         fold DirectedMsgs in *;
-                         try (eexists; dands;[eauto|]);
-                         allrw; simpl; auto)).
-  Qed.
+  (*   - repndors; exrepnd; subst; *)
+  (*       try match goal with *)
+  (*           | [ H : if_not_first _ _ |- _ ] => apply if_not_first_implies_or in H *)
+  (*           end; repndors; exrepnd; subst; *)
+  (*         try (complete (unfold PBusys; allrw; simpl; *)
+  (*                        apply in_output_sm_on_event; *)
+  (*                        dest_cases w; simpl; *)
+  (*                        fold DirectedMsgs in *; *)
+  (*                        try (eexists; dands;[eauto|]); *)
+  (*                        allrw; simpl; auto)). *)
+  (* Qed. *)
 
   (* hold keys to receive messages to the other one *)
   Definition PBhold_keys (eo : EventOrdering) :=
@@ -343,81 +343,81 @@ Section PrimaryBackup.
   Local Open Scope eo.
 
  (* if the system sends a reply, then it received an input *)
-  Lemma PBvalidity :
-    forall (eo : EventOrdering),
-      authenticated_messages_were_sent_or_byz_usys eo PBusys
-      -> PBhold_keys eo
-      -> PBall_correct eo
-      -> forall (e : Event) (n : nat) (dst : list name) (d : nat),
-        In (MkDMsg (PBreply n) dst d) (output_system_on_event_ldata PBusys e)
-        -> exists e',
-          e' ≺ e
-          /\ event_triggered_by_message e' (PBinput n).
-  Proof.
-    introv byz hk cor i.
+  (* Lemma PBvalidity : *)
+  (*   forall (eo : EventOrdering), *)
+  (*     authenticated_messages_were_sent_or_byz_usys eo PBusys *)
+  (*     -> PBhold_keys eo *)
+  (*     -> PBall_correct eo *)
+  (*     -> forall (e : Event) (n : nat) (dst : list name) (d : nat), *)
+  (*       In (MkDMsg (PBreply n) dst d) (output_system_on_event_ldata PBusys e) *)
+  (*       -> exists e', *)
+  (*         e' ≺ e *)
+  (*         /\ event_triggered_by_message e' (PBinput n). *)
+  (* Proof. *)
+  (*   introv byz hk cor i. *)
 
-    apply PBoutput_iff in i; repndors; exrepnd; subst; ginv;[].
+  (*   apply PBoutput_iff in i; repndors; exrepnd; subst; ginv;[]. *)
 
-    (* receipt of an acknowledgment at e *)
-    pose proof (byz e (MkAuthData (PBackn n0) [tt])) as M1h.
-    rewrite in_bind_op_list_as_auth_data_in_trigger in M1h.
-    simpl in M1h.
-    repeat (autodimp M1h hyp);
-      [eapply event_triggered_by_message_implies_auth_data_in_trigger;eauto;simpl;tcsp
-      | |];[|].
+  (*   (* receipt of an acknowledgment at e *) *)
+  (*   pose proof (byz e (MkAuthData (PBackn n0) [tt])) as M1h. *)
+  (*   rewrite in_bind_op_list_as_auth_data_in_trigger in M1h. *)
+  (*   simpl in M1h. *)
+  (*   repeat (autodimp M1h hyp); *)
+  (*     [eapply event_triggered_by_message_implies_auth_data_in_trigger;eauto;simpl;tcsp *)
+  (*     | |];[|]. *)
 
-    {
-      unfold verify_authenticated_data; simpl.
-      pose proof (PBkey_primary eo e) as h; repeat (autodimp h hyp); exrepnd.
-      match goal with
-      | [ |- _ _ ?l = _ ] => remember l as w; destruct w; simpl in *; tcsp
-      end.
-    }
+  (*   { *)
+  (*     unfold verify_authenticated_data; simpl. *)
+  (*     pose proof (PBkey_primary eo e) as h; repeat (autodimp h hyp); exrepnd. *)
+  (*     match goal with *)
+  (*     | [ |- _ _ ?l = _ ] => remember l as w; destruct w; simpl in *; tcsp *)
+  (*     end. *)
+  (*   } *)
 
-    exrepnd; repndors; exrepnd.
+  (*   exrepnd; repndors; exrepnd. *)
 
-    {
-      (* the acknowledgment was sent by the backup *)
-      apply PBoutput_iff in M1h4; repndors; exrepnd; subst; ginv; tcsp.
-      injection M1h3; clear M1h3; intro eqloc.
+  (*   { *)
+  (*     (* the acknowledgment was sent by the backup *) *)
+  (*     apply PBoutput_iff in M1h4; repndors; exrepnd; subst; ginv; tcsp. *)
+  (*     injection M1h3; clear M1h3; intro eqloc. *)
 
-      (* receipt of a forward message at e' *)
-      pose proof (byz e' (MkAuthData (PBforward n0) [tt])) as M2h.
-      rewrite in_bind_op_list_as_auth_data_in_trigger in M2h.
-      simpl in M2h.
-      repeat (autodimp M2h hyp);
-        [eapply event_triggered_by_message_implies_auth_data_in_trigger;eauto;simpl;tcsp
-        | |];[|].
+  (*     (* receipt of a forward message at e' *) *)
+  (*     pose proof (byz e' (MkAuthData (PBforward n0) [tt])) as M2h. *)
+  (*     rewrite in_bind_op_list_as_auth_data_in_trigger in M2h. *)
+  (*     simpl in M2h. *)
+  (*     repeat (autodimp M2h hyp); *)
+  (*       [eapply event_triggered_by_message_implies_auth_data_in_trigger;eauto;simpl;tcsp *)
+  (*       | |];[|]. *)
 
-      { unfold verify_authenticated_data; simpl.
-        pose proof (PBkey_backup eo e') as h; repeat (autodimp h hyp); exrepnd.
-        match goal with
-        | [ |- _ _ ?l = _ ] => remember l as w; destruct w; simpl in *; tcsp
-        end. }
+  (*     { unfold verify_authenticated_data; simpl. *)
+  (*       pose proof (PBkey_backup eo e') as h; repeat (autodimp h hyp); exrepnd. *)
+  (*       match goal with *)
+  (*       | [ |- _ _ ?l = _ ] => remember l as w; destruct w; simpl in *; tcsp *)
+  (*       end. } *)
 
-      exrepnd; repndors; exrepnd; ginv.
+  (*     exrepnd; repndors; exrepnd; ginv. *)
 
-      {
-        (* forward was sent by the primary *)
-        apply PBoutput_iff in M2h4; repndors; exrepnd; subst; ginv; tcsp.
+  (*     { *)
+  (*       (* forward was sent by the primary *) *)
+  (*       apply PBoutput_iff in M2h4; repndors; exrepnd; subst; ginv; tcsp. *)
 
-        (* receipt of an input message at e'0 *)
-        exists e'0; dands; auto.
-        eapply causal_trans;eauto.
-      }
+  (*       (* receipt of an input message at e'0 *) *)
+  (*       exists e'0; dands; auto. *)
+  (*       eapply causal_trans;eauto. *)
+  (*     } *)
 
-      {
-        injection M2h6; clear M2h6; intro eqloc2.
-        pose proof (cor e'') as q; autodimp q hyp.
-        apply correct_is_not_byzantine in q; tcsp.
-      }
-    }
+  (*     { *)
+  (*       injection M2h6; clear M2h6; intro eqloc2. *)
+  (*       pose proof (cor e'') as q; autodimp q hyp. *)
+  (*       apply correct_is_not_byzantine in q; tcsp. *)
+  (*     } *)
+  (*   } *)
 
-    {
-      injection M1h6; clear M1h6; intro eqloc2.
-      pose proof (cor e'') as q; autodimp q hyp.
-      apply correct_is_not_byzantine in q; tcsp.
-    }
-  Qed.
+  (*   { *)
+  (*     injection M1h6; clear M1h6; intro eqloc2. *)
+  (*     pose proof (cor e'') as q; autodimp q hyp. *)
+  (*     apply correct_is_not_byzantine in q; tcsp. *)
+  (*   } *)
+  (* Qed. *)
 
 End PrimaryBackup.

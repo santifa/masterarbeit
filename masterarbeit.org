@@ -119,6 +119,32 @@ C-c C-c
 
 #+RESULTS:
 
+** Simulator
+
+Simulator besteht aus runtime und simulator -> run.sh startet runtime
+Simulator per direkten aufruf Simul.native -max <requests>
+
+**** Config Format 
+space separated
+
+id:<int> host:<ipv4> port:<int> private-key:<name> public-key:<name>
+
+client:<int> host:<ipv4> port:<int> private-key:<name> public-key:<name>
+
+**** generische ML Dateien
+****** RsaKey.ml (generierung), RsaKeyFun.ml (lib mit verifikationsfkts)
+
+****** Colors.ml farbkodierung
+
+****** Hash.ml einfache Hashfunktionen
+
+****** Connect.ml terminal ausgabe, anbindung an die interne node loop
+
+****** Prelude.ml Zeitdefinitionen
+
+**** protocol agnostic
+
+****** ParseConf.ml config file parser
 
 * Footnotes
 

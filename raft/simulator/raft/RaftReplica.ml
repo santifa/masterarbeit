@@ -1,10 +1,10 @@
 open Colors
 open Prelude
-open PbftReplica
 open Connect
 open ParseConf
 open Core
 open Async
+open PbftReplicaEx
 
 
 let replica : (pBFTstate mStateMachine) ref = ref pBFTdummySM;;

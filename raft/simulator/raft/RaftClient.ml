@@ -1,9 +1,9 @@
 open Colors
 open Prelude
-open PbftReplica
+open PbftReplicaEx
 open Connect
 open ParseConf
-open MacKeyFun
+open RsaKeyFun
 open Core
 open Async
 
@@ -17,8 +17,9 @@ let signing : bool ref = ref true
 
 let plot_ts_file  : string = "pbft_ts"
 let plot_avg_file : string = "pbft_avg"
+let plot_elp_file : string = "pbft_elp"
 
-(* default response time is 5ms when no signatures and 15ms when signatures *)
+(* max response time is 5ms without signatures and 30ms with signatures---otherwise something's wrong *)
 let max_time = if !signing then 0.030(*15*) else 0.005
 
 let nfaults : int ref = ref 1
@@ -28,7 +29,7 @@ let initial_timestamp = 1
 let printing_period : int ref = ref 10
 let plotting_period : int ref = ref 10
 
-let buffer_size : int = (128 (*16*) * 1024)
+let buffer_size : int = (4 (*128*) (*16*) * 1024)
 (* =--
    ================================================================ 
  *)
@@ -58,23 +59,23 @@ let rec find_primary_writer_nfo (view : int) (nreps : int) (nfos : writer_nfo li
      else find_primary_writer_nfo view nreps nfos
 
 
-let sign_request breq syms : Cstruct.t list =
+let sign_request breq priv pub =
   let o = Obj.magic (PBFTmsg_bare_request breq) in
-  let css = sign_list o syms in
+  let cs = sign_one o priv in
 (*  (if verify_one o pub cs
    then print_endline ("[managed to verify my own message]")
    else print_endline ("[couldn't verify my own message]"));*)
-  css
+  cs
 
-    
-let send_request prim view timestamp request id syms wnfo =
+
+let send_request prim view timestamp request id priv pub wnfo =
   let opr       = Obj.magic (Opr_add request) in
   let timestamp = timestamp in
   let client    = Obj.magic id in
   let breq      = Bare_req (opr,timestamp,client) in
-  let tokens    = (if !signing then Obj.magic (sign_request breq syms) else Obj.magic([()])) in
+  let tokens    = [ (if !signing then Obj.magic (sign_request breq priv pub) else Obj.magic()) ] in
   let req       = PBFTrequest (Req(breq,tokens)) in
-  (*print_endline ("[sending request]");*)
+  (*print_endline ("[sending request (prim?" ^ string_of_bool prim ^ ";timestamp?" ^ string_of_int timestamp ^ ")]");*)
   wnfo.w >>= fun w -> Deferred.return (Writer.write w (Marshal.to_string req []))
 
 (*  try_with (fun () -> wnfo.w)
@@ -83,12 +84,12 @@ let send_request prim view timestamp request id syms wnfo =
   | Error exn -> print_endline (kBRED ^ "[writing error]" ^ kNRM)*)
 
 
-let send_request_to_primary view timestamp request id syms wnfos =
+let send_request_to_primary view timestamp request id priv pub wnfos =
   let pwnfo = find_primary_writer_nfo view (List.length wnfos) wnfos in
-  send_request true view timestamp request id syms pwnfo
+  send_request true view timestamp request id priv pub pwnfo
 
 
-let rec send_request_to_all view timestamp request id syms nreps wnfos =
+let rec send_request_to_all view timestamp request id priv pub nreps wnfos =
   match wnfos with
   | [] -> Deferred.return ()
   | wnfo :: wnfos ->
@@ -96,8 +97,8 @@ let rec send_request_to_all view timestamp request id syms nreps wnfos =
        print_endline ("[not contacting primary]")
      else*)
      print_endline ("[contacting " ^ ie_node2string wnfo.nfo.id ^ "]");
-     let _ = send_request false view timestamp request id syms wnfo in
-     send_request_to_all view timestamp request id syms nreps wnfos
+     let _ = send_request false view timestamp request id priv pub wnfo in
+     send_request_to_all view timestamp request id priv pub nreps wnfos
 
 
 let rec connect_to_all (nfos : node_nfo list) : writer_nfo list =
@@ -117,16 +118,21 @@ type worker_state_type =
     rep_replied     : (int (* replica id *) * int (* view *)) list;
     time_sent       : Prelude.Time.t;
     time_average    : Prelude.Time.t;
+    time_initial    : Prelude.Time.t;
+    last_time_elp   : Prelude.Time.t;
+    last_ts_elp     : int;
     outliers        : int;
     client_id       : int;
-    syms            : Cstruct.t list;
+    client_priv     : Nocrypto.Rsa.priv;
+    client_pub      : Nocrypto.Rsa.pub;
     max_timestamp   : int;
     writer_nfos     : writer_nfo list;
     writer_plot_ts  : Writer.t;
     writer_plot_avg : Writer.t;
+    writer_plot_elp : Writer.t;
   }
 
-let update_new_timestamp_worker_state ws new_ts new_request new_view replicas new_time new_avg new_outliers =
+let update_new_timestamp_worker_state ws new_ts new_request new_view replicas new_time new_avg new_last_time_elp new_last_ts_elp new_outliers =
   {
     last_timestamp  = new_ts;
     last_request    = new_request;
@@ -134,13 +140,18 @@ let update_new_timestamp_worker_state ws new_ts new_request new_view replicas ne
     rep_replied     = replicas;
     time_sent       = new_time;
     time_average    = new_avg;
+    time_initial    = ws.time_initial;
+    last_time_elp   = new_last_time_elp;
+    last_ts_elp     = new_last_ts_elp;
     outliers        = new_outliers;
     client_id       = ws.client_id;
-    syms            = ws.syms;
+    client_priv     = ws.client_priv;
+    client_pub      = ws.client_pub;
     max_timestamp   = ws.max_timestamp;
     writer_nfos     = ws.writer_nfos;
     writer_plot_ts  = ws.writer_plot_ts;
     writer_plot_avg = ws.writer_plot_avg;
+    writer_plot_elp = ws.writer_plot_elp;
   }
 
 let update_replicas_worker_state ws replicas =
@@ -151,13 +162,18 @@ let update_replicas_worker_state ws replicas =
     rep_replied     = replicas;
     time_sent       = ws.time_sent;
     time_average    = ws.time_average;
+    time_initial    = ws.time_initial;
+    last_time_elp   = ws.last_time_elp;
+    last_ts_elp     = ws.last_ts_elp;
     outliers        = ws.outliers;
     client_id       = ws.client_id;
-    syms            = ws.syms;
+    client_priv     = ws.client_priv;
+    client_pub      = ws.client_pub;
     max_timestamp   = ws.max_timestamp;
     writer_nfos     = ws.writer_nfos;
     writer_plot_ts  = ws.writer_plot_ts;
     writer_plot_avg = ws.writer_plot_avg;
+    writer_plot_elp = ws.writer_plot_elp;
   }
 
 let rec get_highest_view v l =
@@ -202,7 +218,7 @@ module Worker = struct
           (
             (* no progress has been made *)
             print_endline (kBMAG ^ "[no progress (" ^ string_of_int timestamp ^ "), contacting all replicas]" ^ kNRM);
-            let _ = send_request_to_all ws.current_view ws.last_timestamp ws.last_request ws.client_id ws.syms (List.length ws.writer_nfos) ws.writer_nfos in
+            let _ = send_request_to_all ws.current_view ws.last_timestamp ws.last_request ws.client_id ws.client_priv ws.client_pub (List.length ws.writer_nfos) ws.writer_nfos in
             print_endline (kBMAG ^ "[contacted all replicas]" ^ kNRM);
             start_timer worker_state view timestamp
           )
@@ -225,12 +241,13 @@ module Worker = struct
                                                  ws.rep_replied)) in
                           let _ = if List.length replicas' = !nfaults + 1 && ws.last_timestamp < ws.max_timestamp then
                                     (
-                                      let t = Prelude.Time.sub_time (Prelude.Time.get_time ()) ws.time_sent in
+                                      (*print_endline("[got enough replies for " ^ string_of_int ws.last_timestamp ^ "]");*)
+                                      let new_time = Prelude.Time.get_time () in
+                                      let t = Prelude.Time.sub_time new_time ws.time_sent in
                                       let (new_outliers, new_avg) =
                                         if Prelude.Time.lt_time (Prelude.Time.mk_time max_time) t
                                         then (ws.outliers + 1, ws.time_average)
                                         else (ws.outliers, Prelude.Time.div_time (Prelude.Time.add_time (Prelude.Time.mul_time ws.time_average  (ws.last_timestamp - 1)) t) ws.last_timestamp) in
-                                      let new_time = Prelude.Time.get_time () in
                                       let new_ts = ws.last_timestamp + 1 in
                                       let new_request = 17 in
                                       let new_view = get_highest_view ws.current_view replicas' in
@@ -241,6 +258,16 @@ module Worker = struct
                                             Writer.write ws.writer_plot_avg (string_of_int ws.last_timestamp ^ " " ^ Batteries.String.of_list (Prelude.Time.time2string new_avg) ^ "\n")
                                           )
                                         else () in
+                                      let elapsed = Prelude.Time.sub_time new_time ws.last_time_elp in
+                                      (*let _ = print_endline ("[elapsed: " ^ Batteries.String.of_list (Prelude.Time.time2string elapsed) ^ "\n") in*)
+                                      let (new_last_time_elp, new_last_ts_elp) =
+                                        if Prelude.Time.lt_time (Prelude.Time.mk_time (float_of_int 1)) elapsed
+                                        then
+                                          let elp = Prelude.Time.sub_time new_time ws.time_initial in
+                                          let n   = ws.last_timestamp - ws.last_ts_elp in
+                                          let _   = Writer.write ws.writer_plot_elp (Batteries.String.of_list (Prelude.Time.time2string elp) ^ " " ^ string_of_int n ^ "\n") in
+                                          (new_time, ws.last_timestamp)
+                                        else (ws.last_time_elp, ws.last_ts_elp) in
                                       let _ =
                                         if (ws.last_timestamp mod !printing_period) = 0 then
                                           print_endline (kMAG
@@ -258,9 +285,9 @@ module Worker = struct
                                         if ws.current_view < new_view then
                                           print_endline (kCYN ^ "[changed view: " ^ string_of_int ws.current_view ^ " -> " ^ string_of_int new_view ^ "]" ^ kNRM)
                                         else () in
-                                      worker_state := update_new_timestamp_worker_state ws new_ts new_request new_view [] new_time new_avg new_outliers;
+                                      worker_state := update_new_timestamp_worker_state ws new_ts new_request new_view [] new_time new_avg new_last_time_elp new_last_ts_elp new_outliers;
                                       (*print_endline (kYEL ^ "[sending new request with timestamp " ^ string_of_int new_ts ^ "]" ^ kNRM);*)
-                                      let _ = send_request_to_primary ws.current_view new_ts new_request ws.client_id ws.syms ws.writer_nfos in
+                                      let _ = send_request_to_primary ws.current_view new_ts new_request ws.client_id ws.client_priv ws.client_pub ws.writer_nfos in
                                       let _ = start_timer worker_state ws.current_view new_ts in
                                       ()
                                     )
@@ -274,7 +301,8 @@ module Worker = struct
       let functions = {add_reply}
 
       let rec init_worker_state (id, numfaults, numclients, max, nfos) =
-        let syms = List.map nfos (fun nfo -> lookup_client_key (Obj.magic (ie_node2int nfo.id)) (Obj.magic id)) in
+        let priv = lookup_client_sending_key   (Obj.magic id) in
+        let pub  = lookup_client_receiving_key (Obj.magic id) in
 
         Writer.open_file ~append:(false) (plot_ts_file ^ "_" ^ string_of_int id ^ "_" ^ string_of_int numfaults ^ "_" ^ string_of_int numclients ^ "_" ^ string_of_int max ^ ".dat")
         >>= fun plot_ts ->
@@ -283,6 +311,10 @@ module Worker = struct
         Writer.open_file ~append:(false) (plot_avg_file ^ "_" ^ string_of_int id ^ "_" ^ string_of_int numfaults ^ "_" ^ string_of_int numclients ^ "_" ^ string_of_int max ^ ".dat")
         >>= fun plot_avg ->
         let _ = Writer.write plot_avg "#instance/average time to receive enough replies\n" in
+
+        Writer.open_file ~append:(false) (plot_elp_file ^ "_" ^ string_of_int id ^ "_" ^ string_of_int numfaults ^ "_" ^ string_of_int numclients ^ "_" ^ string_of_int max ^ ".dat")
+        >>= fun plot_elp ->
+        let _ = Writer.write plot_avg "#elapsed time/number of requests handled since last ploting point\n" in
 
         let current_view = 0 in
         let wnfos        = connect_to_all nfos in
@@ -297,18 +329,24 @@ module Worker = struct
                       rep_replied     = [];
                       time_sent       = t;
                       time_average    = avg;
+                      time_initial    = t;
+                      last_time_elp   = t;
+                      last_ts_elp     = 0;
                       outliers        = outliers;
                       client_id       = id;
-                      syms            = syms;
+                      client_priv     = priv;
+                      client_pub      = pub;
                       max_timestamp   = max;
                       writer_nfos     = wnfos;
                       writer_plot_ts  = plot_ts;
-                      writer_plot_avg = plot_avg} in
+                      writer_plot_avg = plot_avg;
+                      writer_plot_elp = plot_elp} in
 
-        let _ = send_request_to_primary current_view initial_timestamp request id syms wnfos in
+        print_endline("[---sending first request---]");
+        let _ = send_request_to_primary current_view initial_timestamp request id priv pub wnfos in
         let _ = start_timer ws current_view initial_timestamp in
         Deferred.return ws
-                                                                        
+
       let init_connection_state ~connection:_ ~worker_state:_ = return
     end
   end
@@ -322,7 +360,7 @@ let extract_reply_info (msg : pBFTmsg) : (int * int * int * int * int) option =
   | _ -> None
 
 
-let handle_message id conn msg =
+let handle_message id conn (msg : pBFTmsg) =
   match extract_reply_info msg with
   | Some (view,timestamp,client,replica,result) ->
      if client = id then
@@ -332,7 +370,9 @@ let handle_message id conn msg =
        let _ = Worker.Connection.run_exn conn ~f:Worker.functions.add_reply ~arg:(nfo) in
        ()
      else ()
-  | None -> print_endline ("[message doesn't match expected reply]")
+  | None ->
+     print_endline ("[message doesn't match expected reply]");
+     print_endline ("[message is: " ^ Batteries.String.of_list (PbftReplicaEx.msg2string msg) ^ "]")
 
 
 let rec read_messages id conn buffer size ofs : string =
@@ -358,6 +398,7 @@ let rec read_inputs addr id init buffer r conn =
   | `Eof -> return ()
   | `Ok bytes_read ->
      (*print_endline ("[bytes read (bufer size: " ^ string_of_int bytes_read ^ ") (total size " ^ string_of_int (Marshal.total_size buffer 0) ^ "): " ^ String.sub buffer 0 bytes_read ^ "]");*)
+     (*print_endline ("[bytes read (bufer size: " ^ string_of_int bytes_read ^ ") (total size " ^ string_of_int (Marshal.total_size buffer 0) ^ ")]");*)
      let buffer' = init ^ Bytes.to_string buffer in
      let rest = read_messages id conn (Bytes.of_string buffer') (String.length init + bytes_read) 0 in
      read_inputs addr id rest buffer r conn;;

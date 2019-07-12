@@ -1,22 +1,59 @@
 (*
- * This file defines an instance of the simple PrimaryBackup
- * example to show the simulation of a defined protocol.
- *)
+
+  Copyright 2016 Luxembourg University
+  Copyright 2017 Luxembourg University
+  Copyright 2018 Luxembourg University
+
+  This file is part of Velisarios.
+
+  Velisarios is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Velisarios is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Velisarios.  If not, see <http://www.gnu.org/licenses/>.
+
+
+  Authors: Vincent Rahli
+           Ivana Vukotic
+
+*)
+
 
 Require Export Simulator.
-Require Export Protocols.PrimaryBackup.
-Require Export Ascii String.
+Require Export PBFT.
+Require Export PBFTcollision_resistant.
+Require Import Ascii String.
+(*Require Import SHA256.*)
 
-(* define the instance *)
-Section PrimaryBackupInstance.
 
-  (* total number of faults *)
+(*
+    We'll define here an instance of PBFT so that we can simulate it.
+ *)
+
+
+(* ================== INSTANCE OF PBFT ================== *)
+
+Section PBFTinstance.
+
+(*  Class NumNodes := MkNumNodes { total_num_faults : nat; total_num_clients : nat }.
+  Context { p_num_nodes : NumNodes }.*)
+
+
+  (* ============================================ *)
+  (* total_num_faults *)
   Definition F := 1.
 
-  (* total number of clients which is c + 1 *)
+  (* total_num_clients is C+1 *)
   Definition C := 0.
 
-  (* maximum requests in progress *)
+  (* max requests in progress *)
   Definition MIP := 2.
 
   (* water-mark range *)
@@ -24,25 +61,25 @@ Section PrimaryBackupInstance.
 
   (* checkpoint period *)
   Definition CP := 50.
+  (* ============================================ *)
 
 
+  Definition pbft_digest : Set := list nat.
 
-  Definition pb_digest : Set := list nat.
-
-  Lemma pb_digest_deq : Deq pb_digest.
+  Lemma pbft_digest_deq : Deq pbft_digest.
   Proof.
     introv; apply list_eq_dec.
     apply deq_nat.
   Defined.
 
   Inductive sending_key_stub : Set :=
-  | pb_sending_key_stub.
+  | pbft_sending_key_stub.
 
   Inductive receiving_key_stub : Set :=
-  | pb_receiving_key_stub.
+  | pbft_receiving_key_stub.
 
-  Definition pb_sending_key   : Set := sending_key_stub.
-  Definition pb_receiving_key : Set := receiving_key_stub.
+  Definition pbft_sending_key   : Set := sending_key_stub.
+  Definition pbft_receiving_key : Set := receiving_key_stub.
 
   (*Definition F : nat := 1.*)
   Definition nreps (F : nat) : nat := 3 * F + 1.
@@ -104,18 +141,18 @@ Section PrimaryBackupInstance.
     | opr_sub m => let k := state - m in (k,k)
     end.
 
-  Inductive PBtoken_stub : Set :=
-  | pb_token_stub.
+  Inductive PBFTtoken_stub : Set :=
+  | pbft_token_stub.
 
-  Definition pb_token : Set := PBtoken_stub.
+  Definition pbft_token : Set := PBFTtoken_stub.
 
-  Lemma pb_token_deq : Deq pb_token.
+  Lemma pbft_token_deq : Deq pbft_token.
   Proof.
     introv; destruct x, y; simpl; prove_dec.
   Defined.
 
-  Global Instance PB_I_context : PBcontext :=
-    MkPBcontext
+  Global Instance PBFT_I_context : PBFTcontext :=
+    MkPBFTcontext
       (* max in progress *)
       MIP
 
@@ -126,22 +163,22 @@ Section PrimaryBackupInstance.
       CP
 
       (* digest type *)
-      pb_digest
+      pbft_digest
 
       (* digest decider *)
-      pb_digest_deq
+      pbft_digest_deq
 
       (* token type *)
-      pb_token
+      pbft_token
 
       (* token decider *)
-      pb_token_deq
+      pbft_token_deq
 
       (* sending key type *)
-      pb_sending_key
+      pbft_sending_key
 
       (* receiving key type *)
-      pb_receiving_key
+      pbft_receiving_key
 
       (* number of faults *)
       F
@@ -197,50 +234,81 @@ Section PrimaryBackupInstance.
       (* delay in ms *)
       1000.
 
-(*
-  Definition pb_create_signature
-             (m  : PBmsg)
-             (ks : sending_keys) : PBtokens := [pb_token_stub].
 
-  Definition pb_verify_signature
+  Definition pbft_create_signature
+             (m  : PBFTBare_Msg)
+             (ks : sending_keys) : PBFTtokens := [pbft_token_stub].
+
+  Definition pbft_verify_signature
              (m : PBFTBare_Msg)
              (n : name)
              (k : receiving_key)
              (a : pbft_token) : bool := true.
 
-  Global Instance PB_I_auth : PBauth :=
-    MkPBauth pb_create_signature pb_verify_signature.
-*)
+  Global Instance PBFT_I_auth : PBFTauth :=
+    MkPBFTauth pbft_create_signature pbft_verify_signature.
 
-  Definition pb_lookup_replica_sending_key   (src : Rep)    : pb_sending_key   := pb_sending_key_stub.
-  Definition pb_lookup_replica_receiving_key (dst : Rep)    : pb_receiving_key := pb_receiving_key_stub.
-  Definition pb_lookup_client_receiving_key  (c   : Client) : pb_receiving_key := pb_receiving_key_stub.
-(*
-  Definition initial_pb_local_key_map_replicas (src : name) : local_key_map :=
+
+  Definition pbft_lookup_replica_sending_key   (src : Rep)    : pbft_sending_key   := pbft_sending_key_stub.
+  Definition pbft_lookup_replica_receiving_key (dst : Rep)    : pbft_receiving_key := pbft_receiving_key_stub.
+  Definition pbft_lookup_client_receiving_key  (c   : Client) : pbft_receiving_key := pbft_receiving_key_stub.
+
+  Definition initial_pbft_local_key_map_replicas (src : name) : local_key_map :=
     match src with
-    | PBbackup =>
+    | PBFTreplica i =>
       MkLocalKeyMap
-        [MkDSKey (map PBprimary reps) (pb_lookup_replica_sending_key i)]
+        [MkDSKey (map PBFTreplica reps) (pbft_lookup_replica_sending_key i)]
         (List.app
-           (map (fun c => MkDRKey [PBc] (pb_lookup_client_receiving_key  c)) clients)
-           (map (fun m => MkDRKey [PBbackup] (pb_lookup_replica_receiving_key m) nreps)))
-    | PBc => MkLocalKeyMap [] []
+           (map (fun c => MkDRKey [PBFTclient  c] (pbft_lookup_client_receiving_key  c)) clients)
+           (map (fun m => MkDRKey [PBFTreplica m] (pbft_lookup_replica_receiving_key m)) reps))
+    | PBFTclient _ => MkLocalKeyMap [] []
     end.
 
-  Global Instance PB_I_keys : PBinitial_keys :=
-    MkPBinitial_keys initial_pb_local_key_map_replicas.
-*)
-  Definition pb_simple_create_hash_messages (msgs : list PBmsg) : PBdigest := [].
-  Definition pb_simple_verify_hash_messages (msgs : list PBmsg) (d : PBdigest) := true.
-  Definition pb_simple_create_hash_state_last_reply (smst : PBsm_state) (lastr : LastReplyState) : PBdigest := [].
-  Definition pb_simple_verify_hash_state_last_reply (smst : PBsm_state) (lastr : LastReplyState) (d : PBdigest) := true.
+  Global Instance PBFT_I_keys : PBFTinitial_keys :=
+    MkPBFTinitial_keys initial_pbft_local_key_map_replicas.
 
-  Global Instance PB_I_hash : PBhash :=
-    MkPBhash
-      pb_simple_create_hash_messages
-      pb_simple_verify_hash_messages
-      pb_simple_create_hash_state_last_reply
-      pb_simple_verify_hash_state_last_reply.
+  Definition pbft_simple_create_hash_messages (msgs : list PBFTmsg) : PBFTdigest := [].
+  Definition pbft_simple_verify_hash_messages (msgs : list PBFTmsg) (d : PBFTdigest) := true.
+  Definition pbft_simple_create_hash_state_last_reply (smst : PBFTsm_state) (lastr : LastReplyState) : PBFTdigest := [].
+  Definition pbft_simple_verify_hash_state_last_reply (smst : PBFTsm_state) (lastr : LastReplyState) (d : PBFTdigest) := true.
+
+  Global Instance PBFT_I_hash : PBFThash :=
+    MkPBFThash
+      pbft_simple_create_hash_messages
+      pbft_simple_verify_hash_messages
+      pbft_simple_create_hash_state_last_reply
+      pbft_simple_verify_hash_state_last_reply.
+
+
+  (*Lemma simple_create_hash_messages_collision_resistant :
+  forall msgs1 msgs2,
+    simple_create_hash_messages msgs1 = simple_create_hash_messages msgs2
+    -> msgs1 = msgs2.
+Proof.
+  introv h.
+  unfold simple_create_hash_messages in *.
+Admitted.
+
+Lemma simple_create_hash_state_last_reply_collision_resistant :
+  forall sm1 sm2 last1 last2,
+    simple_create_hash_state_last_reply sm1 last1 = simple_create_hash_state_last_reply sm2 last2
+    -> sm1 = sm2 /\ last1 = last2.
+Proof.
+  introv h.
+Admitted.
+
+Global Instance PBFT_I_hash_axioms : PBFThash_axioms.
+Proof.
+  exact (Build_PBFThash_axioms
+           (* create_hash_message is collision resistant *)
+           simple_create_hash_messages_collision_resistant
+
+           (* create_hash_state_last_reply is collision resistant *)
+           simple_create_hash_state_last_reply_collision_resistant
+        ).
+Defined.
+   *)
+
 
   (* ================== TIME ================== *)
 
@@ -273,10 +341,10 @@ Section PrimaryBackupInstance.
   Definition CR : string := String (ascii_of_nat 13) "".
 
   (* Fix: to finish *)
-  (*Definition tokens2string (toks : Tokens) : string := "-".
-*)
+  Definition tokens2string (toks : Tokens) : string := "-".
+
   (* Fix: to finish *)
-  Definition digest2string (d : pb_digest) : string := "-".
+  Definition digest2string (d : pbft_digest) : string := "-".
 
   (* Fix: to finish *)
   Definition result2string (r : result) : string := "-".
@@ -289,12 +357,12 @@ Section PrimaryBackupInstance.
     | time_stamp n => nat2string n
     end.
 
-  (*Definition view2string (v : View) : string :=
+  Definition view2string (v : View) : string :=
     match v with
     | view n => nat2string n
     end.
-*)
-  (*Definition seq2string (s : SeqNum) : string :=
+
+  Definition seq2string (s : SeqNum) : string :=
     match s with
     | seq_num n => nat2string n
     end.
@@ -304,12 +372,12 @@ Section PrimaryBackupInstance.
     | opr_add n => str_concat ["+", nat2string n]
     | opr_sub n => str_concat ["-", nat2string n]
     end.
-*)
+
   Definition nat_n2string {m} (n : nat_n m) : string := nat2string (proj1_sig n).
 
   Definition replica2string (r : replica F) : string := nat_n2string r.
 
-(*  Definition bare_request2string (br : Bare_Request) : string :=
+  Definition bare_request2string (br : Bare_Request) : string :=
     match br with
     | null_req => str_concat [ "null_req"]
     | bare_req opr ts c => str_concat [operation2string opr, ",", timestamp2string ts, ",", client2string c]
@@ -483,8 +551,8 @@ Section PrimaryBackupInstance.
 
   Definition name2string (n : name) : string :=
     match n with
-    | PBprimary => replica2string n
-    | PBc => client2string "client"
+    | PBFTreplica r => replica2string r
+    | PBFTclient c => client2string c
     end.
 
   Fixpoint names2string (l : list name) : string :=
@@ -499,7 +567,7 @@ Section PrimaryBackupInstance.
   Definition DirectedMsg2string (dm : DirectedMsg) : string :=
     match dm with
     | MkDMsg msg dst delay =>
-      concat [msg2string msg, ":", "[", names2string dst, "]", ":", delay2string delay]
+      str_concat [msg2string msg, ":", "[", names2string dst, "]", ":", delay2string delay]
     end.
 
   Fixpoint DirectedMsgs2string (l : DirectedMsgs) : string :=
@@ -524,25 +592,24 @@ Section PrimaryBackupInstance.
   Definition MonoSimulationState2string (s : MonoSimulationState) : string :=
     match s with
     | MkMonoSimState ty sys step out_inflight in_inflight delivered =>
-      concat
+      str_concat
         [CR,
-          "====== STEP ======",
-          CR,
-          nat2string step,
-          CR,
-          "====== IN FLIGHT (from outside the system) ======",
-          CR,
-          (*DirectedMsgs2string out_inflight,*)
-          CR,
-          "====== IN FLIGHT (from inside the system) ======",
-          CR,
-          (*DirectedMsgs2string in_inflight,*)
-          CR,
-          "====== DELIVERED ======"
-(*CR,
+         "====== STEP ======",
+         CR,
+         nat2string step,
+         CR,
+         "====== IN FLIGHT (from outside the system) ======",
+         CR,
+         DirectedMsgs2string out_inflight,
+         CR,
+         "====== IN FLIGHT (from inside the system) ======",
+         CR,
+         DirectedMsgs2string in_inflight,
+         CR,
+         "====== DELIVERED ======",
+         CR,
          TimedDirectedMsgs2string delivered,
-         CR*)
-        ]
+         CR]
     end.
 
   Definition pbft_state2string (s : PBFTstate) :=
@@ -560,14 +627,24 @@ Section PrimaryBackupInstance.
          , nat2string (List.length (log s))
          ,")"
         ].
-*)
+
   (* ================== SYSTEM ================== *)
 
 
-  Definition dummy_initial_state : PBs :=
-    PBp.
+  Definition dummy_initial_state : PBFTstate :=
+    Build_State
+      (MkLocalKeyMap [] [])
+      initial_view
+      []
+      initial_checkpoint_state
+      PBFTsm_initial_state
+      initial_next_to_execute
+      initial_ready
+      initial_last_reply
+      initial_view_change_state
+      initial_primary_state.
 
-  Definition PBdummySM : MStateMachine PBstate :=
+  Definition PBFTdummySM : MStateMachine PBFTstate :=
     MhaltedSM dummy_initial_state.
 
   Definition PBFTmono_sys : NMStateMachine PBFTstate :=
@@ -638,7 +715,9 @@ Section PrimaryBackupInstance.
              (switches : Switches) : MonoSimulationState :=
     mono_iterate_n_steps rounds switches (PBFTinit_msgs msgs).
 
-End PrimaryBackupInstance.
+End PBFTinstance.
+
+
 
 (* ================== EXTRACTION ================== *)
 
@@ -670,7 +749,7 @@ Extract Inlined Constant time_I_2string  => "Prelude.Time.time2string".
 
 (* == crypto stuff == *)
 (* === COMMENT OUT THIS PART IF YOU DON'T WANT TO USE KEYS === *)
-(*Extract Inlined Constant pbft_sending_key   => "Nocrypto.Rsa.priv".
+Extract Inlined Constant pbft_sending_key   => "Nocrypto.Rsa.priv".
 Extract Inlined Constant pbft_receiving_key => "Nocrypto.Rsa.pub".
 Extract Inlined Constant pbft_lookup_replica_sending_key   => "RsaKeyFun.lookup_replica_sending_key".
 Extract Inlined Constant pbft_lookup_replica_receiving_key => "RsaKeyFun.lookup_replica_receiving_key".
@@ -680,7 +759,6 @@ Extract Inlined Constant pbft_create_signature => "RsaKeyFun.sign_list".
 Extract Inlined Constant pbft_verify_signature => "RsaKeyFun.verify_one".
 Extract Inlined Constant pbft_token => "Cstruct.t".
 Extract Inlined Constant pbft_token_deq => "(=)".
-*)
 (* === --- === *)
 
 
@@ -706,4 +784,4 @@ Definition local_replica (*(F C : nat)*) :=
     PBFT_I_keys
     PBFT_I_hash.
 
-Extraction "PrimaryReplica.ml" pbft_state2string lrun_sm MonoSimulationState2string PBFTdummySM local_replica.
+Extraction "pbft/PbftReplicaEx.ml" pbft_state2string lrun_sm MonoSimulationState2string PBFTdummySM local_replica.

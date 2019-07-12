@@ -1,6 +1,6 @@
 open Colors
 open Prelude
-open PbftReplica
+open PbftReplicaEx
 open Connect
 open ParseConf
 open RsaKeyFun
@@ -372,7 +372,7 @@ let handle_message id conn (msg : pBFTmsg) =
      else ()
   | None ->
      print_endline ("[message doesn't match expected reply]");
-     print_endline ("[message is: " ^ Batteries.String.of_list (PbftReplica.msg2string msg) ^ "]")
+     print_endline ("[message is: " ^ Batteries.String.of_list (PbftReplicaEx.msg2string msg) ^ "]")
 
 
 let rec read_messages id conn buffer size ofs : string =

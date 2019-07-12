@@ -59,25 +59,25 @@ let lookup_replica_sending_key (i : Obj.t(*rep*)) : Nocrypto.Rsa.priv =
   try
     read_private_key ("private_key" ^ string_of_int (Obj.magic i))
   with
-  | _ -> read_private_key ("somekeys/private_key" ^ string_of_int (Obj.magic i))
+  | _ -> read_private_key ("private_key" ^ string_of_int (Obj.magic i))
 
 let lookup_client_sending_key (c : Obj.t(*client*)) : Nocrypto.Rsa.priv =
   try
     read_private_key ("private_key_client" ^ string_of_int (Obj.magic c))
   with
-  | _ -> read_private_key ("somekeys/private_key_client" ^ string_of_int (Obj.magic c))
+  | _ -> read_private_key ("private_key_client" ^ string_of_int (Obj.magic c))
 
 let lookup_replica_receiving_key (i : Obj.t(*rep*)) : Nocrypto.Rsa.pub =
   try
     read_public_key ("public_key" ^ string_of_int (Obj.magic i))
   with
-  | _ -> read_public_key ("somekeys/public_key" ^ string_of_int (Obj.magic i))
+  | _ -> read_public_key ("public_key" ^ string_of_int (Obj.magic i))
 
 let lookup_client_receiving_key (c : Obj.t(*client*)) : Nocrypto.Rsa.pub =
   try
     read_public_key ("public_key_client" ^ string_of_int (Obj.magic c))
   with
-  | _ -> read_public_key ("somekeys/public_key_client" ^ string_of_int (Obj.magic c))
+  | _ -> read_public_key ("public_key_client" ^ string_of_int (Obj.magic c))
 
 
 let rec compare_strings (s1 : string) (s2 : string) : string =

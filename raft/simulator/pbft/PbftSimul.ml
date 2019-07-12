@@ -1,6 +1,6 @@
 open Colors
 open Prelude
-open PbftReplica
+open PbftReplicaEx
 open RsaKeyFun
 open Core
 

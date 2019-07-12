@@ -1,51 +1,79 @@
-#
-# This makefile compile the simulation enviroment
-#
-default: Replica.native Client.native RsaKey.native Simul.native
 
-Replica.native: Replica.ml
-	ocamlbuild -tag thread -use-ocamlfind -package ppx_jane,async,core_extended,batteries,rpc_parallel,nocrypto.unix Replica.native
 
-Client.native: Client.ml
-	ocamlbuild -tag thread -use-ocamlfind -package ppx_jane,async,core_extended,batteries,rpc_parallel,nocrypto.unix Client.native
+OCB_FLAGS = -tag bin_annot -tag thread -use-ocamlfind -Is pb,raft,pbft,lib -package ppx_jane,async,core_extended,batteries,rpc_parallel,nocrypto.unix
+OCB = ocamlbuild $(OCB_FLAGS)
 
-Client_mac.native: Client_mac.ml
-	ocamlbuild -tag thread -use-ocamlfind -package ppx_jane,async,core_extended,batteries,rpc_parallel,nocrypto.unix Client_mac.native
+default: pbft
 
-RsaKey.native: RsaKey.ml
-	ocamlbuild -tag thread -use-ocamlfind -package ppx_jane,async,core_extended,batteries,rpc_parallel,nocrypto.unix RsaKey.native
+pbft: PbftReplica.native PbftClient.native RsaKey.native PbftSimul.native
 
-MacKey.native: MacKey.ml
-	ocamlbuild -tag thread -use-ocamlfind -package ppx_jane,async,core_extended,batteries,rpc_parallel,nocrypto.unix MacKey.native
+raft: RaftClient.native RsaKey.native
 
-Simul.native: Simul.ml
-	ocamlbuild -tag thread -use-ocamlfind -package ppx_jane,async,core_extended,batteries,rpc_parallel,nocrypto.unix Simul.native
+pb: PbSimul.native
 
-Test.native: Test.ml
-	ocamlbuild -tag thread -use-ocamlfind -package ppx_jane,async,core_extended,batteries,rpc_parallel,nocrypto.unix Test.native
+### pb ###
+PbSimul.native: pb/PbSimul.ml
+	$(OCB) PbSimul.native
 
-TestServer.native: TestServer.ml
-	ocamlbuild -tag thread -use-ocamlfind -package ppx_jane,async,core_extended,batteries,rpc_parallel,nocrypto.unix TestServer.native
+### raft ###
+RaftClient.native: raft/RaftClient.ml
+	$(OCB) RaftClient.native
+	mv RaftClient.native Client.ml
 
-TestClient.native: TestClient.ml
-	ocamlbuild -tag thread -use-ocamlfind -package ppx_jane,async,core_extended,batteries,rpc_parallel,nocrypto.unix TestClient.native
+RaftReplica.native:
+	$(OCB) RaftReplica.native
+	mv RaftReplica.native Replica.native
 
-pb:
+RaftSimul.native: raft/RaftSimul.ml
+	$(OCB) RaftSimul.native
+
+### pbft ###
+PbftReplica.native:
+	$(OCB) PbftReplica.native
+	mv PbftReplica.native Replica.native
+
+PbftClient.native:
+	$(OCB) PbftClient.native
+	mv PbftClient.native Client.native
+
+PbftSimul.native: pbft/PbftSimul.ml
+	$(OCB) PbftSimul.native
+
+### protocol agnostic parts ###
+RsaKey.native:
+	$(OCB) RsaKey.native
+
+raft-ext:
 	coqc -R ../coq-tools Tools -R ../velisarios Velisarios \
 	-R ../protocols Protocols -R . Simulator Simulator.v
 	coqc -R ../coq-tools Tools -R ../velisarios Velisarios \
-	-R ../protocols Protocols -R . Simulator PrimaryBackupSim.v
+	-R ../protocols Protocols -R . Simulator raft/RaftSim.v
 
-pbft:
+pbft-ext:
 	coqc -R ../coq-tools Tools -R ../velisarios Velisarios -R ../protocols Protocols -R . Simulator Simulator.v
-	coqc -R ../coq-tools Tools -R ../velisarios Velisarios -R ../protocols Protocols -R . Simulator PBFTsim.v
+	coqc -R ../coq-tools Tools -R ../velisarios Velisarios -R ../protocols Protocols -R . Simulator pbft/PBFTsim.v
+
+ext:
+	coqc -R ../coq-tools util -R ../model model -R ../PBFT PBFT -R ../PrimaryBackup PrimaryBackup -R ../runtime runtime -R ../TwoThirds TwoThirds Simulator.v
+	coqc -R ../coq-tools util -R ../model model -R ../PBFT PBFT -R ../PrimaryBackup PrimaryBackup -R ../runtime runtime -R ../TwoThirds TwoThirds PBFTsim.v
 
 sext:
-	coqc -R ../coq-tools Tools -R ../velisarios Velisarios -R ../PBFT PBFT -R ../PrimaryBackup PrimaryBackup -R ../runtime runtime -R ../TwoThirds TwoThirds Simulator.v
-	coqc -R ../coq-tools Tools -R ../runtime Velisarios -R ../PBFT PBFT -R ../PrimaryBackup PrimaryBackup -R ../runtime runtime -R ../TwoThirds TwoThirds PBFTsim_mac.v
+	(cd ..; make PBFT/PBFT.vo)
+	(cd ..; make PBFT/PBFTcollision_resistant.vo)
+	coqc -R ../coq-tools util -R ../model model -R ../PBFT PBFT -R ../PrimaryBackup PrimaryBackup -R ../runtime runtime -R ../TwoThirds TwoThirds Simulator.v
+	coqc -R ../coq-tools util -R ../model model -R ../PBFT PBFT -R ../PrimaryBackup PrimaryBackup -R ../runtime runtime -R ../TwoThirds TwoThirds PBFTsim_mac.v
 
 oldext:
-	coqc -R ../coq-tools Tools -R ../velisarios Velisarios -R ../PBFT PBFT -R ../PrimaryBackup PrimaryBackup -R ../runtime runtime -R ../TwoThirds TwoThirds PBFTsim.v
+	coqc -R ../coq-tools util -R ../model model -R ../PBFT PBFT -R ../PrimaryBackup PrimaryBackup -R ../runtime runtime -R ../TwoThirds TwoThirds PBFTsim.v
+
+cleano:
+	rm -f *.cmo
+	rm -f *.cmi
+	rm -f *.cma
+	rm -f *.native
+	rm -f *.byte
+	rm -f a.out
+	rm -Rf _build
 
 clean:
 	rm -f *.cmo
