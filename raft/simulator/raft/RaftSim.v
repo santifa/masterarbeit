@@ -12,7 +12,6 @@ Section RaftInstance.
 
   (* ================== TIME ================== *)
 
-
   Definition time_I_type : Set := unit.
 
   Definition time_I_get_time : unit -> time_I_type := fun _ => tt.
@@ -29,39 +28,36 @@ Section RaftInstance.
     { exact time_I_2string. }
   Defined.
 
-
+  (* context definitions *)
   (* total number of faults *)
   Definition F := 1.
 
   (* total number of clients which is c + 1 *)
   Definition C := 0.
 
-  (* maximum requests in progress *)
-  Definition MIP := 2.
+  (* define the key exchange and authentication *)
+  (* Definition raft_digest : Set := list nat. *)
 
-   (* define the key exchange and authentication *)
-  Definition raft_digest : Set := list nat.
+  (* Lemma raft_digest_deq : Deq raft_digest. *)
+  (* Proof. *)
+  (*   introv; apply list_eq_dec. *)
+  (*   apply deq_nat. *)
+  (* Defined. *)
 
-  Lemma raft_digest_deq : Deq raft_digest.
-  Proof.
-    introv; apply list_eq_dec.
-    apply deq_nat.
-  Defined.
+  (* Inductive sending_key_stub : Set := *)
+  (* | raft_sending_key_stub. *)
 
-  Inductive sending_key_stub : Set :=
-  | raft_sending_key_stub.
+  (* Inductive receiving_key_stub : Set := *)
+  (* | raft_receiving_key_stub. *)
 
-  Inductive receiving_key_stub : Set :=
-  | raft_receiving_key_stub.
-
-  Definition raft_sending_key   : Set := sending_key_stub.
-  Definition raft_receiving_key : Set := receiving_key_stub.
+  (* Definition raft_sending_key   : Set := sending_key_stub. *)
+  (* Definition raft_receiving_key : Set := receiving_key_stub. *)
 
   (* define the number of replicas as 3 time the number of faults happening plus one *)
-  Definition nreps (F : nat) : nat := 3 * F + 1.
+  Definition num_replicas (F : nat) : nat := 3 * F + 1.
 
   (* declare the set of replicas *)
-  Definition replica (F : nat) : Set := nat_n (nreps F).
+  Definition replica (F : nat) : Set := nat_n (num_replicas F).
 
   Lemma replica_deq (F : nat) : Deq (replica F).
   Proof.
@@ -69,12 +65,12 @@ Section RaftInstance.
   Defined.
 
   (* convert between the replica and the number indicating the replica *)
-  Definition reps2nat (F : nat) : replica F -> nat_n (nreps F) := fun n => n.
+  Definition reps2nat (F : nat) : replica F -> nat_n (num_replicas F) := fun n => n.
 
   
   Lemma bijective_reps2nat (F : nat) : bijective (reps2nat F).
   Proof.
-    exists (fun n : nat_n (nreps F) => n); introv; unfold reps2nat; auto.
+    exists (fun n : nat_n (num_replicas F) => n); introv; unfold reps2nat; auto.
   Defined.
 
   (* define the number of clients *)
@@ -104,181 +100,41 @@ Section RaftInstance.
     exists (fun n : nat_n (nclients C) => n); introv; unfold clients2nat; auto.
   Defined.
 
-  Global Instance Ract_I_context : Raftcontext :=
+  (* define the abstract state machine *)
+  Definition smState : Set := nat.
+
+  (* initialize the global raft context *)
+  Global Instance Raft_I_context : RaftContext :=
     MkRaftContext
+      F
+      (replica F)
+      (replica_deq F)
+      (reps2nat F)
+      (bijective_reps2nat F)
+  
       (nclients C)
       (client C)
       (client_deq C)
       (clients2nat C)
       (bijective_clients2nat C)
-
-      F
-      (replica F)
-      (replica_deq F)
-      (reps2nat F)
-      (bijective_reps2nat F).
+      smState
+      0.
+  
 
 
  
   (* define some client operations *)
-  Inductive operation :=
-  | opr_add (n : nat)
-  | opr_sub (n : nat).
+  (* Inductive operation := *)
+  (* | opr_add (n : nat) *)
+  (* | opr_sub (n : nat). *)
 
-  Lemma operation_deq : Deq operation.
-  Proof.
-    introv; destruct x as [n|n], y as [m|m]; prove_dec;
-      destruct (deq_nat n m); subst; prove_dec.
-  Defined.
-
-  Definition smState : Set := nat.
-  Definition result : Set := nat.
-
-  Definition operation_upd (C : nat) (c : client C) (state : smState) (opr : operation) : result * smState :=
-    match opr with
-    | opr_add m => let k := state + m in (k,k)
-    | opr_sub m => let k := state - m in (k,k)
-    end.
-
-  Inductive Rafttoken_stub : Set :=
-  | raft_token_stub.
-
-  Definition raft_token : Set := Rafttoken_stub.
-
-  Lemma raft_token_deq : Deq raft_token.
-  Proof.
-    introv; destruct x, y; simpl; prove_dec.
-  Defined.
+  (* Lemma operation_deq : Deq operation. *)
+  (* Proof. *)
+  (*   introv; destruct x as [n|n], y as [m|m]; prove_dec; *)
+  (*     destruct (deq_nat n m); subst; prove_dec. *)
+  (* Defined. *)
 
 
-  (* authentication stuff *)
-  (* Definition raft_create_signature *)
-  (*            (m  : Raftmsg) *)
-  (*            (ks : sending_keys) : Rafttokens := [raft_token_stub]. *)
-
-  (* Definition raft_verify_signature *)
-  (*            (m : PBFTBare_Msg) *)
-  (*            (n : name) *)
-  (*            (k : receiving_key) *)
-  (*            (a : raft_token) : bool := true. *)
-
-  (* Global Instance PB_I_auth : PBauth := *)
-  (*   MkPBauth pb_create_signature pb_verify_signature. *)
-
-
-  (* Definition pb_lookup_replica_sending_key   (src : Rep)    : pb_sending_key   := pb_sending_key_stub. *)
-  (* Definition pb_lookup_replica_receiving_key (dst : Rep)    : pb_receiving_key := pb_receiving_key_stub. *)
-  (* Definition pb_lookup_client_receiving_key  (c   : Client) : pb_receiving_key := pb_receiving_key_stub. *)
-
-  (* Definition initial_pb_local_key_map_replicas (src : name) : local_key_map := *)
-  (*   match src with *)
-  (*   | PBbackup => *)
-  (*     MkLocalKeyMap *)
-  (*       [MkDSKey (map PBprimary reps) (pb_lookup_replica_sending_key i)] *)
-  (*       (List.app *)
-  (*          (map (fun c => MkDRKey [PBc] (pb_lookup_client_receiving_key  c)) clients) *)
-  (*          (map (fun m => MkDRKey [PBbackup] (pb_lookup_replica_receiving_key m) nreps))) *)
-  (*   | PBc => MkLocalKeyMap [] [] *)
-  (*   end. *)
-
-  (* Global Instance PB_I_keys : PBinitial_keys := *)
-  (*   MkPBinitial_keys initial_pb_local_key_map_replicas. *)
-  
-  (* Definition pb_simple_create_hash_messages (msgs : list PBmsg) : PBdigest := []. *)
-  (* Definition pb_simple_verify_hash_messages (msgs : list PBmsg) (d : PBdigest) := true. *)
-  (* Definition pb_simple_create_hash_state_last_reply (smst : PBsm_state) (lastr : LastReplyState) : PBdigest := []. *)
-  (* Definition pb_simple_verify_hash_state_last_reply (smst : PBsm_state) (lastr : LastReplyState) (d : PBdigest) := true. *)
-
-  (* Global Instance PB_I_hash : PBhash := *)
-  (*   MkPBhash *)
-  (*     pb_simple_create_hash_messages *)
-  (*     pb_simple_verify_hash_messages *)
-  (*     pb_simple_create_hash_state_last_reply *)
-  (*     pb_simple_verify_hash_state_last_reply. *)
-
-
-  (* Global Instance PB_I_context : PBcontext := *)
-  (*   MkPBcontext *)
-  (*     (* max in progress *) *)
-  (*     MIP *)
-
-  (*     (* water mark range *) *)
-  (*     WMR *)
-
-  (*     (* checkpoint period *) *)
-  (*     CP *)
-
-  (*     (* digest type *) *)
-  (*     pb_digest *)
-
-  (*     (* digest decider *) *)
-  (*     pb_digest_deq *)
-
-  (*     (* token type *) *)
-  (*     pb_token *)
-
-  (*     (* token decider *) *)
-  (*     pb_token_deq *)
-
-  (*     (* sending key type *) *)
-  (*     pb_sending_key *)
-
-  (*     (* receiving key type *) *)
-  (*     pb_receiving_key *)
-
-  (*     (* number of faults *) *)
-  (*     F *)
-
-  (*     (* replica type *) *)
-  (*     (replica F) *)
-
-  (*     (* Replica decider *) *)
-  (*     (replica_deq F) *)
-
-  (*     (* replica 2 nat *) *)
-  (*     (reps2nat F) *)
-
-  (*     (* proof that reps2nat is bijective *) *)
-  (*     (bijective_reps2nat F) *)
-
-  (*     (* number of clients *) *)
-  (*     (nclients C) *)
-
-  (*     (* client type *) *)
-  (*     (client C) *)
-
-  (*     (* client decider *) *)
-  (*     (client_deq C) *)
-
-  (*     (* client 2 nat *) *)
-  (*     (clients2nat C) *)
-
-  (*     (* proof that clients2nat is bijective *) *)
-  (*     (bijective_clients2nat C) *)
-
-  (*     (* operation type *) *)
-  (*     operation *)
-
-  (*     (* operation decider *) *)
-  (*     operation_deq *)
-
-  (*     (* result type *) *)
-  (*     result *)
-
-  (*     (* result decider *) *)
-  (*     deq_nat *)
-
-  (*     (* state type *) *)
-  (*     smState *)
-
-  (*     (* initial state *) *)
-  (*     0 *)
-
-  (*     (* update function *) *)
-  (*     (operation_upd C) *)
-
-  (*     (* delay in ms *) *)
-  (*     1000. *)
 
   (* ================== PRETTY PRINTING ================== *)
 
@@ -298,10 +154,10 @@ Section RaftInstance.
   (*Definition tokens2string (toks : Tokens) : string := "-".
 *)
   (* Fix: to finish *)
-  Definition digest2string (d : raft_digest) : string := "-".
+  (* Definition digest2string (d : raft_digest) : string := "-". *)
 
   (* Fix: to finish *)
-  Definition result2string (r : result) : string := "-".
+  (* Definition result2string (r : result) : string := "-". *)
 
   (* Fix: there's only one client anyway *)
   Definition client2string (c : client C) : string := "-".
@@ -519,8 +375,9 @@ Section RaftInstance.
 
   Definition msg2string (m : Raftmsg) : string :=
     match m with
-    | Command n => "Command " ++ nat2string n
-    | _ => "Other msg"
+    | Input n => "Command " ++ nat2string n
+    | Heartbeat => "Heartbeat"
+    (* | _ => "Other msg" *)
     end.
 
   (* Definition DirectedMsg2strking (dm : DirectedMsg) : string := *)
@@ -575,9 +432,9 @@ Section RaftInstance.
 
 
 
-  Definition raft_state2string (s : Raftleader_state) :=
+  Definition state2string (s : RaftState) :=
       str_concat
-        ["(Leader state:"
+        ["(Raft state:"
          ,")"
         ].
 
@@ -585,18 +442,22 @@ Section RaftInstance.
 
   
 
-  (* Definition dummy_initial_state : Raftnode := *)
-  (*    Replica . *)
+  Definition dummy_initial_state : RaftState :=
+    Build_State
+      initial_term
+      RaftSM_initial_state
+      5
+      false.
 
-  (* Definition RaftdummySM : MStateMachine Raftnode := *)
-  (*   MhaltedSM dummy_initial_state. *)
+  Definition RaftdummySM : MStateMachine RaftState :=
+    MhaltedSM dummy_initial_state.
 
-  (* Definition PBFTmono_sys : NMStateMachine Raftnode := *)
-  (*   fun name => *)
-  (*     match name with *)
-  (*     | Leader => RaftleaderSM *)
-  (*     (* | _ => MhaltedSM dummy_initial_state *) *)
-  (*     end. *)
+  Definition Raftmono_sys : NMStateMachine RaftState :=
+    fun name =>
+      match name with
+      | Raftreplica n => RaftreplicaSM n
+      | _ => MhaltedSM dummy_initial_state
+      end.
 
   (* Definition mk_request_to (rep : Rep) (ts : nat) (opr : nat) : DirectedMsg := *)
   (*   let ts   := time_stamp ts in *)
@@ -628,11 +489,11 @@ Section RaftInstance.
   (*       req_operation    : nat; *)
   (*     }. *)
 
-  (* Definition PBFTinit_msgs (msgs : DirectedMsgs) : MonoSimulationState := *)
-  (*   MkInitMonoSimState PBFTmono_sys msgs. *)
+  Definition Raftinit_msgs (msgs : DirectedMsgs) : MonoSimulationState :=
+    MkInitMonoSimState Raftmono_sys msgs.
 
   (* Definition PBFTinit (init : InitRequests) : MonoSimulationState := *)
-  (*   PBFTinit_msgs *)
+  (*   Raftinit_msgs *)
   (*     (mk_requests_start *)
   (*        (num_requests init) *)
   (*        (starting_seq_num init) *)
@@ -718,6 +579,6 @@ Require Export ExtrOcamlNatInt.
 Require Export ExtrOcamlString.
 
 Definition local_replica (*(F C : nat)*) :=
-  @RaftleaderSM.
-   
-Extraction "raft/RaftReplicaEx.ml" raft_state2string lrun_sm  RaftleaderSM local_replica.
+  @RaftreplicaSM (@Raft_I_context).
+
+Extraction "RaftReplicaEx.ml" state2string lrun_sm RaftdummySM local_replica.

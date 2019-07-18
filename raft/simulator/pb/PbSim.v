@@ -118,18 +118,31 @@ Section PrimaryBackupInstance.
     end.
 
 
-  Definition pb_state2string n :=
-    match n with
-    | PBprimary => "Primary"
-    | PBbackup => "Backup"
-    | _ => "-"
+  (* Definition primary_state2string (s : PBprimary_state):= *)
+  (*   match s with *)
+  (*   | PBpst p n => "Primary" *)
+  (*   end. *)
+
+  (* Definition backup_state2string (s : PBbackup_state) := *)
+  (*   match s with *)
+  (*   | PBbst n => "Backup" *)
+  (*   end. *)
+
+  Definition state2string (s : PB_state) : string :=
+    match s with
+    | PBpst p n => str_concat ["Primary ", nat2string n,
+                              match p with
+                              | PBfree => " free"
+                              | PBlocked => " locked"
+                              end]
+    | PBbst n => str_concat ["Backup ", nat2string n]
     end.
 
   (* ================== SYSTEM ================== *)
 
 
   Definition dummy_initial_state : PB_state :=
-    PBbst 0.
+    PBpst PBfree 0.
 
   Definition PBdummySM : MStateMachine PB_state :=
     MhaltedSM dummy_initial_state.
@@ -243,4 +256,4 @@ Definition local_replica (n : name) :=
   | _ => @PBbackupSM
   end.
 
-Extraction "PbReplicaEx.ml" pb_state2string lrun_sm MonoSimulationState2string PBdummySM local_replica.
+Extraction "PbReplicaEx.ml" state2string lrun_sm MonoSimulationState2string PBdummySM local_replica.

@@ -5,22 +5,15 @@ open Core
 open Simulator
 open RaftReplicaEx
 
-(* turn this to false if you don't want to sign messages *)
-let signing : bool ref = ref true
-
-let to_replica n = { id = Obj.magic (Replica (Obj.magic n));
+let to_replica n = { id = Obj.magic (Raftreplica (Obj.magic n));
                      replica = local_replica (Obj.magic n) }
+
 let r = new replicas
-
-
-(* let sign_request breq priv =
- *   let o  = Obj.magic (PBFTmsg_bare_request breq) in
- *   sign_one o priv *)
 
 let destination2string (n : name) : string =
   match Obj.magic n with
-  | Replica r -> "R(" ^ string_of_int (Obj,magic r) ^ ")"
-  | Client c -> "C(" ^ string_of_int (Obj.magic c) ^ ")";;
+  | Raftreplica r -> "R(" ^ string_of_int (Obj.magic r) ^ ")"
+  | Raftclient c -> "C(" ^ string_of_int (Obj.magic c) ^ ")";;
 
 let rec run_replicas_on_inputs (inflight : directedMsgs) : directedMsgs =
   match inflight with
@@ -39,21 +32,21 @@ let rec run_replicas_on_inputs (inflight : directedMsgs) : directedMsgs =
       | Some rep ->
         (* print_info (kGRN) "Input message" (msg2string (Obj.magic dm.dmMsg)); *)
         let (rep',dmsgs) = lrun_sm rep.replica (Obj.magic dm.dmMsg) in
-        print_info (kCYN) "Done" [];
+        print_info (kCYN) "Done" "";
         r#replace_replica id rep';
         run_replicas_on_inputs (dm' :: dms @ dmsgs)
 
-class ['a, 'b] pbft c = object(self)
+class ['a, 'b] raft c = object(self)
   inherit ['a, 'b] runner c
 
   method create_replicas =
     r#set_replicas [to_replica 0; to_replica 1; to_replica 2; to_replica 3];
 
   method mk_request (timestamp : int) (request : int) =
-    let opr       = Obj.magic request in
+    (* let opr       = Obj.magic request in *)
     (* let breq      = Bare_req (opr,timestamp,(Obj.magic c.client_id)) in *)
-    let tokens    = Obj.magic() (* [ (if !signing then Obj.magic (sign_request breq c.private_key) else Obj.magic()) ] *) in
-    Command (request)
+    (* let tokens    = Obj.magic() *) (* [ (if !signing then Obj.magic (sign_request breq c.private_key) else Obj.magic()) ] *) (* in *)
+    Input (request)
 
 
   method run_client timestamp max avg printing_period =
@@ -73,12 +66,12 @@ class ['a, 'b] pbft c = object(self)
 end
 
 let _ =
-  let c = new pbft {
+  let c = new raft {
     version = "1.0";
-    protocol = "PBFT";
+    protocol = "Raft";
     client_id = 0;
     private_key = lookup_client_sending_key (Obj.magic 0);
-    primary = Obj.magic (Replica (Obj.magic 0)) (* type: name *)
+    primary = Obj.magic (Raftreplica (Obj.magic 0)) (* type: name *)
   } in
   c#run
 

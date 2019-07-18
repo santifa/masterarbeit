@@ -1,0 +1,7 @@
+S lib/
+S pbft/
+S raft/
+
+B _build/*
+
+PKG core nocrypto batteries

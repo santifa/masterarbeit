@@ -70,9 +70,10 @@ Section PrimaryBackup.
   | PBfree.
 
   Inductive PB_state :=
-  | PBpst (status : PBprimary_status) (counter : nat)
-  | PBbst (counter : nat).
-  
+  | PBbst (counter : nat)
+  | PBpst (status : PBprimary_status) (counter : nat).
+
+
   Definition primary_upd : MSUpdate PB_state :=
     fun state input =>
       match state, input with

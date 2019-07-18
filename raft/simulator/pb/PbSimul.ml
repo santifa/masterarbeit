@@ -20,26 +20,32 @@ let to_replica n =
   print_info (kBLU) "Main" ("Starting " ^ (String.of_char_list (name2string n)));
   { id = Obj.magic n; replica = local_replica (Obj.magic n) }
 
-(* init the replicas object *)
-let r = new replicas
-
-let sign_request breq priv =
-  let o  = Obj.magic (PBinput breq) in
-  sign_one o priv
-
-(* build the request destination *)
-(* let destination2string (n : name) : string =
- *   match Obj.magic n with
- *   | PBprimary -> "P(" ^ string_of_int (Obj.magic 0) ^ ")"
- *   | PBbackup -> "B(" ^ string_of_int (Obj.magic 0) ^ ")"
- *   | PBc -> "C(" ^ string_of_int (Obj.magic 0) ^ ")" ;; *)
-
-let print_msgs msgs =
+let print_dmsgs msgs =
   List.fold_right ~f:(fun acc x -> acc ^ ";" ^ x) (List.map ~f:(fun x -> (String.of_char_list (directedMsg2string x))) msgs)
 
-(* run the replicas on some input *)
-let rec run_replicas_on_inputs (inflight : directedMsgs) : directedMsgs =
-  print_info (kMAG) "Queue" ((print_msgs inflight) "");
+let print_msg msg =
+  String.of_char_list (msg2string (Obj.magic msg))
+
+let print_node node =
+  node2string node
+
+let print_state state =
+  String.of_char_list (state2string (sm_state state))
+
+(* implement the virtual simulator *)
+class ['a, 'b, 'c, 'd] pb c = object(self)
+  inherit ['a, 'b, 'c, 'd] simulator c
+
+  (* create the replication system with one primary and three backups *)
+  method create_replicas =
+    replicas#set_replicas [to_replica PBprimary; to_replica PBbackup]
+
+  (* create a client request *)
+  method mk_request (timestamp : int) (request : int) =
+    PBinput request
+
+  method run_replicas (inflight : directedMsgs) : directedMsgs =
+  print_info (kMAG) "Queue" ((print_dmsgs inflight) "");
   (* check if there is some message in queue *)
   match inflight with
   | [] ->
@@ -49,45 +55,32 @@ let rec run_replicas_on_inputs (inflight : directedMsgs) : directedMsgs =
     (* we have some message and now we iterate through all its destinations *)
     match dm.dmDst with
     (* restart loop if there a no destinations *)
-    | [] -> run_replicas_on_inputs dms
+    | [] -> self#run_replicas dms
     | id :: ids ->
-      print_info (kCYN) "Procesing" ((String.of_char_list (directedMsg2string dm)));
+      print_info (kCYN) "Procesing" ((print_dmsgs [dm]) "")(* ((String.of_char_list (directedMsg2string dm))) *);
+      (* print_info (kCYN) "Procesing" ((String.of_char_list (directedMsg2string dm))); *)
       (* create a new message without the taken id *)
       let dm' = { dmMsg = dm.dmMsg; dmDst = ids; dmDelay = dm.dmDelay } in
       (* find the replica mathing the id *)
-      match r#find_replica id with
+      match replicas#find_replica id with
       | None ->
-        print_err ("Couldn't find id " ^ node2string id);
+        print_err ("Couldn't find id " ^ print_node id);
         let failed_to_deliver = { dmMsg = dm.dmMsg; dmDst = [id]; dmDelay = dm.dmDelay } in
         (* requeue message which failed to deliver ? *)
-        failed_to_deliver :: run_replicas_on_inputs (dm' :: dms)
+        failed_to_deliver :: self#run_replicas (dm' :: dms)
       | Some rep ->
         (* we have found the replica *)
-        print_info (kGRN) ((node2string rep.id) ^ "got") (String.of_char_list (msg2string (Obj.magic dm.dmMsg)));
+        (* print_info (kGRN) ((node2string rep.id) ^ "got") (String.of_char_list (msg2string (Obj.magic dm.dmMsg))); *)
+        print_info (kGRN) ((print_node rep.id) ^ "got") (print_msg dm.dmMsg);
         (* run the state machine on the message input *)
         let (rep',dmsgs) = lrun_sm rep.replica (Obj.magic dm.dmMsg) in
-        print_info (kCYN) (node2string id ^ "State transistion completed") ("Return " ^ (String.of_char_list (directedMsgs2string dmsgs)));
+        print_info (kCYN) (print_node id ^ "State transistion completed") ("Send " ^ ((print_dmsgs dmsgs) ""));
         (* replace the state machine of the replica *)
-        print_info (kCYN) (node2string id) (Obj.magic rep.replica);
-        r#replace_replica id rep';
+        print_info (kCYN) (print_node id) (print_state rep');
+        (* print_endline ("Dump: old state " ^ (Batteries.dump rep.replica) ^ " new state " ^ (Batteries.dump rep')); *)
+        replicas#replace_replica id rep';
         (* (message without current replica) :: (next messages) @ (newly created messages) *)
-        run_replicas_on_inputs (dm' :: dms @ dmsgs)
-
-(* implement the virtual simulator *)
-class ['a, 'b] pb c = object(self)
-  inherit ['a, 'b] runner c
-
-  (* create the replication system with one primary and three backups *)
-  method create_replicas =
-    r#set_replicas [to_replica PBprimary; to_replica PBbackup]
-
-  (* create a client request *)
-  method mk_request (timestamp : int) (request : int) =
-    PBinput request
-    (* let opr       = Obj.magic (Opr_add request) in
-     * let breq      = Bare_req (opr,timestamp,(Obj.magic c.client_id)) in
-     * let tokens    = [ (if !signing then Obj.magic (sign_request breq c.private_key) else Obj.magic()) ] in
-     * PBFTrequest (Req(breq,tokens)) *)
+        self#run_replicas (dm' :: dms @ dmsgs)
 
 
   (* run the client recursively
@@ -106,7 +99,7 @@ class ['a, 'b] pb c = object(self)
     print_info (kWHT) "Client sends" (String.of_char_list (directedMsgs2string inflight));
     let t = Prelude.Time.get_time () in
     (* deliver the messages *)
-    let failed_to_deliver = run_replicas_on_inputs inflight in
+    let failed_to_deliver = self#run_replicas inflight in
     (* stop monitoring the system *)
     let d = Prelude.Time.sub_time (Prelude.Time.get_time ()) t in
     (* calculate the average *)
@@ -116,14 +109,14 @@ class ['a, 'b] pb c = object(self)
     (match s with
      | "" -> ()
      | s' -> print_err s');
-    (* print some results of the time is right *)
+    (* print some results if the time is right *)
     (if timestamp mod printing_period = 0 then
        print_res timestamp d new_avg
      else ());
     (* restart the client if there are more rounds to go *)
     if timestamp < max then
       self#run_client (timestamp + 1) max new_avg printing_period
-    else () 
+    else ()
 end
 
 let _ =
@@ -136,5 +129,3 @@ let _ =
     primary = Obj.magic PBprimary (* type: name *)
   } in
   c#run
-
-(* let _ = Command.run ~version:"1.0" ~build_info:"PBFT" command *)

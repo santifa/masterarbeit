@@ -67,6 +67,7 @@ let rec run_replicas_on_inputs (inflight : directedMsgs) : directedMsgs =
            (*print_endline (kGRN ^ "[input message: " ^ Batteries.String.of_list (msg2string (Obj.magic dm.dmMsg)) ^ "]" ^ kNRM);*)
            let (rep',dmsgs) = lrun_sm rep (Obj.magic dm.dmMsg) in
            (*print_endline ("[done]");*)
+           print_endline (String.of_char_list (pbft_state2string (sm_state rep')));
            replicas := replace_replica id rep' (!replicas);
            run_replicas_on_inputs (dm' :: dms @ dmsgs)
 

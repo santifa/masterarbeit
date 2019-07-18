@@ -39,18 +39,25 @@ PbftClient.native:
 PbftSimul.native: pbft/PbftSimul.ml
 	$(OCB) PbftSimul.native
 
+PbftSimul2.native: pbft/PbftSimul2.ml
+	$(OCB) PbftSimul2.native
+
 ### protocol agnostic parts ###
 RsaKey.native:
 	$(OCB) RsaKey.native
 
-raft-ext:
+sim-ext: Simulator.v
+	coqc -R ../coq-tools Tools -R ../velisarios Velisarios -R ../protocols Protocols -R . Simulator Simulator.v
+
+pb-ext: sim-ext
 	coqc -R ../coq-tools Tools -R ../velisarios Velisarios \
-	-R ../protocols Protocols -R . Simulator Simulator.v
+	-R ../protocols Protocols -R . Simulator pb/PbSim.v
+
+raft-ext: sim-ext
 	coqc -R ../coq-tools Tools -R ../velisarios Velisarios \
 	-R ../protocols Protocols -R . Simulator raft/RaftSim.v
 
-pbft-ext:
-	coqc -R ../coq-tools Tools -R ../velisarios Velisarios -R ../protocols Protocols -R . Simulator Simulator.v
+pbft-ext: sim-ext
 	coqc -R ../coq-tools Tools -R ../velisarios Velisarios -R ../protocols Protocols -R . Simulator pbft/PBFTsim.v
 
 ext:
