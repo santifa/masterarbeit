@@ -53,20 +53,20 @@ let rec run_replicas_on_inputs (inflight : directedMsgs) : directedMsgs =
   match inflight with
   | [] -> []
   | dm :: dms ->
-     (*print_endline (kCYN ^ "[processsing: " ^ Batteries.String.of_list (directedMsg2string dm) ^ "]" ^ kNRM);*)
+     print_endline (kCYN ^ "[processsing: " ^ Batteries.String.of_list (directedMsg2string dm) ^ "]" ^ kNRM);
      match dm.dmDst with
      | [] -> run_replicas_on_inputs dms
      | id :: ids ->
         let dm' = { dmMsg = dm.dmMsg; dmDst = ids; dmDelay = dm.dmDelay } in
         match find_replica id (!replicas) with
         | None ->
-           (*print_endline (kBRED ^ "[couldn't find id " ^ destination2string id ^ "]" ^ kNRM);*)
+           print_endline (kBRED ^ "[couldn't find id " ^ destination2string id ^ "]" ^ kNRM);
            let failed_to_deliver = { dmMsg = dm.dmMsg; dmDst = [id]; dmDelay = dm.dmDelay } in
            failed_to_deliver :: run_replicas_on_inputs (dm' :: dms)
         | Some rep ->
-           (*print_endline (kGRN ^ "[input message: " ^ Batteries.String.of_list (msg2string (Obj.magic dm.dmMsg)) ^ "]" ^ kNRM);*)
+           print_endline (kGRN ^ "[input message: " ^ Batteries.String.of_list (msg2string (Obj.magic dm.dmMsg)) ^ "]" ^ kNRM);
            let (rep',dmsgs) = lrun_sm rep (Obj.magic dm.dmMsg) in
-           (*print_endline ("[done]");*)
+           print_endline ("[done]");
            print_endline (String.of_char_list (pbft_state2string (sm_state rep')));
            replicas := replace_replica id rep' (!replicas);
            run_replicas_on_inputs (dm' :: dms @ dmsgs)
@@ -78,13 +78,13 @@ let rec run_client (id : client) (priv : Nocrypto.Rsa.priv) (timestamp : int) (m
   let failed_to_deliver = run_replicas_on_inputs inflight in
   let d = Prelude.Time.sub_time (Prelude.Time.get_time ()) t in
   let new_avg = Prelude.Time.div_time (Prelude.Time.add_time (Prelude.Time.mul_time avg  (timestamp - 1)) d) timestamp in
-  (*let s = Batteries.String.of_list (directedMsgs2string failed_to_deliver) in*)
+  let s = Batteries.String.of_list (directedMsgs2string failed_to_deliver) in
   (if timestamp mod printing_period = 0 then
      print_endline (kMAG
                     ^ "[timestamp: " ^ string_of_int timestamp
                     ^ "; elapsed time: " ^ Batteries.String.of_list (Prelude.Time.time2string d)
                     ^ "; average: " ^ Batteries.String.of_list (Prelude.Time.time2string new_avg)
-                    (*^ "; non delievered messages: " ^ s*)
+                    ^ "; non delievered messages: " ^ s
                     ^ "]"
                     ^ kNRM)
    else ());

@@ -49,7 +49,7 @@ Section PrimaryBackupInstance.
     |PBinput n => str_concat ["Input ", nat2string n]
     | PBforward n => str_concat ["Forward ", nat2string n]
     | PBackn n => str_concat ["Ackn ", nat2string n]
-    | PBreply n => str_concat ["Reply", nat2string n]
+    | PBreply n => str_concat ["Reply ", nat2string n]
     end.
 
   Definition name2string (n : PBnode) : string :=

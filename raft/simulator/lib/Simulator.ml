@@ -13,8 +13,8 @@ open Core
 
 (* handy print functions with colored output *)
 (* print error messages *)
-let print_err msg =
-  print_endline (Colors.kBRED ^ "Error:\t[" ^ msg ^ "]" ^ Colors.kNRM)
+let print_err msg ?case:(c="") () =
+  print_endline (Colors.kBRED ^ "Error:\t[" ^ c ^ msg ^ "]" ^ Colors.kNRM)
 
 (* print info messages with c - color; t - message type; msg - message *)
 let print_info c t msg =

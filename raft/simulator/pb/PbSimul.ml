@@ -13,7 +13,7 @@ let node2string n =
   match (Obj.magic n) with
   | PBprimary -> "Primary "
   | PBbackup -> "Backup "
-  | _ -> "Other "
+  | PBc -> "Client "
 
 (* create a new replica *)
 let to_replica n =
@@ -21,7 +21,7 @@ let to_replica n =
   { id = Obj.magic n; replica = local_replica (Obj.magic n) }
 
 let print_dmsgs msgs =
-  List.fold_right ~f:(fun acc x -> acc ^ ";" ^ x) (List.map ~f:(fun x -> (String.of_char_list (directedMsg2string x))) msgs)
+  List.fold_right ~f:(fun acc x -> x ^ ":" ^ acc) (List.map ~f:(fun x -> (String.of_char_list (directedMsg2string x))) msgs)
 
 let print_msg msg =
   String.of_char_list (msg2string (Obj.magic msg))
@@ -57,27 +57,24 @@ class ['a, 'b, 'c, 'd] pb c = object(self)
     (* restart loop if there a no destinations *)
     | [] -> self#run_replicas dms
     | id :: ids ->
-      print_info (kCYN) "Procesing" ((print_dmsgs [dm]) "")(* ((String.of_char_list (directedMsg2string dm))) *);
-      (* print_info (kCYN) "Procesing" ((String.of_char_list (directedMsg2string dm))); *)
+      print_info (kCYN) "Procesing" ((print_dmsgs [dm]) "");
       (* create a new message without the taken id *)
       let dm' = { dmMsg = dm.dmMsg; dmDst = ids; dmDelay = dm.dmDelay } in
       (* find the replica mathing the id *)
       match replicas#find_replica id with
       | None ->
-        print_err ("Couldn't find id " ^ print_node id);
+        print_err ("Couldn't find id " ^ print_node id) ();
         let failed_to_deliver = { dmMsg = dm.dmMsg; dmDst = [id]; dmDelay = dm.dmDelay } in
         (* requeue message which failed to deliver ? *)
         failed_to_deliver :: self#run_replicas (dm' :: dms)
       | Some rep ->
         (* we have found the replica *)
-        (* print_info (kGRN) ((node2string rep.id) ^ "got") (String.of_char_list (msg2string (Obj.magic dm.dmMsg))); *)
         print_info (kGRN) ((print_node rep.id) ^ "got") (print_msg dm.dmMsg);
         (* run the state machine on the message input *)
         let (rep',dmsgs) = lrun_sm rep.replica (Obj.magic dm.dmMsg) in
         print_info (kCYN) (print_node id ^ "State transistion completed") ("Send " ^ ((print_dmsgs dmsgs) ""));
         (* replace the state machine of the replica *)
         print_info (kCYN) (print_node id) (print_state rep');
-        (* print_endline ("Dump: old state " ^ (Batteries.dump rep.replica) ^ " new state " ^ (Batteries.dump rep')); *)
         replicas#replace_replica id rep';
         (* (message without current replica) :: (next messages) @ (newly created messages) *)
         self#run_replicas (dm' :: dms @ dmsgs)
@@ -108,7 +105,7 @@ class ['a, 'b, 'c, 'd] pb c = object(self)
     let s = Batteries.String.of_list (directedMsgs2string failed_to_deliver) in
     (match s with
      | "" -> ()
-     | s' -> print_err s');
+     | s' -> print_err s' ~case:"Failed to deliver: " ());
     (* print some results if the time is right *)
     (if timestamp mod printing_period = 0 then
        print_res timestamp d new_avg
