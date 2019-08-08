@@ -1,17 +1,19 @@
-(*
- * This file defines an instance of the simple PrimaryBackup
- * example to show the simulation of a defined protocol.
- *)
+(*!
+ * This file defines an instance of the raft protocol
+ * and extracts the code necessary to use the simulator and runtime
+ * from ocaml.
+ !*)
 
 Require Export Simulator.
 Require Export Protocols.Raft.Raft.
 Require Export Ascii String.
 
-(* define some instance of raft *)
+(** This section defines a real instance of the previously defined
+ ** raft protocol. **)
 Section RaftInstance.
 
   (* ================== TIME ================== *)
-
+  (*! Define timing stuff !*)
   Definition time_I_type : Set := unit.
 
   Definition time_I_get_time : unit -> time_I_type := fun _ => tt.
@@ -28,57 +30,41 @@ Section RaftInstance.
     { exact time_I_2string. }
   Defined.
 
-  (* context definitions *)
-  (* total number of faults *)
+  (*! Commen context definitions !*)
+  (** The total number of faults the system should survive.  **)
   Definition F := 1.
 
-  (* total number of clients which is c + 1 *)
+  (** Define the total number of clients which is c + 1. **)
   Definition C := 0.
 
-  (* define the key exchange and authentication *)
-  (* Definition raft_digest : Set := list nat. *)
-
-  (* Lemma raft_digest_deq : Deq raft_digest. *)
-  (* Proof. *)
-  (*   introv; apply list_eq_dec. *)
-  (*   apply deq_nat. *)
-  (* Defined. *)
-
-  (* Inductive sending_key_stub : Set := *)
-  (* | raft_sending_key_stub. *)
-
-  (* Inductive receiving_key_stub : Set := *)
-  (* | raft_receiving_key_stub. *)
-
-  (* Definition raft_sending_key   : Set := sending_key_stub. *)
-  (* Definition raft_receiving_key : Set := receiving_key_stub. *)
-
-  (* define the number of replicas as 3 time the number of faults happening plus one *)
+  (** Define the number of replicas as 3 time the number of faults happening plus one. **)
   Definition num_replicas (F : nat) : nat := 3 * F + 1.
 
-  (* declare the set of replicas *)
+  (** Declare the set of replicas as map between num and replica. **)
   Definition replica (F : nat) : Set := nat_n (num_replicas F).
 
+  (** Replicas have decidable equality. **)
   Lemma replica_deq (F : nat) : Deq (replica F).
   Proof.
     apply nat_n_deq.
   Defined.
 
-  (* convert between the replica and the number indicating the replica *)
+  (** Convert between the replicas and the numbers indicating the replica **)
   Definition reps2nat (F : nat) : replica F -> nat_n (num_replicas F) := fun n => n.
 
-  
+  (** Show that the function is bijective. **)
   Lemma bijective_reps2nat (F : nat) : bijective (reps2nat F).
   Proof.
     exists (fun n : nat_n (num_replicas F) => n); introv; unfold reps2nat; auto.
   Defined.
 
-  (* define the number of clients *)
+  (** Return the number of clients needed for a given amount. **)
   Definition nclients (C : nat) : nat := S C.
 
-  (* create the set of clients *)
+  (** Create the map of clients and it's natural representation. **)
   Definition client (C : nat) : Set := nat_n (nclients C).
 
+  (** Proof that the definition client holds for one client. **)
   Definition client0 (C : nat) : client C.
   Proof.
     exists 0.
@@ -87,14 +73,16 @@ Section RaftInstance.
     omega.
   Defined.
 
+  (** Proof that proposed clients have decidable equality. **)
   Lemma client_deq (C : nat) : Deq (client C).
   Proof.
     apply nat_n_deq.
   Defined.
 
-  (* convert between a client and the numeral representation *)
+  (** Convert between clients and their numeral representations. **)
   Definition clients2nat (C : nat) : client C -> nat_n (nclients C) := fun n => n.
 
+  (** Proof that the conversion is bijective. **)
   Lemma bijective_clients2nat (C : nat) : bijective (clients2nat C).
   Proof.
     exists (fun n : nat_n (nclients C) => n); introv; unfold clients2nat; auto.

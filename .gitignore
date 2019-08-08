@@ -29,3 +29,4 @@ _build/
 PbReplica*
 PbftReplica*
 pbft_*
+Api.md

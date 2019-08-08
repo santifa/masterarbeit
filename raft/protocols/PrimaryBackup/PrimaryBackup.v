@@ -63,7 +63,7 @@ Section PrimaryBackup.
 
   Global Instance PB_I_MsgStatus : MsgStatus := MkMsgStatus PB_msg_status.
 
-  (* when primary receives request from client, it state si locked,
+  (* when primary receives request from client, it state is locked,
      until backup sends ack *)
   Inductive PBprimary_status :=
   | PBlocked
@@ -85,7 +85,10 @@ Section PrimaryBackup.
       | PBpst PBlocked _, _ => (state, [])
 
       (* if free and message is an input then forward it to backup *)
-      | PBpst PBfree counter, PBinput n => (state, [MkDMsg (PBforward n) [PBbackup] 0])
+      (* this might be an error, we should change to the locked state and wait for ack *)
+      (* | PBpst PBfree counter, PBinput n => (state, [MkDMsg (PBforward n) [PBbackup] 0]) *)
+      | PBpst PBfree counter, PBinput n =>
+        ((PBpst PBlocked counter), [MkDMsg (PBforward n) [PBbackup] 0])
 
       (* otherwise ignore message *)
       | _, _ => (state, [])

@@ -30,22 +30,23 @@ Checkout the repository with `git clone --recursive https://github.com/santifa/m
     Structure:
     
     +--- Velisarios (as reference included)
-    +--- latex (the written master thesis, not further documented)
-    +--- learn-coq (scetches to get used to the COQ system)
-    +--- masterarbeit.org (notes, schedules, some code)
+    +--- latex (my not further documented thesis)
+    +--- learn-coq (some basic coq files to get a grasp in the language and system)
+    +--- masterarbeit.org (personal notes, schedules, some code)
     +--- Makefile
-    +--- bootstrap.sh (assembles the commands needed to setup velisarios on arch linux)
-    +--- raft (the actual source code for the examples and raft)
+    +--- bootstrap.sh (a shell script which assembles the commands I used to run velisarios)
+    +--- raft (the code for my master thesis)
 
+To get the code jump into the raft folder and dig to the readme files.
 
+The Makefile contains only high level commands to convert the thesis and notes. 
+Additional one can try to build velisarios but it is likely to not working.
 
-The Makefile contains the essentials to bootstrap the code
-and build the documentation and thesis. The Velisarios module
-is integrated for reference since the used code for raft is copied
-from the project.
+Remark:  
+The Velisarios submodule is added as reference. I copied the essential parts
+to the raft folder as a velisarios package. Additionally I also copied the PBFT
+and PrimaryBackup protocol as reference.
 
 * `make schedule`: Just convert the org file into a pdf
 * `make thesis`: Compile the thesis pdf
 * `make velisarios`: Try to build velisarios
-
-See the readme in the raft folder and the masterarbeit.org file for more information.
