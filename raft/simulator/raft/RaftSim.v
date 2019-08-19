@@ -88,299 +88,151 @@ Section RaftInstance.
     exists (fun n : nat_n (nclients C) => n); introv; unfold clients2nat; auto.
   Defined.
 
-  (* define the abstract state machine *)
+  (** Define the state machines type **)
   Definition smState : Set := nat.
 
-  (* initialize the global raft context *)
+  (** Initialize the global context **)
   Global Instance Raft_I_context : RaftContext :=
     MkRaftContext
-      F
-      (replica F)
-      (replica_deq F)
-      (reps2nat F)
-      (bijective_reps2nat F)
-  
-      (nclients C)
-      (client C)
-      (client_deq C)
-      (clients2nat C)
-      (bijective_clients2nat C)
-      smState
-      0.
-  
+      F (* faults *)
+      (replica F) (* replica type *)
+      (replica_deq F) (* replica decidability *)
+      (reps2nat F)  (* replica 2 nat conversion *)
+      (bijective_reps2nat F) (* proof that conversion is bijective *)
 
+      (nclients C) (* number of clients *)
+      (client C) (* client type *)
+      (client_deq C) (* client decidability *)
+      (clients2nat C) (* client 2 nat conversion *)
+      (bijective_clients2nat C) (* proof that conversion is bijective *)
+      smState (* state machine type *)
+      0 (* initial state *)
+      1000. (* timeout in ms *)
 
- 
-  (* define some client operations *)
-  (* Inductive operation := *)
-  (* | opr_add (n : nat) *)
-  (* | opr_sub (n : nat). *)
-
-  (* Lemma operation_deq : Deq operation. *)
-  (* Proof. *)
-  (*   introv; destruct x as [n|n], y as [m|m]; prove_dec; *)
-  (*     destruct (deq_nat n m); subst; prove_dec. *)
-  (* Defined. *)
-
-
-
-  (* ================== PRETTY PRINTING ================== *)
-
-    Fixpoint str_concat (l : list String.string) : String.string :=
+  (*! Pretty printing !*)
+  (** concat a list of string to one string. **)
+  Fixpoint str_concat (l : list String.string) : String.string :=
     match l with
     | [] => ""
     | s :: ss => String.append s (str_concat ss)
     end.
 
   (* FIX: to replace when extracting *)
+  (** The next three functions are placeholder functions which are later
+   ** replaced by real ocaml function within the extraction process. **)
+  (** carriage return **)
+  Definition CR : string := String (ascii_of_nat 13) "".
   Definition print_endline : string -> unit := fun _ => tt.
   Definition nat2string (n : nat) : string := "-".
 
-  Definition CR : string := String (ascii_of_nat 13) "".
-
-  (* Fix: to finish *)
-  (*Definition tokens2string (toks : Tokens) : string := "-".
-*)
-  (* Fix: to finish *)
-  (* Definition digest2string (d : raft_digest) : string := "-". *)
-
-  (* Fix: to finish *)
-  (* Definition result2string (r : result) : string := "-". *)
-
   (* Fix: there's only one client anyway *)
-  Definition client2string (c : client C) : string := "-".
-
-  (* Definition timestamp2string (ts : Timestamp) : string := *)
-  (*   match ts with *)
-  (*   | time_stamp n => nat2string n *)
-  (*   end. *)
-
-  (*Definition view2string (v : View) : string :=
-    match v with
-    | view n => nat2string n
-    end.
-*)
-  (*Definition seq2string (s : SeqNum) : string :=
-    match s with
-    | seq_num n => nat2string n
-    end.
-*)
-  (* Definition operation2string (opr : operation) : string := *)
-  (*   match opr with *)
-  (*   | opr_add n => str_concat ["+", nat2string n] *)
-  (*   | opr_sub n => str_concat ["-", nat2string n] *)
-  (*   end. *)
+  (** Name the client **)
+  Definition client2string (c : client C) : string := str_concat ["Client: ", nat2string C].
 
   Definition nat_n2string {m} (n : nat_n m) : string := nat2string (proj1_sig n).
+  (** Fetch the replica number from the map **)
+  Definition replica2string (r : replica F) : string := str_concat ["Replica: ", nat_n2string r].
 
-  Definition replica2string (r : replica F) : string := nat_n2string r.
-
-(*  Definition bare_request2string (br : Bare_Request) : string :=
-    match br with
-    | null_req => str_concat [ "null_req"]
-    | bare_req opr ts c => str_concat [operation2string opr, ",", timestamp2string ts, ",", client2string c]
+  (** The following defintions convert the basic types used within the protocol to strings **)
+  Definition term2string (t : Term) : string :=
+    match t with
+    | term n => str_concat ["Term: ", nat2string n]
     end.
 
   Definition request2string (r : Request) : string :=
     match r with
-    | req br a => str_concat ["REQUEST(", bare_request2string br, ",", tokens2string a, ")"]
+    | Req client c t => str_concat ["Request: (",
+                                   client2string client, ", ",
+                                   "Cmd: ", nat2string c, ", ",
+                                   term2string t, ")"]
     end.
 
-  Fixpoint requests2string (rs : list Request) : string :=
-    match rs with
-    | [] => ""
-    | [r] => request2string r
-    | r :: rs => str_concat [request2string r, ",", requests2string rs]
-    end.
-
-  Definition bare_pre_prepare2string (bpp : Bare_Pre_prepare) : string :=
-    match bpp with
-    | bare_pre_prepare v s reqs => str_concat [view2string v, ",", seq2string s, ",", requests2string reqs]
-    end.
-
-  Definition bare_prepare2string (bp : Bare_Prepare) : string :=
-    match bp with
-    | bare_prepare v s d i => str_concat [view2string v, ",", seq2string s, ",", digest2string d, ",", replica2string i]
-    end.
-
-  Definition bare_commit2string (bc : Bare_Commit) : string :=
-    match bc with
-    | bare_commit v s d i => str_concat [view2string v, ",", seq2string s, ",", digest2string d, ",", replica2string i]
-    end.
-
-  Definition bare_reply2string (br : Bare_Reply) : string :=
-    match br with
-    | bare_reply v ts c i res => str_concat [view2string v, ",", timestamp2string ts, ",", client2string c, ",", replica2string i, ",", result2string res]
-    end.
-
-  Definition pre_prepare2string (pp : Pre_prepare) : string :=
-    match pp with
-    | pre_prepare b a => str_concat ["PRE_PREPARE(",bare_pre_prepare2string b, ",", tokens2string a, ")"]
-    end.
-
-  Definition prepare2string (p : Prepare) : string :=
-    match p with
-    | prepare bp a => str_concat ["PREPARE(", bare_prepare2string bp, ",", tokens2string a, ")"]
-    end.
-
-  Definition commit2string (c : Commit) : string :=
-    match c with
-    | commit bc a => str_concat ["COMMIT(", bare_commit2string bc, ",", tokens2string a, ")"]
-    end.
-
-  Definition reply2string (r : Reply) : string :=
-    match r with
-    | reply br a => str_concat ["REPLY(", bare_reply2string br, ",", tokens2string a, ")"]
-    end.
-
-  Definition debug2string (d : Debug) : string :=
-    match d with
-    | debug r s => str_concat ["DEBUG(", replica2string r, ",", s, ")"]
-    end.
-
-  Definition bare_checkpoint2string (bc : Bare_Checkpoint) : string :=
-    match bc with
-    | bare_checkpoint v n d i => str_concat [view2string v, ",", seq2string n, ",", digest2string d, ",", replica2string i]
-    end.
-
-  Definition checkpoint2string (c : Checkpoint) : string :=
-    match c with
-    | checkpoint bc a => str_concat ["CHECKPOINT(", bare_checkpoint2string bc, ",", tokens2string a, ")"]
-    end.
-
-  Definition check_ready2string (c : CheckReady) : string := "CHECK-READY()".
-
-  Definition check_stable2string (c : CheckStableChkPt) : string := "CHECK-STABLE()".
-
-  Definition start_timer2string (t : StartTimer) : string :=
-    match t with
-    | start_timer r v => str_concat ["START-TIMER(", bare_request2string r, "," , view2string v, ")"]
-    end.
-
-  Definition expired_timer2string (t : ExpiredTimer) : string :=
-    match t with
-    | expired_timer r v => str_concat ["EXPIRED-TIMER(", bare_request2string r, "," , view2string v, ")"]
-    end.
-
-  (* FIX *)
-  Definition stable_chkpt2string (stable : StableChkPt) : string := "-".
-
-  (* FIX *)
-  Definition checkpoint_cert2string (cert : CheckpointCert) : string := "-".
-
-  (* FIX *)
-  Definition prepared_infos2string (l : list PreparedInfo) : string := "-".
-
-  Definition bare_view_change2string (bvc : Bare_ViewChange) : string :=
-    match bvc with
-    | bare_view_change v n stable cert preps i =>
-      str_concat
-        [view2string v,
-         ",",
-         seq2string n,
-         ",",
-         stable_chkpt2string stable,
-         ",",
-         checkpoint_cert2string cert,
-         ",",
-         prepared_infos2string preps,
-         ",",
-         replica2string i
-        ]
-    end.
-
-  Definition view_change2string (vc : ViewChange) : string :=
-    match vc with
-    | view_change bvc a => str_concat ["VIEW-CHANGE(", bare_view_change2string bvc, ",", tokens2string a, ")"]
-    end.
-
-  (* FIX *)
-  Definition view_change_cert2string (V : ViewChangeCert) : string := "-".
-
-  Fixpoint pre_prepares2string (l : list Pre_prepare) : string :=
+  Fixpoint log_list2string (l : list nat) : string :=
     match l with
     | [] => ""
-    | [r] => pre_prepare2string r
-    | r :: rs => str_concat [pre_prepare2string r, ",", pre_prepares2string rs]
+    | x :: xs => str_concat [nat2string x, " ", log_list2string xs]
     end.
 
-  Definition bare_new_view2string (bnv : Bare_NewView) : string :=
-    match bnv with
-    | bare_new_view v V OP NP =>
-      str_concat
-        [
-          view2string v,
-          ",",
-          view_change_cert2string V,
-          ",",
-          pre_prepares2string OP,
-          ",",
-          pre_prepares2string NP
-        ]
+  Definition append_entries2string (a : AppendEntries) : string :=
+    match a with
+    | Heartbeat => "Heartbeat"
+    | Replicate t r lli llt ci e => str_concat ["Replicate: (",
+                                               term2string t,
+                                               replica2string r,
+                                               "Last_log_index: ", nat2string lli,
+                                               "Last_log_term: ", nat2string llt,
+                                               "Commit_index: ", nat2string ci,
+                                               "Entries: ", log_list2string e, ")"]
     end.
 
-  Definition new_view2string (nv : NewView) : string :=
-    match nv with
-    | new_view bnv a => str_concat ["NEW-VIEW(", bare_new_view2string bnv, ",", tokens2string a, ")"]
+  Definition request_vote2string (r : RequestVote) : string :=
+    match r with
+    | Vote t c lli llt => str_concat ["RequestVote: (",
+                                     term2string t,
+                                     replica2string c,
+                                     "Last_log_index: ", nat2string lli,
+                                     "Last_log_term: ", nat2string llt, ")"]
     end.
 
-  Definition check_bcast_new_view2string (c : CheckBCastNewView) : string :=
-    match c with
-    | check_bcast_new_view i => str_concat ["CHECK-BCAST-NEW-VIEW(", nat2string i, ")"]
+  Definition bool2string (b : bool) : string :=
+    match b with
+    | true => "true"
+    | false => "false"
     end.
 
-  Definition msg2string (m : PBFTmsg) : string :=
-    match m with
-    | PBFTrequest r              => request2string r
-    | PBFTpre_prepare pp         => pre_prepare2string pp
-    | PBFTprepare p              => prepare2string p
-    | PBFTcommit c               => commit2string c
-    | PBFTcheckpoint c           => checkpoint2string c
-    | PBFTcheck_ready c          => check_ready2string c
-    | PBFTcheck_stable c         => check_stable2string c
-    | PBFTcheck_bcast_new_view c => check_bcast_new_view2string c
-    | PBFTstart_timer t          => start_timer2string t
-    | PBFTexpired_timer t        => expired_timer2string t
-    | PBFTview_change v          => view_change2string v
-    | PBFTnew_view v             => new_view2string v
-    | PBFTdebug d                => debug2string d
-    | PBFTreply r                => reply2string r
+  Definition result2string (r : Result) : string :=
+    match r with
+    | ClientRes res => str_concat ["ClientResult: ", nat2string res]
+    | AppendEntriesRes s t => str_concat ["AppendEntriesResult: (",
+                                         "Success: ", bool2string s,
+                                         term2string t, ")"]
+    | RequestVoteRes v t => str_concat ["RequestVoteResult: (",
+                                       "Vote_granted: ", bool2string v,
+                                       term2string t, ")"]
     end.
-*)
-  (* Definition name2string (n : name) : string := *)
-  (*   match n with *)
-  (*   | Raftleader => "leader" *)
-  (*   end. *)
-
-  (* Fixpoint names2string (l : list name) : string := *)
-  (*   match l with *)
-  (*   | [] => "" *)
-  (*   | [n] => name2string n *)
-  (*   | n :: ns => str_concat [name2string n, ",", names2string ns] *)
-  (*   end. *)
-
-  (* Definition delay2string (delay : nat) : string := nat2string delay. *)
 
   Definition msg2string (m : Raftmsg) : string :=
     match m with
-    | Input n => "Command " ++ nat2string n
-    | Heartbeat => "Heartbeat"
-    (* | _ => "Other msg" *)
+    | RequestMsg r => request2string r
+    | ResponseMsg r => result2string r
+    | AppendEntriesMsg r => append_entries2string r
+    | AppendEntriesResultMsg r => result2string r
+    | RequestVoteMsg r => request_vote2string r
+    | ResponseVoteMsg r => result2string r
     end.
 
-  (* Definition DirectedMsg2strking (dm : DirectedMsg) : string := *)
-  (*   match dm with *)
-  (*   | MkDMsg msg dst delay =>  *)
-  (*     (* concat ["msg", ":", "[", " dest" , "]", ":"] *) *)
-  (*   end. *)
+  (* convert the node types to names *)
+  Definition name2string (n : name) : string :=
+    match n with
+    | Raftreplica r => replica2string r
+    | Raftclient c => client2string c
+    end.
 
-  (* Fixpoint DirectedMsgs2string (l : DirectedMsgs) : string := *)
-  (*   match l with *)
-  (*   | [] => "" *)
-  (*   | [dm] => "msg" (* DirectedMsg2string dm *) *)
-  (*   | dm :: dmsgs => str_concat ["mutliple msgs"] (* [DirectedMsg2string dm, CR, DirectedMsgs2string dmsgs] *) *)
-  (*   end. *)
-(*
+  Fixpoint names2string (l : list name) : string :=
+    match l with
+    | [] => ""
+    | [n] => name2string n
+    | n :: ns => str_concat [name2string n, "|", names2string ns]
+    end.
+
+  (** A direct message as some sort of possible delay **)
+  Definition delay2string (delay : nat) : string := nat2string delay.
+
+  (** convert a message which is send directly to the nodes into a string **)
+  Definition DirectedMsg2string (dm : DirectedMsg) : string :=
+    match dm with
+    | MkDMsg msg dst delay =>
+      str_concat ["Msg:", msg2string msg, " Dst:{", names2string dst, "}, Delay:", delay2string delay]
+    end.
+
+  Fixpoint DirectedMsgs2string (l : DirectedMsgs) : string :=
+    match l with
+    | [] => ""
+    | [dm] =>  DirectedMsg2string dm
+    | dm :: dmsgs => str_concat  [DirectedMsg2string dm, CR, DirectedMsgs2string dmsgs]
+    end.
+
+  (*
   Definition TimedDirectedMsg2string (m : TimedDirectedMsg) : string :=
     match m with
     | MkTimedDMsg dm time => str_concat [DirectedMsg2string dm, ":", time_I_2string time]
@@ -416,26 +268,25 @@ Section RaftInstance.
 (*          CR*) *)
 (*         ] *)
 (*     end. *)
- 
-
 
 
   Definition state2string (s : RaftState) :=
       str_concat
-        ["(Raft state:"
-         ,")"
+        ["(Raft state:", CR,
+         term2string (current_term s), ")"
         ].
 
-  (* ================== SYSTEM ================== *)
-
-  
-
+  (*! System definition !*)
   Definition dummy_initial_state : RaftState :=
     Build_State
       initial_term
-      RaftSM_initial_state
+      None
+      []
+      0
+      0
       5
-      false.
+      RaftSM_initial_state
+      initial_leader_state.
 
   Definition RaftdummySM : MStateMachine RaftState :=
     MhaltedSM dummy_initial_state.
@@ -569,4 +420,4 @@ Require Export ExtrOcamlString.
 Definition local_replica (*(F C : nat)*) :=
   @RaftreplicaSM (@Raft_I_context).
 
-Extraction "RaftReplicaEx.ml" state2string lrun_sm RaftdummySM local_replica.
+Extraction "RaftReplicaEx.ml" state2string lrun_sm RaftdummySM local_replica DirectedMsgs2string.

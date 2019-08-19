@@ -66,8 +66,8 @@ Section Raft.
         current_term : Term;
         (* The candidate this node voted for the current term or null if none *)
         voted_for : (option nat);
-        (* The replicated log data. *)
-        log : list Set;
+        (* The replicated log data. !Use nat at the beginning! *)
+        log : list nat;
         (* Volatile - The last log index known to be committed. *)
         commit_index : nat;
         (* Volatile - The last log index applied to the state machine. *)

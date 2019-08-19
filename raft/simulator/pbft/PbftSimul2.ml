@@ -1,9 +1,9 @@
 open Colors
 open Prelude
-open PbftReplicaEx
 open RsaKeyFun
 open Core
 open Simulator
+open PbftReplicaEx
 
 (* turn this to false if you don't want to sign messages *)
 let signing : bool ref = ref true

@@ -181,7 +181,7 @@ Section RaftHeader.
   Inductive AppendEntries :=
   | Heartbeat
   | Replicate (term : Term) (leader : Rep) (last_log_index : nat)
-              (last_log_term : Term) (commit_index : nat) (entry : list Set).
+              (last_log_term : Term) (commit_index : nat) (entry : list nat).
 
   (** A vote is issued during the leader election. The candidate provides
    ** itself, the current term and the index of the last stored log and
