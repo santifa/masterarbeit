@@ -12,6 +12,12 @@ Require Export Ascii String.
  ** raft protocol. **)
 Section RaftInstance.
 
+  (*! notations !*)
+  Notation Nindex := (list NextIndex).
+  Notation Mindex := (list NextIndex).
+  Notation Log := (list Entry).
+  Notation Commit_log := (list Entry).
+
   (* ================== TIME ================== *)
   (*! Define timing stuff !*)
   Definition time_I_type : Set := unit.
@@ -91,6 +97,10 @@ Section RaftInstance.
   (** Define the state machines type **)
   Definition smState : Set := nat.
 
+  (* Convert a natural number to a string. use the ocaml fn
+   * Predefined for usage in the context. *)
+  Definition nat2string (n : nat) : string := "-".
+
   (** Initialize the global context **)
   Global Instance Raft_I_context : RaftContext :=
     MkRaftContext
@@ -107,9 +117,34 @@ Section RaftInstance.
       (bijective_clients2nat C) (* proof that conversion is bijective *)
       smState (* state machine type *)
       0 (* initial state *)
-      1000. (* timeout in ms *)
+      1000 (* timeout in ms *)
+      nat
+      nat2string.
+
+  Check MkEntry (term 0) 0.
+
+  (** Some examples **)
+  Definition l : Log := [new_entry (term 0) 0, new_entry (term 1) 1].
+  Definition l2 : Log := [new_entry (term 0) 0, new_entry (term 1) 3].
+  Compute(get_last_log_term l).
+  Compute (get_last_log_index l2).
+  Compute (check_last_log 2 (term 1) l).
+  Compute (check_last_log 1 (term 0) []).
+  Compute (check_last_log 3 (term 2) l).
+  Compute (take_from_log 0 l).
+  Compute (take_from_log 1 l).
+
 
   (*! Pretty printing !*)
+  (** Rules for pretty printing:
+   ** - Every inductive type should get a string representation for all cases.
+   ** - For a type it should be "<Name>: " and
+   **   - if there is only one parameter, the parameter as string
+   **   - if there are multiple parameter, a tuple of the string representations like
+   **     "{<Name1>: <p1>, <Name2>: <p2>}"
+   ** - Records are handled likewise
+   ** - list are surrounded by brackets "[<entry1>, <entry2>]" **)
+
   (** concat a list of string to one string. **)
   Fixpoint str_concat (l : list String.string) : String.string :=
     match l with
@@ -117,13 +152,31 @@ Section RaftInstance.
     | s :: ss => String.append s (str_concat ss)
     end.
 
+  (** auxilary function which converts a list of some type to its representation. **)
+  Fixpoint list2string_aux {A : Type} (l : list A) (s : A -> string) : string :=
+    match l with
+    | [] => ""
+    | [x] => s x
+    | x :: xs => str_concat [s x, ", ", list2string_aux xs s]
+    end.
+
+  (** Convert a list to a string according the rules. **)
+  Definition list2string {A : Type} (l : list A) (s : A -> string) : string :=
+    str_concat ["[", list2string_aux l s, "]"].
+
   (* FIX: to replace when extracting *)
   (** The next three functions are placeholder functions which are later
    ** replaced by real ocaml function within the extraction process. **)
-  (** carriage return **)
-  Definition CR : string := String (ascii_of_nat 13) "".
+  (** line feed **)
+  Definition LF : string := String (ascii_of_nat 10) "".
   Definition print_endline : string -> unit := fun _ => tt.
-  Definition nat2string (n : nat) : string := "-".
+
+  Fixpoint record_concat (n : string) (l : list String.string) : string :=
+    str_concat [n, ": {", list2string_aux l (fun x => x), "}"].
+
+  (** Use this to get convert a named number to a string. **)
+  Definition number2string (name : string) (i : nat) : string :=
+    str_concat [name, ": ", nat2string i].
 
   (* Fix: there's only one client anyway *)
   (** Name the client **)
@@ -131,47 +184,60 @@ Section RaftInstance.
 
   Definition nat_n2string {m} (n : nat_n m) : string := nat2string (proj1_sig n).
   (** Fetch the replica number from the map **)
-  Definition replica2string (r : replica F) : string := str_concat ["Replica: ", nat_n2string r].
 
-  (** The following defintions convert the basic types used within the protocol to strings **)
+  Definition replica2string (r : replica F) : string :=
+    str_concat ["Replica: ", nat_n2string r].
+
+  (** The following defintions convert the basic types according the rules. **)
   Definition term2string (t : Term) : string :=
     match t with
-    | term n => str_concat ["Term: ", nat2string n]
+    | term n => number2string "Term" n
     end.
+
+  Definition cmd2string (c : nat) : string := number2string "Cmd" c.
 
   Definition request2string (r : Request) : string :=
     match r with
-    | Req client c t => str_concat ["Request: (",
-                                   client2string client, ", ",
-                                   "Cmd: ", nat2string c, ", ",
-                                   term2string t, ")"]
+    | Req client c t =>
+      record_concat "Request" [client2string client, cmd2string c, term2string t]
     end.
 
-  Fixpoint log_list2string (l : list nat) : string :=
-    match l with
-    | [] => ""
-    | x :: xs => str_concat [nat2string x, " ", log_list2string xs]
+  Definition entry2string (e : Entry) : string :=
+    match e as e' with
+    | MkEntry t content =>
+      record_concat "Entry" [term2string t, content2string content]
     end.
+
+  Definition log2string (l : list Entry) : string :=
+    str_concat ["Log: ", list2string l entry2string].
+
+  Definition committed2string (l : list Entry) : string :=
+    str_concat ["Committed: ", list2string l entry2string].
+
+  (** Entries are basically the same but are used semantically within append entries messages
+   ** and not within the replica states. **)
+  Definition entries2string (l : list Entry) : string :=
+    str_concat ["Entries: ", list2string l entry2string].
+
+  Definition last_log_index2string (i : nat) : string := number2string "Last_log_index" i.
+  Definition last_log_term2string (t : nat) : string := number2string "Last_log_term" t.
+  Definition commit_index2string (i : nat) : string := number2string "Commit_index" i.
 
   Definition append_entries2string (a : AppendEntries) : string :=
     match a with
     | Heartbeat => "Heartbeat"
-    | Replicate t r lli llt ci e => str_concat ["Replicate: (",
-                                               term2string t,
-                                               replica2string r,
-                                               "Last_log_index: ", nat2string lli,
-                                               "Last_log_term: ", nat2string llt,
-                                               "Commit_index: ", nat2string ci,
-                                               "Entries: ", log_list2string e, ")"]
+    | Replicate t r lli llt ci e =>
+      record_concat "Replicate"
+                    [term2string t, replica2string r, last_log_index2string lli,
+                     last_log_term2string llt, commit_index2string ci, entries2string e]
     end.
 
   Definition request_vote2string (r : RequestVote) : string :=
     match r with
-    | Vote t c lli llt => str_concat ["RequestVote: (",
-                                     term2string t,
-                                     replica2string c,
-                                     "Last_log_index: ", nat2string lli,
-                                     "Last_log_term: ", nat2string llt, ")"]
+    | Vote t c lli llt =>
+      record_concat "RequestVote"
+                    [term2string t, replica2string c,
+                     last_log_index2string lli, last_log_term2string llt]
     end.
 
   Definition bool2string (b : bool) : string :=
@@ -182,16 +248,16 @@ Section RaftInstance.
 
   Definition result2string (r : Result) : string :=
     match r with
-    | ClientRes res => str_concat ["ClientResult: ", nat2string res]
-    | AppendEntriesRes s t => str_concat ["AppendEntriesResult: (",
-                                         "Success: ", bool2string s,
-                                         term2string t, ")"]
-    | RequestVoteRes v t => str_concat ["RequestVoteResult: (",
-                                       "Vote_granted: ", bool2string v,
-                                       term2string t, ")"]
+    | ClientRes res => number2string "ClientResult" res
+    | AppendEntriesRes s t =>
+      record_concat "AppendEntriesResult"
+                    [str_concat ["Success: ", bool2string s], term2string t]
+    | RequestVoteRes v t =>
+      record_concat "RequestVoteResult"
+                    [str_concat ["Vote_granted: ", bool2string v], term2string t]
     end.
 
-  Definition msg2string (m : Raftmsg) : string :=
+  Fixpoint msg2string (m : Raftmsg) : string :=
     match m with
     | RequestMsg r => request2string r
     | ResponseMsg r => result2string r
@@ -199,6 +265,7 @@ Section RaftInstance.
     | AppendEntriesResultMsg r => result2string r
     | RequestVoteMsg r => request_vote2string r
     | ResponseVoteMsg r => result2string r
+    | ForwardMsg r => str_concat ["Forward: ", msg2string r]
     end.
 
   (* convert the node types to names *)
@@ -208,44 +275,34 @@ Section RaftInstance.
     | Raftclient c => client2string c
     end.
 
-  Fixpoint names2string (l : list name) : string :=
-    match l with
-    | [] => ""
-    | [n] => name2string n
-    | n :: ns => str_concat [name2string n, "|", names2string ns]
-    end.
+  (* maybe wrong name *)
+  Definition names2string (l : list name) : string :=
+    str_concat ["Dst: ", list2string l name2string].
 
   (** A direct message as some sort of possible delay **)
-  Definition delay2string (delay : nat) : string := nat2string delay.
+  Definition delay2string (delay : nat) : string := str_concat ["Delay: ", nat2string delay].
 
   (** convert a message which is send directly to the nodes into a string **)
   Definition DirectedMsg2string (dm : DirectedMsg) : string :=
     match dm with
     | MkDMsg msg dst delay =>
-      str_concat ["Msg:", msg2string msg, " Dst:{", names2string dst, "}, Delay:", delay2string delay]
+      record_concat "message" [msg2string msg, names2string dst, delay2string delay]
     end.
 
-  Fixpoint DirectedMsgs2string (l : DirectedMsgs) : string :=
-    match l with
-    | [] => ""
-    | [dm] =>  DirectedMsg2string dm
-    | dm :: dmsgs => str_concat  [DirectedMsg2string dm, CR, DirectedMsgs2string dmsgs]
-    end.
+  Definition DirectedMsgs2string (l : DirectedMsgs) : string :=
+    str_concat ["Dmsgs: ", list2string l DirectedMsg2string].
 
-  (*
+
+
   Definition TimedDirectedMsg2string (m : TimedDirectedMsg) : string :=
     match m with
     | MkTimedDMsg dm time => str_concat [DirectedMsg2string dm, ":", time_I_2string time]
     end.
 
-  Fixpoint TimedDirectedMsgs2string (l : TimedDirectedMsgs) : string :=
-    match l with
-    | [] => ""
-    | [dm] => TimedDirectedMsg2string dm
-    | dm :: dmsgs => str_concat [TimedDirectedMsg2string dm, CR, TimedDirectedMsgs2string dmsgs]
-    end.
-*)
-(*   Definition MonoSimulationState2string (s : MonoSimulationState) : string := *)
+  Definition TimedDirectedMsgs2string (l : TimedDirectedMsgs) :=
+    str_concat ["Tdmsgs: ", list2string l TimedDirectedMsg2string].
+
+  (*   Definition MonoSimulationState2string (s : MonoSimulationState) : string := *)
 (*     match s with *)
 (*     | MkMonoSimState ty sys step out_inflight in_inflight delivered => *)
 (*       concat *)
@@ -267,35 +324,99 @@ Section RaftInstance.
 (*          TimedDirectedMsgs2string delivered, *)
 (*          CR*) *)
 (*         ] *)
-(*     end. *)
+  (*     end. *)
 
 
-  Definition state2string (s : RaftState) :=
-      str_concat
-        ["(Raft state:", CR,
-         term2string (current_term s), ")"
-        ].
+  (** Convert a NextIndex element into a string tuple. **)
+  Definition index2string (n : NextIndex) : string :=
+    match n with
+    | next rep index => str_concat ["(i: ", nat2string index, ", e: ", replica2string rep, ")"]
+    end.
+
+  (** This function takes the first list index name and iterates through the list
+   ** concatenating the index and entry value as tuple. **)
+  Fixpoint indexed_list2string (l : list NextIndex) : string :=
+    match l with
+    | [] => ""
+    | [x] => index2string x
+    | x :: xs => str_concat [index2string x, ", ", indexed_list2string xs]
+    end.
+
+  Definition next_index2string (l : Nindex) : string :=
+    str_concat ["Next_index: [", indexed_list2string l, "]"].
+
+  Definition match_index2string (l : Mindex) : string :=
+    str_concat ["Match_index: [", indexed_list2string l, "]"].
+
+  (** Give a string representation from the leader state if some **)
+  Definition leader_state2string (l : RaftLeaderState) : string :=
+    match (is_leader l) with
+    | true =>
+      record_concat "Leader" ["yes", next_index2string (next_index l),
+                              match_index2string (match_index l)]
+    | false => "Leader: no"
+    end.
+
+  Definition current_leader2string (c : option Rep) : string :=
+    match c with
+    | None => "Current_leader: None"
+    | Some n => str_concat ["Current_leader: ", replica2string n]
+    end.
+
+  Definition voted_for2string (c : option nat) : string :=
+    match c with
+    | None => "Voted_for: None"
+    | Some n => str_concat ["Voted_for: ", nat2string n]
+    end.
+
+    (** Give a string representation of some nodes states **)
+  Definition state2string (s : RaftState) : string :=
+    record_concat "Replica state"
+                  [term2string (current_term s), voted_for2string (voted_for s),
+                   log2string (log s), commit_index2string (commit_index s),
+                   committed2string (committed s),
+                  current_leader2string (current_leader s), leader_state2string (leader s)].
 
   (*! System definition !*)
-  Definition dummy_initial_state : RaftState :=
+  (** this is the initial replica state which is used to create
+   ** a network of replicas. **)
+  (* Definition dummy_initial_state : RaftState := *)
+    (* Build_State *)
+    (*   initial_term *)
+    (*   None *)
+    (*   [] *)
+    (*   0 *)
+    (*   0 *)
+    (*   5 *)
+    (*   RaftSM_initial_state *)
+    (*   no_leader_state. *)
+
+  (** This is a special purpose state, which initiates a leader.
+   ** Providing an initial leader is not inteded by the raft protocol.
+   ** This state assumes that the network has 3 followers. **)
+  Definition dummy_leader_state : RaftState :=
     Build_State
       initial_term
       None
       []
       0
+      []
       0
       5
       RaftSM_initial_state
-      initial_leader_state.
+      (init_leader_state [1, 2, 3])
+      (Some (nat2rep 0))
+      [0; 1; 2; 3].
 
+  (** Provide the dummy state machine defined within raft.v **)
   Definition RaftdummySM : MStateMachine RaftState :=
-    MhaltedSM dummy_initial_state.
+    MhaltedSM initial_state (* dummy_initial_state *).
 
   Definition Raftmono_sys : NMStateMachine RaftState :=
     fun name =>
       match name with
       | Raftreplica n => RaftreplicaSM n
-      | _ => MhaltedSM dummy_initial_state
+      | _ => MhaltedSM initial_state
       end.
 
   (* Definition mk_request_to (rep : Rep) (ts : nat) (opr : nat) : DirectedMsg := *)
@@ -417,7 +538,8 @@ Require Export ExtrOcamlBasic.
 Require Export ExtrOcamlNatInt.
 Require Export ExtrOcamlString.
 
-Definition local_replica (*(F C : nat)*) :=
-  @RaftreplicaSM (@Raft_I_context).
+Definition local_replica (*(F C : nat)*) (leader : bool) :=
+  if leader then @RaftLeaderreplicaSM (@Raft_I_context)
+  else @RaftreplicaSM (@Raft_I_context).
 
 Extraction "RaftReplicaEx.ml" state2string lrun_sm RaftdummySM local_replica DirectedMsgs2string.

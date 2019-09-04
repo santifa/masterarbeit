@@ -79,7 +79,6 @@ class ['a, 'b, 'c, 'd] pb c = object(self)
         (* (message without current replica) :: (next messages) @ (newly created messages) *)
         self#run_replicas (dm' :: dms @ dmsgs)
 
-
   (* run the client recursively
    * timestamp - is the current term and gets inc every round
    * max - the maximum rounds to go

@@ -29,6 +29,7 @@ Programmiersprachen generiert werden.
 ** Zeitplanung [%]
 
 Neuer Zeitplan von Mitte April bis Ende September,
+
 eine frühere Fertigstellung wird angestrebt.
 
 
@@ -40,7 +41,6 @@ eine frühere Fertigstellung wird angestrebt.
     "Neubegin Masterarbeit"
 
 **** TODO Programmierung RAFT mit Velisarios <2019-04-25 Do>--<2019-06-15 Sa>
-
 
 
 **** TODO Simluation? <2019-06-15 Sa>--<2019-07-06 Sa>
@@ -120,6 +120,19 @@ C-c C-c
 #+END_SRC
 
 #+RESULTS:
+
+*** Practice
+
+Hier wird der Ablauf beschrieben, um ein Protokoll mit Velisarios zu implementieren.
+
+Grundsätzlich ist es hilfreich ein Protokoll zum Untergliedern in mehrere Dateien:
+
+<Protokoll>Header.v -> Protokollkontext, allg. Definitionen zur Topologie (Knoten, Nachrichten,...)
+<Protokoll>.v -> Implementierung (Zustandsautomat, Verknüpfen mit Velisarios Ausführungsautomat)
+<Protokoll>Sim.v -> Implementierung einer Instanz, API zu Ocaml, Pretty Printing, Extraktion
+<Protokoll>Simul.ml -> Implementierung Simulator auf Ocaml Seite
+
+
 
 ** Simulator
 
