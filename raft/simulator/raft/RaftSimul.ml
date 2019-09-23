@@ -9,17 +9,19 @@ let char_list2string l = Batteries.String.of_list l
 
 let print_state state = char_list2string (state2string (sm_state state))
 
-let to_replica n = { id = Obj.magic (Raftreplica (Obj.magic n));
+let to_replica n = { id = Obj.magic (Replica (Obj.magic n));
                      replica = local_replica false (Obj.magic n) }
 
-let to_leader n = { id = Obj.magic (Raftreplica (Obj.magic n));
+let to_leader n = { id = Obj.magic (Replica (Obj.magic n));
                      replica = local_replica true (Obj.magic n) }
 
+let get_session msg =
+  match 
 
 let destination2string (n : name) : string =
   match Obj.magic n with
-  | Raftreplica r -> "R(" ^ string_of_int (Obj.magic r) ^ ")"
-  | Raftclient c -> "C(" ^ string_of_int (Obj.magic c) ^ ")";;
+  | Replica r -> "R(" ^ string_of_int (Obj.magic r) ^ ")"
+  | Client c -> "C(" ^ string_of_int (Obj.magic c) ^ ")";;
 
 class ['a, 'b, 'c, 'd] raft c = object(self)
   inherit ['a, 'b, 'c, 'd] simulator c
@@ -31,7 +33,7 @@ class ['a, 'b, 'c, 'd] raft c = object(self)
     let cmd = 12 in
     let term = 0 in
     let client = Obj.magic conf.client_id in
-    RequestMsg (Req(client, (Obj.magic cmd), term))
+    Request_msg (Client_request (client, conf.session, request, (Obj.magic cmd)))
 
   method run_replicas (inflight : directedMsgs) : directedMsgs =
     match inflight with
@@ -43,10 +45,6 @@ class ['a, 'b, 'c, 'd] raft c = object(self)
         print_info (kCYN) "Procesing" (char_list2string (directedMsg2string dm));
         let dm' = { dmMsg = dm.dmMsg; dmDst = ids; dmDelay = dm.dmDelay } in
         match replicas#find_replica id with
-        | None ->
-          print_err  ("Couldn't find id " ^ destination2string id) ();
-          let failed_to_deliver = { dmMsg = dm.dmMsg; dmDst = [id]; dmDelay = dm.dmDelay } in
-          failed_to_deliver :: self#run_replicas (dm' :: dms)
         | Some rep ->
           print_info (kGRN) (destination2string id ^ " | Input message")
             (char_list2string (msg2string (Obj.magic dm.dmMsg)));
@@ -56,13 +54,23 @@ class ['a, 'b, 'c, 'd] raft c = object(self)
           replicas#replace_replica id rep';
           print_endline (char_list2string (state2string rep'.sm_state));
           self#run_replicas (dm' :: dms @ dmsgs)
-
+        | None ->
+          print_err  ("Couldn't find id " ^ destination2string id) ();
+          let failed_to_deliver = { dmMsg = dm.dmMsg; dmDst = [id]; dmDelay = dm.dmDelay } in
+          failed_to_deliver :: self#run_replicas (dm' :: dms)
+       
   method run_client timestamp max avg printing_period =
+    (* register some client *)
+    let register = Register_msg (Obj.magic conf.client_id) in
+    let inflight = [{ dmMsg = Obj.magic register; dmDst = [c.primary]; dmDelay = 0 }] in
+    print_info (kBLU) "Start" (char_list2string (directedMsgs2string inflight));
+    let failed_to_deliver = self#run_replicas inflight in
+    (* execute some request **)
     let req = self#mk_request (Obj.magic timestamp) 17 in
     let inflight = [{ dmMsg = Obj.magic req; dmDst = [c.primary]; dmDelay = 0 }] in
     let t = Prelude.Time.get_time () in
     print_info (kBLU) "Start" (char_list2string (directedMsgs2string inflight));
-    let failed_to_deliver = self#run_replicas inflight in
+    let failed_to_deliver = failed_to_deliver @ (self#run_replicas inflight) in
     let d = Prelude.Time.sub_time (Prelude.Time.get_time ()) t in
     let new_avg = Prelude.Time.div_time (Prelude.Time.add_time (Prelude.Time.mul_time avg  (timestamp - 1)) d) timestamp in
     (match failed_to_deliver with
@@ -82,6 +90,7 @@ let _ =
     protocol = "Raft";
     client_id = 0;
     private_key = lookup_client_sending_key (Obj.magic 0);
-    primary = Obj.magic (Raftreplica (Obj.magic 1)) (* type: name *)
+    primary = Obj.magic (Replica (Obj.magic 0)) (* type: name *);
+    session = 1;
   } in
   c#run

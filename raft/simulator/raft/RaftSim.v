@@ -13,10 +13,8 @@ Require Export Ascii String.
 Section RaftInstance.
 
   (*! notations !*)
-  Notation Nindex := (list NextIndex).
-  Notation Mindex := (list NextIndex).
   Notation Log := (list Entry).
-  Notation Commit_log := (list Entry).
+  Notation Sessions := (list (SessionId * Client * RequestId)).
 
   (* ================== TIME ================== *)
   (*! Define timing stuff !*)
@@ -47,16 +45,16 @@ Section RaftInstance.
   Definition num_replicas (F : nat) : nat := 3 * F + 1.
 
   (** Declare the set of replicas as map between num and replica. **)
-  Definition replica (F : nat) : Set := nat_n (num_replicas F).
+  Definition raft_replica (F : nat) : Set := nat_n (num_replicas F).
 
   (** Replicas have decidable equality. **)
-  Lemma replica_deq (F : nat) : Deq (replica F).
+  Lemma replica_deq (F : nat) : Deq (raft_replica F).
   Proof.
     apply nat_n_deq.
   Defined.
 
   (** Convert between the replicas and the numbers indicating the replica **)
-  Definition reps2nat (F : nat) : replica F -> nat_n (num_replicas F) := fun n => n.
+  Definition reps2nat (F : nat) : raft_replica F -> nat_n (num_replicas F) := fun n => n.
 
   (** Show that the function is bijective. **)
   Lemma bijective_reps2nat (F : nat) : bijective (reps2nat F).
@@ -68,10 +66,10 @@ Section RaftInstance.
   Definition nclients (C : nat) : nat := S C.
 
   (** Create the map of clients and it's natural representation. **)
-  Definition client (C : nat) : Set := nat_n (nclients C).
+  Definition raft_client (C : nat) : Set := nat_n (nclients C).
 
   (** Proof that the definition client holds for one client. **)
-  Definition client0 (C : nat) : client C.
+  Definition client0 (C : nat) : raft_client C.
   Proof.
     exists 0.
     apply leb_correct.
@@ -80,13 +78,13 @@ Section RaftInstance.
   Defined.
 
   (** Proof that proposed clients have decidable equality. **)
-  Lemma client_deq (C : nat) : Deq (client C).
+  Lemma client_deq (C : nat) : Deq (raft_client C).
   Proof.
     apply nat_n_deq.
   Defined.
 
   (** Convert between clients and their numeral representations. **)
-  Definition clients2nat (C : nat) : client C -> nat_n (nclients C) := fun n => n.
+  Definition clients2nat (C : nat) : raft_client C -> nat_n (nclients C) := fun n => n.
 
   (** Proof that the conversion is bijective. **)
   Lemma bijective_clients2nat (C : nat) : bijective (clients2nat C).
@@ -96,6 +94,12 @@ Section RaftInstance.
 
   (** Define the state machines type **)
   Definition smState : Set := nat.
+  Definition result : Set := nat.
+  Definition content : Set := nat.
+
+  Definition update_sm (s : smState) (c : content) :=
+    let s' := s + c in
+    (s', s').
 
   (* Convert a natural number to a string. use the ocaml fn
    * Predefined for usage in the context. *)
@@ -105,21 +109,23 @@ Section RaftInstance.
   Global Instance Raft_I_context : RaftContext :=
     MkRaftContext
       F (* faults *)
-      (replica F) (* replica type *)
+      (raft_replica F) (* replica type *)
       (replica_deq F) (* replica decidability *)
       (reps2nat F)  (* replica 2 nat conversion *)
       (bijective_reps2nat F) (* proof that conversion is bijective *)
 
       (nclients C) (* number of clients *)
-      (client C) (* client type *)
+      (raft_client C) (* client type *)
       (client_deq C) (* client decidability *)
       (clients2nat C) (* client 2 nat conversion *)
       (bijective_clients2nat C) (* proof that conversion is bijective *)
+      1000 (* timeout in ms *)
+      content (* content type *)
+      nat2string (* content -> string *)
+      result (* result type *)
       smState (* state machine type *)
       0 (* initial state *)
-      1000 (* timeout in ms *)
-      nat
-      nat2string.
+      update_sm.
 
   Check MkEntry (term 0) 0.
 
@@ -133,6 +139,38 @@ Section RaftInstance.
   Compute (check_last_log 3 (term 2) l).
   Compute (take_from_log 0 l).
   Compute (take_from_log 1 l).
+
+  (*! Define fake states for testing !*)
+ Definition initial_faked_leader_state : RaftState :=
+    Build_State
+      term0 (* zero at first boot *)
+      [] (* *)
+      None (* voted for no one. *)
+      [] (* no log entries stored *)
+      0 (* no commit done *)
+      0 (* nothing applied to state machine *)
+      5 (* some way of defining an offset is needed *)
+      RaftSM_initial_state (* defined within the raft context *)
+      follower (* at default no one is leader *)
+      (Some (nat2rep 0)) (* set leader to 0 *)
+      timer0 (* empty list of nodes *).
+
+
+  (** An initial leader state which should only used for testing. **)
+  Definition initial_leader_state : RaftState :=
+    Build_State
+      term0 (* zero at first boot *)
+      []
+      None (* voted for no one. *)
+      [] (* no log entries stored *)
+      0 (* no commit done *)
+      0 (* nothing applied to state machine *)
+      5 (* some way of defining an offset is needed *)
+      RaftSM_initial_state (* defined within the raft context *)
+      (leader (after_election_leader 0 (List.map nat2rep [1, 2, 3]))) (* define as leader with 3 followers *)
+      (Some (nat2rep 0)) (* set leader to 0 for testing *)
+      timer0 (* set follower nodes *).
+
 
 
   (*! Pretty printing !*)
@@ -180,13 +218,19 @@ Section RaftInstance.
 
   (* Fix: there's only one client anyway *)
   (** Name the client **)
-  Definition client2string (c : client C) : string := str_concat ["Client: ", nat2string C].
+  Definition client2string (c : raft_client C) : string := str_concat ["Client: ", nat2string C].
 
   Definition nat_n2string {m} (n : nat_n m) : string := nat2string (proj1_sig n).
   (** Fetch the replica number from the map **)
 
-  Definition replica2string (r : replica F) : string :=
+  Definition replica2string (r : raft_replica F) : string :=
     str_concat ["Replica: ", nat_n2string r].
+
+  Definition replica_option2string (r : option Rep) : string :=
+    match r with
+    | None => "None"
+    | Some r => replica2string r
+    end.
 
   (** The following defintions convert the basic types according the rules. **)
   Definition term2string (t : Term) : string :=
@@ -194,12 +238,34 @@ Section RaftInstance.
     | term n => number2string "Term" n
     end.
 
+  Definition session_id2string (s : SessionId) :=
+    match s with
+    | session_id i => number2string "Session" i
+    end.
+
+  Definition request_id2string (ri : RequestId) :=
+    match ri with
+    | request_id i => number2string "Request" i
+    end.
+
+  Definition session2string (s : (SessionId * Client * RequestId)) : string :=
+    match s with
+    | (sid, c, ri) => record_concat "Session"
+                               [session_id2string sid, client2string c, request_id2string ri]
+    end.
+
+  Definition register_client2string (r : RegisterClient) :=
+    match r with
+    | register_client c => str_concat ["Register: ", client2string c]
+    end.
+
   Definition cmd2string (c : nat) : string := number2string "Cmd" c.
 
-  Definition request2string (r : Request) : string :=
+  Definition request2string (r : ClientRequest) : string :=
     match r with
-    | Req client c t =>
-      record_concat "Request" [client2string client, cmd2string c, term2string t]
+    | client_request cl sid rid c =>
+      record_concat "Request" [client2string cl, session_id2string sid,
+                               request_id2string rid, cmd2string c]
     end.
 
   Definition entry2string (e : Entry) : string :=
@@ -225,8 +291,8 @@ Section RaftInstance.
 
   Definition append_entries2string (a : AppendEntries) : string :=
     match a with
-    | Heartbeat => "Heartbeat"
-    | Replicate t r lli llt ci e =>
+    | heartbeat => "Heartbeat"
+    | replicate t r lli llt ci e =>
       record_concat "Replicate"
                     [term2string t, replica2string r, last_log_index2string lli,
                      last_log_term2string llt, commit_index2string ci, entries2string e]
@@ -234,7 +300,7 @@ Section RaftInstance.
 
   Definition request_vote2string (r : RequestVote) : string :=
     match r with
-    | Vote t c lli llt =>
+    | request_vote t c lli llt =>
       record_concat "RequestVote"
                     [term2string t, replica2string c,
                      last_log_index2string lli, last_log_term2string llt]
@@ -248,31 +314,48 @@ Section RaftInstance.
 
   Definition result2string (r : Result) : string :=
     match r with
-    | ClientRes res => number2string "ClientResult" res
-    | AppendEntriesRes s t =>
+    | client_res res => number2string "ClientResult" res
+    | append_entries_res s t =>
       record_concat "AppendEntriesResult"
                     [str_concat ["Success: ", bool2string s], term2string t]
-    | RequestVoteRes v t =>
+    | request_vote_res v t =>
       record_concat "RequestVoteResult"
                     [str_concat ["Vote_granted: ", bool2string v], term2string t]
+    | register_client_res s sid l =>
+      record_concat "RegisterClientResult"
+                    [str_concat ["Registered:", bool2string s],
+                     session_id2string sid, replica_option2string l]
     end.
 
-  Fixpoint msg2string (m : Raftmsg) : string :=
+  Definition timer2string (t : Timer) := number2string "TimerId" t.
+
+  Definition init2string (n : nat) :=
+    str_concat ["Initial message, bootup the system with offset ", nat2string n].
+
+  Definition debug2string (d : string) := str_concat ["Debug(", d, ")"].
+
+  Fixpoint msg2string (m : RaftMsg) : string :=
     match m with
-    | RequestMsg r => request2string r
-    | ResponseMsg r => result2string r
-    | AppendEntriesMsg r => append_entries2string r
-    | AppendEntriesResultMsg r => result2string r
-    | RequestVoteMsg r => request_vote2string r
-    | ResponseVoteMsg r => result2string r
-    | ForwardMsg r => str_concat ["Forward: ", msg2string r]
+    | register_msg m => register_client2string m
+    | register_result_msg m => result2string m
+    | broadcast_sessions_msg m =>  str_concat ["Broadcast: ", list2string m session2string]
+    | request_msg r => request2string r
+    | response_msg r => result2string r
+    | append_entries_msg r => append_entries2string r
+    | append_entries_result_msg r => result2string r
+    | request_vote_msg r => request_vote2string r
+    | response_vote_msg r => result2string r
+    | forward_msg m => str_concat ["Forward: ", msg2string m]
+    | timer_msg d => timer2string d
+    | init_msg d => init2string d
+    | debug_msg d => debug2string d
     end.
 
   (* convert the node types to names *)
   Definition name2string (n : name) : string :=
     match n with
-    | Raftreplica r => replica2string r
-    | Raftclient c => client2string c
+    | replica r => replica2string r
+    | client c => client2string c
     end.
 
   (* maybe wrong name *)
@@ -328,35 +411,30 @@ Section RaftInstance.
 
 
   (** Convert a NextIndex element into a string tuple. **)
-  Definition index2string (n : NextIndex) : string :=
-    match n with
-    | next rep index => str_concat ["(i: ", nat2string index, ", e: ", replica2string rep, ")"]
-    end.
+  Definition index2string (i : Index) : string :=
+    str_concat ["(i: ", nat2string (index2nat i), ", e: ", replica2string (index2rep i), ")"].
 
   (** This function takes the first list index name and iterates through the list
    ** concatenating the index and entry value as tuple. **)
-  Fixpoint indexed_list2string (l : list NextIndex) : string :=
+  Fixpoint indexed_list2string (l : NextIndex) : string :=
     match l with
     | [] => ""
     | [x] => index2string x
     | x :: xs => str_concat [index2string x, ", ", indexed_list2string xs]
     end.
 
-  Definition next_index2string (l : Nindex) : string :=
+  Definition next_index2string (l : NextIndex) : string :=
     str_concat ["Next_index: [", indexed_list2string l, "]"].
 
-  Definition match_index2string (l : Mindex) : string :=
+  Definition match_index2string (l : MatchIndex) : string :=
     str_concat ["Match_index: [", indexed_list2string l, "]"].
 
   (** Give a string representation from the leader state if some **)
-  Definition leader_state2string (l : RaftLeaderState) : string :=
-    match (is_leader l) with
-    | true =>
-      record_concat "Leader" ["yes", next_index2string (next_index l),
-                              match_index2string (match_index l)]
-    | false => "Leader: no"
-    end.
-
+  Definition leader_state2string (l : LeaderState) : string :=
+      record_concat "Leader" ["yes",
+                              next_index2string (next_index l),
+                              match_index2string (match_index l)].
+  
   Definition current_leader2string (c : option Rep) : string :=
     match c with
     | None => "Current_leader: None"
@@ -369,13 +447,24 @@ Section RaftInstance.
     | Some n => str_concat ["Voted_for: ", nat2string n]
     end.
 
+  Definition node_state2string (s : NodeState) : string :=
+    match s with
+    | leader l => leader_state2string l
+    | follower => "Follower"
+    | candidate => "Candidate"
+    end.
+
     (** Give a string representation of some nodes states **)
   Definition state2string (s : RaftState) : string :=
     record_concat "Replica state"
-                  [term2string (current_term s), voted_for2string (voted_for s),
-                   log2string (log s), commit_index2string (commit_index s),
-                   committed2string (committed s),
-                  current_leader2string (current_leader s), leader_state2string (leader s)].
+                  [term2string (current_term s),
+                   str_concat ["Sessions: ", list2string (sessions s) session2string],
+                   voted_for2string (voted_for s),
+                   log2string (log s),
+                   commit_index2string (commit_index s),
+                   number2string "Last_Applied" (last_applied s),
+                   current_leader2string (current_leader s),
+                   node_state2string (node_state s)].
 
   (*! System definition !*)
   (** this is the initial replica state which is used to create
@@ -396,27 +485,27 @@ Section RaftInstance.
    ** This state assumes that the network has 3 followers. **)
   Definition dummy_leader_state : RaftState :=
     Build_State
-      initial_term
+      term0
+      []
       None
       []
       0
-      []
       0
       5
       RaftSM_initial_state
-      (init_leader_state [1, 2, 3])
+      (leader (after_election_leader 0 (List.map nat2rep [1, 2, 3])))
       (Some (nat2rep 0))
-      [0; 1; 2; 3].
+      timer0.
 
   (** Provide the dummy state machine defined within raft.v **)
   Definition RaftdummySM : MStateMachine RaftState :=
-    MhaltedSM initial_state (* dummy_initial_state *).
+    MhaltedSM state0 (* dummy_initial_state *).
 
   Definition Raftmono_sys : NMStateMachine RaftState :=
     fun name =>
       match name with
-      | Raftreplica n => RaftreplicaSM n
-      | _ => MhaltedSM initial_state
+      | replica n => RaftReplicaSM n
+      | _ => MhaltedSM state0
       end.
 
   (* Definition mk_request_to (rep : Rep) (ts : nat) (opr : nat) : DirectedMsg := *)
@@ -538,8 +627,14 @@ Require Export ExtrOcamlBasic.
 Require Export ExtrOcamlNatInt.
 Require Export ExtrOcamlString.
 
-Definition local_replica (*(F C : nat)*) (leader : bool) :=
-  if leader then @RaftLeaderreplicaSM (@Raft_I_context)
-  else @RaftreplicaSM (@Raft_I_context).
+(* maybe start internal timer here?? *)
+(* how to set some debug flag from ocaml *)
+Definition local_replica (n : Rep) (offset : nat)(*(F C : nat)*) (leader : bool) :=
+  (* if leader then @RaftLeaderreplicaSM (@Raft_I_context) *)
+  (* else *)
+  let node := @RaftReplicaSM (@Raft_I_context) in
+  let init := run_sm (node n) (init_msg offset) in
+  (node, init).
+
 
 Extraction "RaftReplicaEx.ml" state2string lrun_sm RaftdummySM local_replica DirectedMsgs2string.

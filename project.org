@@ -1,0 +1,82 @@
+
+* Master thesis
+
+
+
+This document briefly explains my master thesis and outlines
+the steps towards the final implementation and document.
+
+** Abstract
+
+In a distributed system with many nodes the problem of snychronization between the nodes
+and the correct new state of the system arises. Also, fault-tolerance is an important issue
+if the system handles critical infrastructure and a failure of the system could lead to
+far-reaching consequences. 
+Most consensus protocols are build on the first description from Leslie Lamport in the
+paper "The byzantine generals problem" to detect failures in some system 
+and the [[https://lamport.azurewebsites.net/pubs/lamport-paxos.pdf][Paxos]] algorithms as an attempt to handle such cases.
+Since then, many papers are produced to explain and adjust the protocol to make it
+more easy to implement and understand.
+[[https://raft.github.io][RAFT]] is a new consensus protocol build from scratch by Diego Ongaro to provide an algorithm
+which is easy to understand and more elaborated to get easily implemented.
+
+This master thesis takes the RAFT protocol and tries to implement it within [[https://github.com/vrahli/Velisarios][Velisarios]]
+an implementation of the [[http://www.nuprl.org/documents/Bickford/TechReportCLEinCTT.pdf][Logic of Events]]. The logic is implemented in the proof management
+system [[https://coq.inria.fr/][COQ]]. This combination allows to implement protocols which can be proofed for correctness
+and used in the real world through code generation. 
+The scope of this thesis handles with the basic implementation of RAFT which means that the 
+correctness proofs are left out and the usage in the real world is left for the future. 
+
+** Milestone
+
+The thesis milestones are split into two parts. The first parts deals with the implementation
+and evaluation of the protocol and the second part is about the writing needed for a master thesis.
+
+*** Implementation [2/7]
+
+The implementation is growing and all todo's are already touched but
+most part has to be finalized. The exceptions are leader election and benchmarking.
+
+**** DONE Basic setup 
+     CLOSED: [2019-09-23 Mo 10:41]
+
+**** TODO Leader Election
+
+**** TODO Log replication
+partialy done
+
+**** DONE Internal forwarding
+     CLOSED: [2019-09-23 Mo 10:47]
+
+**** TODO Message queue handling
+partialy
+
+**** TODO Testing
+partialy, currently only the simulator with test changed by hand
+
+**** TODO Benchmarking
+
+*** Writing [1/8]
+
+This first attempt was done in german.
+
+**** DONE Latex setup
+     CLOSED: [2019-09-23 Mo 10:48]
+
+**** TODO TOC
+in german
+
+**** TODO introduction
+in german
+
+**** TODO basics, logic
+in german
+
+**** TODO basics, coq and velisarios
+
+**** TODO description of the implementation
+
+**** TODO evaluation
+
+**** TODO conclusion and further steps
+
