@@ -3,13 +3,14 @@
  * throughout the code.
  !*)
 
+Require Export  Strings.String.
+
 Section RaftHelper.
 
   (** concat a list of string to one string. **)
-  Fixpoint str_concat (l : list String.string) : String.string :=
+  Fixpoint str_concat (l : list String.string) :=
     match l with
-    | [] => ""
-    | s :: ss => String.append s (str_concat ss)
+    | _ => ""
     end.
 
   (** auxilary function which converts a list of some type to its representation. **)

@@ -60,6 +60,7 @@ type ('a) run_conf = {
   client_id : int;
   private_key : Nocrypto.Rsa.priv;
   primary : 'a;
+  session : int;
 }
 
 (* the abstract simulator provides convient functions to implement a new protocol.
