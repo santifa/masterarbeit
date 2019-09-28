@@ -59,20 +59,26 @@ class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
   method virtual create_replicas : unit
 
   (** Convert a list of mesgs to a string **)
-  method virtual msgs2string : 'c -> string
+  method virtual msgs2string : 'c list -> string
 
   (** specify how the replica handles input messages **)
-  method virtual run_replicas : 'c -> 'c
+  method virtual run_replicas : 'c list -> ('c list * 'c list)
 
   (** specify the client implementation. The client get initial an empty list of responses. **)
-  method virtual client : 'c -> 'c
+  method virtual client : 'c list  -> 'c list
 
   (** Run the simulation and handle client server interaction **)
-  method run_simulation : 'c =
-    let request = self#client [] in
-    log_info "Client sends" (self#msgs2string request);
-    let failed_to_deliver = self#run_replicas request in
-    failed_to_deliver
+  method run_simulation (queue : 'c list) : 'c list =
+    let request = self#client queue in
+    if List.is_empty request then begin
+      [] (* return if no more request are produced *)
+    end else begin
+      log_info "Input queue" (self#msgs2string request);
+      let (responses, failed_to_deliver) = self#run_replicas request in
+      log_info "Response queue" (self#msgs2string responses);
+      if List.is_empty responses then failed_to_deliver else
+        failed_to_deliver @ self#run_simulation responses
+    end
 
   (** This method handles the basic benchmarking code and reports failed messages
    ** every round is a full simulation between client and replicas **)
@@ -80,7 +86,7 @@ class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
     (* start monitoring the system time *)
     let t = Prelude.Time.get_time () in
     (* run the system *)
-    let failed_to_deliver = self#run_simulation in
+    let failed_to_deliver = self#run_simulation [] in
     (* stop monitoring the system *)
     let d = Prelude.Time.sub_time (Prelude.Time.get_time ()) t in
     (* calculate the average *)
