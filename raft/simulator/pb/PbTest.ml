@@ -1,7 +1,7 @@
 open Prelude
 open PbReplicaEx
 open Core
-open Simulator
+open Test
 
 (* convert the node name to string *)
 let node2string n =
@@ -38,8 +38,8 @@ let get_response (msgs : directedMsgs) : directedMsgs =
       | _ -> []
 
 (* implement the virtual simulator *)
-class ['a, 'b, 'c, 'd] pb c = object(self)
-  inherit ['a, 'b, 'c, 'd] simulator c
+class ['a, 'b, 'c, 'd] pb c t = object(self)
+  inherit ['a, 'b, 'c, 'd] simulator c t
 
   (* create the replication system with one primary and three backups *)
   method create_replicas =
@@ -47,60 +47,45 @@ class ['a, 'b, 'c, 'd] pb c = object(self)
 
   method msgs2string (msgs : directedMsgs) : string = print_dmsgs msgs ""
 
-  method run_replicas (inflight : directedMsgs) : (directedMsgs * directedMsgs) =
-  (* check if there is some message in queue *)
-  match inflight with
-  | [] ->
-    log_info "Main" "All messages processed stopping";
-    ([], []) (* we reached the end of the simulation round *)
-  | dm :: dms ->
-    (* we have some message and now we iterate through all its destinations *)
-    match dm.dmDst with
-    (* restart loop if there a no destinations *)
-    | [] -> self#run_replicas dms
-    | id :: ids ->
-      log_msgs "Procesing" ((print_dmsgs [dm]) "");
-      (* create a new message without the taken id *)
-      let dm' = { dmMsg = dm.dmMsg; dmDst = ids; dmDelay = dm.dmDelay } in
-      (* find the replica mathing the id *)
-      match replicas#find_replica id with
-      | None ->
-        let failed_to_deliver = { dmMsg = dm.dmMsg; dmDst = [id]; dmDelay = dm.dmDelay } in
-        let resp = get_response [failed_to_deliver] in
-        (* requeue message which failed to deliver ? *)
-        let (response, failed) = self#run_replicas (dm' :: dms) in
-        if List.is_empty resp then begin
-          log_err "Main" ("Couldn't find id " ^ print_node id);
-          (response, failed_to_deliver :: failed)
-        end else (resp @ response, failed)
+  method change_dst dm ids =
+    { dmMsg = dm.dmMsg; dmDst = ids; dmDelay = dm.dmDelay }
 
-      | Some rep ->
-        (* we have found the replica *)
-        log_msgs ((print_node rep.id) ^ "got") (print_msg dm.dmMsg);
-        (* run the state machine on the message input *)
-        let (rep',dmsgs) = lrun_sm rep.replica (Obj.magic dm.dmMsg) in
-        log_state (print_node id ^ "State transistion completed")
-          ("Send " ^ ((print_dmsgs dmsgs) ""));
-        (* let resp = get_response dmsgs in *)
-        (* replace the state machine of the replica *)
-        log_state (print_node id) (print_state rep');
-        replicas#replace_replica id rep';
-        (* (message without current replica) :: (next messages) @ (newly created messages) *)
-        let (response, failed) = self#run_replicas (dm' :: dms @ dmsgs) in
-        (response, failed)
+  method get_dsts dm = dm.dmDst
 
-  method client (response : directedMsgs) : directedMsgs =
-    match response with
+  method get_response dms = get_response dms
+
+  method run_sm dm rep = lrun_sm rep (Obj.magic dm.dmMsg)
+end
+
+class ['c] response_eq = object
+  method request (resp: directedMsgs) : directedMsgs =
+    match resp with
     | [] ->
-    (* create a simple PNinput request *)
-    let req = PBinput 10 in
-    (* create a message list with the primary as destination *)
-    [{ dmMsg = Obj.magic req; dmDst = [c.primary]; dmDelay = 0 }]
+      (* create a simple PNinput request *)
+      let req = PBinput 10 in
+      (* create a message list with the primary as destination *)
+      [{ dmMsg = Obj.magic req; dmDst = [Obj.magic PBprimary]; dmDelay = 0 }]
     | rsp :: rsps ->
       match (Obj.magic rsp.dmMsg) with
       | PBreply 10 ->  log_test "correct" "The primary node returned the correct result";
         []
-      | _ ->   log_err "failed" ("Got the wrong result" ^ self#msgs2string [rsp]);
+      | _ ->   log_err "failed" ("Got the wrong result" ^ (print_msg rsp));
+        [] (* do nothing if we recieve some result *)
+end
+
+class ['c] resp_uneq = object
+  method request (resp: directedMsgs) : directedMsgs =
+    match resp with
+    | [] ->
+      (* create a simple PNinput request *)
+      let req = PBinput 9 in
+      (* create a message list with the primary as destination *)
+      [{ dmMsg = Obj.magic req; dmDst = [Obj.magic PBprimary]; dmDelay = 0 }]
+    | rsp :: rsps ->
+      match (Obj.magic rsp.dmMsg) with
+      | PBreply 10 ->  log_test "correct" "The primary node returned the correct result";
+        []
+      | _ ->   log_test "failed" ("Got the wrong result" ^ (print_dmsgs [rsp] ""));
         [] (* do nothing if we recieve some result *)
 end
 
@@ -113,5 +98,5 @@ let _ =
     private_key = Obj.magic 0(* ignore this one *);
     primary = Obj.magic PBprimary; (* type: name *)
     timer = 1;
-  } in
-  c#run
+  } [(new response_eq); (new resp_uneq)] in
+  c#run 

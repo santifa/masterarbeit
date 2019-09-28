@@ -48,12 +48,19 @@ type ('a) run_conf = {
   timer : int;
 }
 
+
+class virtual ['c] client = object
+  (** specify the client implementation. The client get initial an empty list of responses. **)
+  method virtual request : 'c list  -> 'c list
+end
+
 (* the abstract simulator provides convient functions to implement a new protocol.
    Inherit and implement the virtual methods. See PbSimul.ml and PbftSimul.ml as reference
    'a -> Nodename ; 'b -> protocol message ; 'c -> directed message type ; 'd -> state machine *)
-class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
+class virtual ['a, 'b, 'c, 'd] simulator c t = object(self)
   val mutable conf : ('a) run_conf = c
   val mutable replicas : ('a, 'd) replicas = new replicas
+  val mutable tests : ('c) client list = t
 
   (** create all the replicas **)
   method virtual create_replicas : unit
@@ -64,45 +71,79 @@ class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
   (** specify how the replica handles input messages **)
   method virtual run_replicas : 'c list -> ('c list * 'c list)
 
-  (** specify the client implementation. The client get initial an empty list of responses. **)
-  method virtual client : 'c list  -> 'c list
+  method virtual change_dst : 'c -> 'a list -> 'c
+
+  method virtual get_dsts : 'c -> 'a list
+
+  method virtual get_response : 'c list -> 'c list
+
+  method virtual run_sm : 'c -> 'b
+
+  method run_replicas (inflight : 'c list) : ('c list * 'c list) =
+  (* check if there is some message in queue *)
+  match inflight with
+  | [] ->
+    log_info "Main" "All messages processed stopping";
+    ([], []) (* we reached the end of the simulation round *)
+  | dm :: dms ->
+    (* we have some message and now we iterate through all its destinations *)
+    match (self#get_dsts dm)(* dm.dmDst *) with
+    (* restart loop if there a no destinations *)
+    | [] -> self#run_replicas dms
+    | id :: ids ->
+      log_msgs "Procesing" (self#msgs2string [dm]) (* ((print_dmsgs [dm]) "") *);
+      (* create a new message without the taken id *)
+      let dm' = self#change_dst dm ids (* { dmMsg = dm.dmMsg; dmDst = ids; dmDelay = dm.dmDelay } *) in
+      (* find the replica mathing the id *)
+      match replicas#find_replica id with
+      | None ->
+        (* let failed_to_deliver = { dmMsg = dm.dmMsg; dmDst = [id]; dmDelay = dm.dmDelay } in *)
+        let failed_to_deliver = self#change_dst dm [id] (* { dmMsg = dm.dmMsg; dmDst = [id]; dmDelay = dm.dmDelay } *) in
+        let resp = self#get_response [failed_to_deliver] in
+        (* requeue message which failed to deliver ? *)
+        let (response, failed) = self#run_replicas (dm' :: dms) in
+        if List.is_empty resp then begin
+          (* log_err "Main" ("Couldn't find id " ^ print_node id); *)
+          (response, failed_to_deliver :: failed)
+        end else (resp @ response, failed)
+
+      | Some rep ->
+        (* we have found the replica *)
+        (* log_msgs ((print_node rep.id) ^ "got") (print_msg dm.dmMsg); *)
+        (* run the state machine on the message input *)
+        let (rep',dmsgs) = self#run_sm dm rep.replica(* (Obj.magic dm.dmMsg) *) in
+        (* log_state (print_node id ^ "State transistion completed")
+         *   ("Send " ^ self#msgs2string dmsgs (\* ((print_dmsgs dmsgs) "") *\)); *)
+        (* let resp = get_response dmsgs in *)
+        (* replace the state machine of the replica *)
+        (* log_state (print_node id) (print_state rep'); *)
+        replicas#replace_replica id rep';
+        (* (message without current replica) :: (next messages) @ (newly created messages) *)
+        let (response, failed) = self#run_replicas (dm' :: dms @ dmsgs) in
+        (response, failed)
 
   (** Run the simulation and handle client server interaction **)
-  method run_simulation (queue : 'c list) : 'c list =
-    let request = self#client queue in
+  method run_simulation (queue : 'c list) t : 'c list =
+    let request = t#request queue in
     if List.is_empty request then [] (* return if no more request are produced *)
     else begin
       log_info "Input queue" (self#msgs2string request);
       let (responses, failed_to_deliver) = self#run_replicas request in
       log_info "Response queue" (self#msgs2string responses);
       if List.is_empty responses then failed_to_deliver else
-        failed_to_deliver @ self#run_simulation responses
+        failed_to_deliver @ self#run_simulation responses t
     end
 
-  (** This method handles the basic benchmarking code and reports failed messages
-   ** every round is a full simulation between client and replicas **)
-  method benchmark (timestamp : int) (max : int) (avg : Prelude.Time.t) (period : int) =
-    (* start monitoring the system time *)
-    let t = Prelude.Time.get_time () in
-    (* run the system *)
-    let failed_to_deliver = self#run_simulation [] in
-    (* stop monitoring the system *)
-    let d = Prelude.Time.sub_time (Prelude.Time.get_time ()) t in
-    (* calculate the average *)
-    let new_avg = Prelude.Time.div_time (Prelude.Time.add_time (Prelude.Time.mul_time avg  (timestamp - 1)) d) timestamp in
-    (* print the messages which failed to deliver as string *)
-    let s = self#msgs2string failed_to_deliver in
-    (match s with
-     | "" -> ()
-     | s' -> log_err "Main" ("Failed to deliver" ^ s'));
-    (* print some results if the time is right *)
-    (if timestamp mod period = 0 then
-       log_res "Main" timestamp d new_avg
-     else ());
-    (* restart the client if there are more rounds to go *)
-    if timestamp < max then
-      self#benchmark (timestamp + 1) max new_avg period
-    else ()
+  method run_tests (t : ('c) client list) : unit =
+    match t with
+    | [] -> ()
+    | t' :: tt ->
+      let failed = self#run_simulation [] t' in
+      let s = self#msgs2string failed in
+      (match s with
+       | "" -> ()
+       | s' -> log_err "Main" ("Test failed" ^ s'));
+      self#run_tests tt
 
   (* maybe this could be more generalized *)
   (** An implementation should catch the spec args <max> <printing_period> initialize the crypto;
@@ -112,12 +153,11 @@ class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
        log_info "Main" "Initialize random generator";
        let () = Nocrypto_entropy_unix.initialize () in
 
-       log_info "Main" "Start replicas";
+       log_info "Main" "Start system";
        self#create_replicas;
 
-       log_info "Main" "Fire up client";
-       let initial_avg       = Prelude.Time.mk_time 0. in
-       self#benchmark conf.timer max initial_avg printing_period)
+       log_info "Main" "Fire up test client";
+       self#run_tests tests)
 
 
   (** the default cli specification **)
