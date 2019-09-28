@@ -37,9 +37,7 @@ class ['a, 'b, 'c, 'd] pb c = object(self)
   method create_replicas =
     replicas#set_replicas [to_replica PBprimary; to_replica PBbackup]
 
-  (* create a client request *)
-  method mk_request (timestamp : int) (request : int) =
-    PBinput request
+  method msgs2string (msgs : directedMsgs) : string = print_msg msgs
 
   method run_replicas (inflight : directedMsgs) : directedMsgs =
   log_msgs "Queue" ((print_dmsgs inflight) "");
@@ -76,40 +74,52 @@ class ['a, 'b, 'c, 'd] pb c = object(self)
         (* (message without current replica) :: (next messages) @ (newly created messages) *)
         self#run_replicas (dm' :: dms @ dmsgs)
 
+  method client (response : directedMsgs) : directedMsgs =
+    (* generate request number *)
+    let rand = Random.int 20 in
+    print_endline (Int.to_string rand);
+    (* create a simple PNinput request *)
+    let req = PBinput rand in
+    (* create a message list with the primary as destination *)
+    let inflight = [{ dmMsg = (Obj.magic req); dmDst = [c.primary]; dmDelay = 0 }] in
+    log_info "Client sends" (self#msgs2string inflight);
+    let failed_to_deliver = self#run_replicas inflight in
+    failed_to_deliver
+
   (* run the client recursively
    * timestamp - is the current term and gets inc every round
    * max - the maximum rounds to go
    * avg - an ongoing calculated average
    * printing_period - the number of timestamps before printing some results *)
-  method run_client timestamp max avg printing_period =
-    (* generate request number *)
-    let rand = Random.int 20 in
-    (* create a simple PNinput request *)
-    let req = self#mk_request (Obj.magic timestamp) rand in
-    (* create a message list with the primary as destination *)
-    let inflight = [{ dmMsg = Obj.magic req; dmDst = [c.primary]; dmDelay = 0 }] in
-    (* start monitoring the system time *)
-    log_info "Client sends" (String.of_char_list (directedMsgs2string inflight));
-    let t = Prelude.Time.get_time () in
-    (* deliver the messages *)
-    let failed_to_deliver = self#run_replicas inflight in
-    (* stop monitoring the system *)
-    let d = Prelude.Time.sub_time (Prelude.Time.get_time ()) t in
-    (* calculate the average *)
-    let new_avg = Prelude.Time.div_time (Prelude.Time.add_time (Prelude.Time.mul_time avg  (timestamp - 1)) d) timestamp in
-    (* print the messages which failed to deliver as string *)
-    let s = Batteries.String.of_list (directedMsgs2string failed_to_deliver) in
-    (match s with
-     | "" -> ()
-     | s' -> log_err "Main" ("Failed to deliver" ^ s'));
-    (* print some results if the time is right *)
-    (if timestamp mod printing_period = 0 then
-       log_res "Main" timestamp d new_avg
-     else ());
-    (* restart the client if there are more rounds to go *)
-    if timestamp < max then
-      self#run_client (timestamp + 1) max new_avg printing_period
-    else ()
+  (* method run_client timestamp max avg printing_period =
+   *   (\* generate request number *\)
+   *   let rand = Random.int 20 in
+   *   (\* create a simple PNinput request *\)
+   *   let req = self#mk_request (Obj.magic timestamp) rand in
+   *   (\* create a message list with the primary as destination *\)
+   *   let inflight = [{ dmMsg = Obj.magic req; dmDst = [c.primary]; dmDelay = 0 }] in
+   *   (\* start monitoring the system time *\)
+   *   log_info "Client sends" (String.of_char_list (directedMsgs2string inflight));
+   *   let t = Prelude.Time.get_time () in
+   *   (\* deliver the messages *\)
+   *   let failed_to_deliver = self#run_replicas inflight in
+   *   (\* stop monitoring the system *\)
+   *   let d = Prelude.Time.sub_time (Prelude.Time.get_time ()) t in
+   *   (\* calculate the average *\)
+   *   let new_avg = Prelude.Time.div_time (Prelude.Time.add_time (Prelude.Time.mul_time avg  (timestamp - 1)) d) timestamp in
+   *   (\* print the messages which failed to deliver as string *\)
+   *   let s = Batteries.String.of_list (directedMsgs2string failed_to_deliver) in
+   *   (match s with
+   *    | "" -> ()
+   *    | s' -> log_err "Main" ("Failed to deliver" ^ s'));
+   *   (\* print some results if the time is right *\)
+   *   (if timestamp mod printing_period = 0 then
+   *      log_res "Main" timestamp d new_avg
+   *    else ());
+   *   (\* restart the client if there are more rounds to go *\)
+   *   if timestamp < max then
+   *     self#run_client (timestamp + 1) max new_avg printing_period
+   *   else () *)
 end
 
 let _ =

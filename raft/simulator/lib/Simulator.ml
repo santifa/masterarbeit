@@ -58,14 +58,46 @@ class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
   (** create all the replicas **)
   method virtual create_replicas : unit
 
-  (** specify how some client request is made **)
-  method virtual mk_request : int -> int -> 'b
+  (** Convert a list of mesgs to a string **)
+  method virtual msgs2string : 'c -> string
 
   (** specify how the replica handles input messages **)
   method virtual run_replicas : 'c -> 'c
 
-  (** specify the client **)
-  method virtual run_client : int -> int -> Prelude.Time.t -> int -> unit
+  (** specify the client implementation. The client get initial an empty list of responses. **)
+  method virtual client : 'c -> 'c
+
+  (** Run the simulation and handle client server interaction **)
+  method run_simulation : 'c =
+    let request = self#client [] in
+    log_info "Client sends" (self#msgs2string request);
+    let failed_to_deliver = self#run_replicas request in
+    failed_to_deliver
+
+  (** This method handles the basic benchmarking code and reports failed messages
+   ** every round is a full simulation between client and replicas **)
+  method benchmark (timestamp : int) (max : int) (avg : Prelude.Time.t) (period : int) =
+    (* start monitoring the system time *)
+    let t = Prelude.Time.get_time () in
+    (* run the system *)
+    let failed_to_deliver = self#run_simulation in
+    (* stop monitoring the system *)
+    let d = Prelude.Time.sub_time (Prelude.Time.get_time ()) t in
+    (* calculate the average *)
+    let new_avg = Prelude.Time.div_time (Prelude.Time.add_time (Prelude.Time.mul_time avg  (timestamp - 1)) d) timestamp in
+    (* print the messages which failed to deliver as string *)
+    let s = self#msgs2string failed_to_deliver in
+    (match s with
+     | "" -> ()
+     | s' -> log_err "Main" ("Failed to deliver" ^ s'));
+    (* print some results if the time is right *)
+    (if timestamp mod period = 0 then
+       log_res "Main" timestamp d new_avg
+     else ());
+    (* restart the client if there are more rounds to go *)
+    if timestamp < max then
+      self#benchmark (timestamp + 1) max new_avg period
+    else ()
 
   (* maybe this could be more generalized *)
   (** An implementation should catch the spec args <max> <printing_period> initialize the crypto;
@@ -79,14 +111,14 @@ class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
        self#create_replicas;
 
        log_info "Main" "Fire up client";
-       let initial_timestamp = 1 in
        let initial_avg       = Prelude.Time.mk_time 0. in
-       self#run_client conf.timer max initial_avg printing_period)
+       self#benchmark conf.timer max initial_avg printing_period)
 
 
   (** the default cli specification **)
   method spec : Command.t =
     let () = Nocrypto_entropy_unix.initialize () in
+    let () = Random.self_init () in
     Command.basic_spec
       ~summary:"Start a client"
       Command.Spec.(
