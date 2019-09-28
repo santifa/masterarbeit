@@ -1,4 +1,5 @@
 open Core
+include Log
 
 (* This module defines the abstract type classes and basic functions
    to easily implement a simulator for some protocol.
@@ -10,22 +11,6 @@ open Core
    The rough method is to implement the virtual methods of the simulator class
    which should be sufficient for ocaml to guess the types and run the simulation.
 *)
-
-(* handy print functions with colored output *)
-(* print error messages *)
-let print_err msg ?case:(c="") () =
-  print_endline (Colors.kBRED ^ "Error:\t[" ^ c ^ msg ^ "]" ^ Colors.kNRM)
-
-(* print info messages with c - color; t - message type; msg - message *)
-let print_info c t msg =
-  print_endline (c ^ "Info:\t{" ^ t ^ ": " ^ msg ^ "}" ^ Colors.kNRM)
-
-(* print results t - timestamp; d - elapsed time; avg - average *)
-let print_res t d avg  =
-  print_endline (Colors.kMAG ^ "Result:\t[Timestamp: " ^ string_of_int t
-                 ^ "; elapsed time: " ^ (Batteries.String.of_list (Prelude.Time.time2string d))
-                 ^ "; average: " ^ Batteries.String.of_list (Prelude.Time.time2string avg)
-                 ^ "]" ^ Colors.kNRM)
 
 (* The basic record which connects an id with some replica.
    The semantic is mostly that the id the the node name and
@@ -60,7 +45,7 @@ type ('a) run_conf = {
   client_id : int;
   private_key : Nocrypto.Rsa.priv;
   primary : 'a;
-  session : int;
+  timer : int;
 }
 
 (* the abstract simulator provides convient functions to implement a new protocol.
@@ -87,16 +72,16 @@ class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
       set the replicas and at last call run_client **)
   method callback : int -> int -> bool -> unit -> unit =
     (fun max printing_period debug () ->
-       print_info (Colors.kBLU) "Main" "Initialize random generator";
+       log_info "Main" "Initialize random generator";
        let () = Nocrypto_entropy_unix.initialize () in
 
-       print_info (Colors.kBLU) "Main" "Start replicas";
+       log_info "Main" "Start replicas";
        self#create_replicas;
 
-       print_info (Colors.kBLU) "Main" "Fire up client";
+       log_info "Main" "Fire up client";
        let initial_timestamp = 1 in
        let initial_avg       = Prelude.Time.mk_time 0. in
-       self#run_client initial_timestamp max initial_avg printing_period)
+       self#run_client conf.timer max initial_avg printing_period)
 
 
   (** the default cli specification **)
@@ -118,7 +103,7 @@ class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
 
   (** run a simulator with some specified configuration **)
   method run =
-    print_info (Colors.kWHT) "Main" ("Running simulator for " ^ conf.protocol
+    log_info "Main" ("Running simulator for " ^ conf.protocol
                               ^ " Version: " ^ conf.version);
     Command.run ~version:conf.version ~build_info:conf.protocol self#spec
 end

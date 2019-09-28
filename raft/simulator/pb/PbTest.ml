@@ -1,7 +1,5 @@
-open Colors
 open Prelude
 open PbReplicaEx
-open RsaKeyFun
 open Core
 open Simulator
 
@@ -71,7 +69,7 @@ class ['a, 'b, 'c, 'd] pb c = object(self)
         let (rep',dmsgs) = lrun_sm rep.replica (Obj.magic dm.dmMsg) in
         log_state (print_node id ^ "State transistion completed") ("Send " ^ ((print_dmsgs dmsgs) ""));
         (* replace the state machine of the replica *)
-        log_state  (print_node id) (print_state rep');
+        log_state (print_node id) (print_state rep');
         replicas#replace_replica id rep';
         (* (message without current replica) :: (next messages) @ (newly created messages) *)
         self#run_replicas (dm' :: dms @ dmsgs)
@@ -101,7 +99,7 @@ class ['a, 'b, 'c, 'd] pb c = object(self)
     let s = Batteries.String.of_list (directedMsgs2string failed_to_deliver) in
     (match s with
      | "" -> ()
-     | s' -> log_err "Main" ("Failed to deliver" ^ s'));
+     | s' -> log_err "Main" ("Failed to deliver " ^ s'));
     (* print some results if the time is right *)
     (if timestamp mod printing_period = 0 then
        log_res "Main" timestamp d new_avg
@@ -118,7 +116,7 @@ let _ =
     version = "1.0";
     protocol = "PB";
     client_id = 0;
-    private_key = lookup_client_sending_key (Obj.magic 0);
+    private_key = Obj.magic 0(* lookup_client_sending_key (Obj.magic 0) *);
     primary = Obj.magic PBprimary; (* type: name *)
     timer = 1;
   } in
