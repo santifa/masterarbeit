@@ -1,19 +1,51 @@
+#
+# This makefile is used to extract the COQ code and build the demonstration cases,
+# the benchmarks and tests.
+# The default protocol is raft but others should be build by its name.
+#
 
-
-OCB_FLAGS = -tag bin_annot -tag thread -use-ocamlfind -Is pb,raft,pbft,lib -package ppx_jane,async,core_extended,batteries,rpc_parallel,nocrypto.unix
+# ocaml flags
+OCB_FLAGS = -tag bin_annot -tag thread -use-ocamlfind -Is pb,raft,pbft,lib -package ppx_jane,async,core_extended,batteries,rpc_parallel,nocrypto.unix,yojson
 OCB = ocamlbuild $(OCB_FLAGS)
 
-default: pbft
+# coq flags
+COQ_PATH = -R ../coq-tools Tools -R ../velisarios Velisarios -R ../protocols Protocols -R . Simulator
 
-pbft: PbftReplica.native PbftClient.native RsaKey.native PbftSimul.native
+LIB=$(lib/%.ml)
 
-raft: RaftClient.native RsaKey.native
+default: general raft
 
-pb: PbSimul.native
+general: RsaKey.native
+
+pbft: general pbft-ext PbftReplica.native PbftClient.native RsaKey.native PbftSimul.native
+
+raft: general raft-ext general raft-tests raft-demonstrations
+
+raft-tests: RaftTest.native
+
+raft-demonstrations: RaftClient.native RaftSimul.native RaftReplica.native
+
+pb: general pb-ext PbTest.native PbSimul.native
+
+### Extraction from coq ###
+sim-ext: Simulator.v
+	coqc $(COQ_PATH) $<
+
+pb-ext: sim-ext
+	coqc $(COQ_PATH) pb/PbSim.v
+
+raft-ext: sim-ext
+	coqc $(COQ_PATH) raft/RaftSim.v
+
+pbft-ext: sim-ext
+	coqc $(COQ_PATH) pbft/PBFTsim.v
 
 ### pb ###
-PbSimul.native: pb/PbSimul.ml
+PbSimul.native: pb/PbSimul.ml $(LIB)
 	$(OCB) PbSimul.native
+
+PbTest.native: pb/PbTest.ml $(LIB)
+	$(OCB) pb/PbTest.native
 
 ### raft ###
 RaftClient.native: raft/RaftClient.ml
@@ -26,6 +58,9 @@ RaftReplica.native:
 
 RaftSimul.native: raft/RaftSimul.ml
 	$(OCB) RaftSimul.native
+
+RaftTest.native: raft/RaftTest.ml
+	$(OCB) RaftTest.native
 
 ### pbft ###
 PbftReplica.native:
@@ -46,19 +81,6 @@ PbftSimul2.native: pbft/PbftSimul2.ml
 RsaKey.native:
 	$(OCB) RsaKey.native
 
-sim-ext: Simulator.v
-	coqc -R ../coq-tools Tools -R ../velisarios Velisarios -R ../protocols Protocols -R . Simulator Simulator.v
-
-pb-ext: sim-ext
-	coqc -R ../coq-tools Tools -R ../velisarios Velisarios \
-	-R ../protocols Protocols -R . Simulator pb/PbSim.v
-
-raft-ext: sim-ext
-	coqc -R ../coq-tools Tools -R ../velisarios Velisarios \
-	-R ../protocols Protocols -R . Simulator raft/RaftSim.v
-
-pbft-ext: sim-ext
-	coqc -R ../coq-tools Tools -R ../velisarios Velisarios -R ../protocols Protocols -R . Simulator pbft/PBFTsim.v
 
 ext:
 	coqc -R ../coq-tools util -R ../model model -R ../PBFT PBFT -R ../PrimaryBackup PrimaryBackup -R ../runtime runtime -R ../TwoThirds TwoThirds Simulator.v

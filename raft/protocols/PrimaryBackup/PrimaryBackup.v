@@ -22,12 +22,18 @@
   Authors: Vincent Rahli
            Ivana Vukotic
 
+  Changed: 2019/ Henrik Jürges : Fixed parts to enable simulation
 *)
 
+(*
+  The protocol is fairly simple. The network consists of a primary node which
+  handled client requests and backup nodes which replicate the primary node.
 
-
+  A client offers a request the primary locks itself and forwards the request to
+  all backups and waits until they response with an acknowledgment.
+  The primary unlocks itself and replys the accepted number to the client.
+ *)
 Require Export Process.
-
 
 Section PrimaryBackup.
 
@@ -73,7 +79,6 @@ Section PrimaryBackup.
   | PBbst (counter : nat)
   | PBpst (status : PBprimary_status) (counter : nat).
 
-
   Definition primary_upd : MSUpdate PB_state :=
     fun state input =>
       match state, input with
@@ -93,8 +98,6 @@ Section PrimaryBackup.
       (* otherwise ignore message *)
       | _, _ => (state, [])
       end.
-
-  (* Inductive PBbackup_state := *)
 
   Definition backup_upd : MSUpdate PB_state :=
     fun state input =>
@@ -142,32 +145,32 @@ Section PrimaryBackup.
       | _ => haltedProc
       end.
 
-  Instance PB_I_Key : Key := MkKey unit unit.
+  (* Instance PB_I_Key : Key := MkKey unit unit. *)
 
-  Instance PB_I_Data : Data := MkData PBmsg.
+  (* Instance PB_I_Data : Data := MkData PBmsg. *)
 
-  Instance PB_I_AuthTok : AuthTok := MkAuthTok unit Deq_unit.
+  (* Instance PB_I_AuthTok : AuthTok := MkAuthTok unit Deq_unit. *)
 
-  Instance PB_I_AuthFun : AuthFun :=
-    MkAuthFun
-      (fun _ _ => [tt])
-      (fun _ _ _ _ => true).
+  (* Instance PB_I_AuthFun : AuthFun := *)
+  (*   MkAuthFun *)
+  (*     (fun _ _ => [tt]) *)
+  (*     (fun _ _ _ _ => true). *)
 
-  Definition PBdata_auth : name -> PBmsg -> option name :=
-    fun n m => (* n is not used because no message sent to itself *)
-      match m with
-      | PBinput   _ => Some PBc
-      | PBforward _ => Some PBprimary
-      | PBackn    _ => Some PBbackup
-      | PBreply   _ => Some PBprimary
-      end.
+  (* Definition PBdata_auth : name -> PBmsg -> option name := *)
+  (*   fun n m => (* n is not used because no message sent to itself *) *)
+  (*     match m with *)
+  (*     | PBinput   _ => Some PBc *)
+  (*     | PBforward _ => Some PBprimary *)
+  (*     | PBackn    _ => Some PBbackup *)
+  (*     | PBreply   _ => Some PBprimary *)
+  (*     end. *)
 
-  Instance PB_I_DataAuth : DataAuth := MkDataAuth PBdata_auth.
+  (* Instance PB_I_DataAuth : DataAuth := MkDataAuth PBdata_auth. *)
 
-  Instance PB_I_ContainedAuthData : ContainedAuthData :=
-    MkContainedAuthData
-      (fun m => [MkAuthData m [tt]]) (* tt here says that the data is authenticated *)
-  (*(fun a => match a with | MkAuthData m _ => m end)*).
+  (* Instance PB_I_ContainedAuthData : ContainedAuthData := *)
+  (*   MkContainedAuthData *)
+  (*     (fun m => [MkAuthData m [tt]]) (* tt here says that the data is authenticated *) *)
+  (* (*(fun a => match a with | MkAuthData m _ => m end)*). *)
 
   (* QUESTION: Can we avoid repeating this? *)
   Hint Rewrite @map_option_option_map : option.
@@ -299,50 +302,50 @@ Section PrimaryBackup.
   (* Qed. *)
 
   (* hold keys to receive messages to the other one *)
-  Definition PBhold_keys (eo : EventOrdering) :=
-    forall (e : Event),
-      match loc e with
-      | PBprimary => has_receiving_key (keys e) PBbackup
-      | PBbackup  => has_receiving_key (keys e) PBprimary
-      | _ => True
-      end.
+  (* Definition PBhold_keys (eo : EventOrdering) := *)
+  (*   forall (e : Event), *)
+  (*     match loc e with *)
+  (*     | PBprimary => has_receiving_key (keys e) PBbackup *)
+  (*     | PBbackup  => has_receiving_key (keys e) PBprimary *)
+  (*     | _ => True *)
+  (*     end. *)
 
-  Definition PBall_correct (eo : EventOrdering) :=
-    forall (e : Event), (loc e = PBprimary \/ loc e = PBbackup) -> isCorrect e.
+  (* Definition PBall_correct (eo : EventOrdering) := *)
+  (*   forall (e : Event), (loc e = PBprimary \/ loc e = PBbackup) -> isCorrect e. *)
 
-  Lemma PBkey_primary :
-    forall (eo : EventOrdering) e,
-      loc e = PBprimary
-      -> PBhold_keys eo
-      -> {k : receiving_key & In k (lookup_receiving_keys (keys e) PBbackup)}.
-  Proof.
-    introv lp hk.
-    pose proof (hk e) as q; clear hk.
-    rewrite lp in q.
-    unfold has_receiving_key in q.
-    unfold lookup_receiving_keys.
-    remember (lookup_drkeys (keys e) PBbackup) as lk; destruct lk; simpl; tcsp.
-    destruct d as [n k]; simpl in *.
-    destruct k.
-    exists tt; auto.
-  Qed.
+  (* Lemma PBkey_primary : *)
+  (*   forall (eo : EventOrdering) e, *)
+  (*     loc e = PBprimary *)
+  (*     -> PBhold_keys eo *)
+  (*     -> {k : receiving_key & In k (lookup_receiving_keys (keys e) PBbackup)}. *)
+  (* Proof. *)
+  (*   introv lp hk. *)
+  (*   pose proof (hk e) as q; clear hk. *)
+  (*   rewrite lp in q. *)
+  (*   unfold has_receiving_key in q. *)
+  (*   unfold lookup_receiving_keys. *)
+  (*   remember (lookup_drkeys (keys e) PBbackup) as lk; destruct lk; simpl; tcsp. *)
+  (*   destruct d as [n k]; simpl in *. *)
+  (*   destruct k. *)
+  (*   exists tt; auto. *)
+  (* Qed. *)
 
-  Lemma PBkey_backup :
-    forall (eo : EventOrdering) e,
-      loc e = PBbackup
-      -> PBhold_keys eo
-      -> {k : receiving_key & In k (lookup_receiving_keys (keys e) PBprimary)}.
-  Proof.
-    introv lp hk.
-    pose proof (hk e) as q; clear hk.
-    rewrite lp in q.
-    unfold has_receiving_key in q.
-    unfold lookup_receiving_keys.
-    remember (lookup_drkeys (keys e) PBprimary) as lk; destruct lk; simpl; tcsp.
-    destruct d as [n k]; simpl in *.
-    destruct k.
-    exists tt; auto.
-  Qed.
+  (* Lemma PBkey_backup : *)
+  (*   forall (eo : EventOrdering) e, *)
+  (*     loc e = PBbackup *)
+  (*     -> PBhold_keys eo *)
+  (*     -> {k : receiving_key & In k (lookup_receiving_keys (keys e) PBprimary)}. *)
+  (* Proof. *)
+  (*   introv lp hk. *)
+  (*   pose proof (hk e) as q; clear hk. *)
+  (*   rewrite lp in q. *)
+  (*   unfold has_receiving_key in q. *)
+  (*   unfold lookup_receiving_keys. *)
+  (*   remember (lookup_drkeys (keys e) PBprimary) as lk; destruct lk; simpl; tcsp. *)
+  (*   destruct d as [n k]; simpl in *. *)
+  (*   destruct k. *)
+  (*   exists tt; auto. *)
+  (* Qed. *)
 
   Local Open Scope eo.
 

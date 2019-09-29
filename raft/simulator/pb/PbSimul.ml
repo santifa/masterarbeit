@@ -5,29 +5,16 @@ open RsaKeyFun
 open Core
 open Simulator
 
-(* convert the node name to string *)
-let node2string n =
-  match (Obj.magic n) with
-  | PBprimary -> "Primary "
-  | PBbackup -> "Backup "
-  | PBc -> "Client "
-
 (* create a new replica *)
 let to_replica n =
-  log_info "Main" ("Starting " ^ (String.of_char_list (name2string n)));
+  (* log_info "Main" ("Starting " ^ (String.of_char_list (name2string n))); *)
   { id = Obj.magic n; replica = local_replica (Obj.magic n) }
 
-let print_dmsgs msgs =
-  List.fold_right ~f:(fun acc x -> x ^ ":" ^ acc) (List.map ~f:(fun x -> (String.of_char_list (directedMsg2string x))) msgs)
+let node2string node =  coq2string (name2string node)
 
-let print_msg msg =
-  String.of_char_list (msg2string (Obj.magic msg))
+let s2string state = coq2string (state2string (sm_state state))
 
-let print_node node =
-  node2string node
-
-let print_state state =
-  String.of_char_list (state2string (sm_state state))
+let msgs2string msgs = coq2string (directedMsgs2string msgs)
 
 let get_response (msgs : directedMsgs) : directedMsgs =
   match msgs with
@@ -49,7 +36,7 @@ class ['a, 'b, 'c, 'd] pb c = object(self)
   method create_replicas =
     replicas#set_replicas [to_replica PBprimary; to_replica PBbackup]
 
-  method msgs2string (msgs : directedMsgs) : string = print_dmsgs msgs ""
+  method msgs2string (msgs : directedMsgs) : string = msgs2string msgs
 
    method run_replicas (inflight : directedMsgs) : (directedMsgs * directedMsgs) =
   (* check if there is some message in queue *)
@@ -63,7 +50,7 @@ class ['a, 'b, 'c, 'd] pb c = object(self)
     (* restart loop if there a no destinations *)
     | [] -> self#run_replicas dms
     | id :: ids ->
-      log_msgs "Procesing" ((print_dmsgs [dm]) "");
+      log_msgs "Procesing" (self#msgs2string [dm]);
       (* create a new message without the taken id *)
       let dm' = { dmMsg = dm.dmMsg; dmDst = ids; dmDelay = dm.dmDelay } in
       (* find the replica mathing the id *)
@@ -74,20 +61,20 @@ class ['a, 'b, 'c, 'd] pb c = object(self)
         (* requeue message which failed to deliver ? *)
         let (response, failed) = self#run_replicas (dm' :: dms) in
         if List.is_empty resp then begin
-          log_err "Main" ("Couldn't find id " ^ print_node id);
+          log_err "Main" ("Couldn't find id " ^ node2string (Obj.magic id));
           (response, failed_to_deliver :: failed)
         end else (resp @ response, failed)
 
       | Some rep ->
         (* we have found the replica *)
-        log_msgs ((print_node rep.id) ^ "got") (print_msg dm.dmMsg);
+        (* log_msgs ((node2string (Obj.magic rep.id)) ^ "got") (msgs2string [dm.dmMsg]); *)
         (* run the state machine on the message input *)
         let (rep',dmsgs) = lrun_sm rep.replica (Obj.magic dm.dmMsg) in
-        log_state (print_node id ^ "State transistion completed")
-          ("Send " ^ ((print_dmsgs dmsgs) ""));
+        log_state ((node2string (Obj.magic id)) ^ "State transistion completed")
+          ("Send " ^ (msgs2string dmsgs));
         (* let resp = get_response dmsgs in *)
         (* replace the state machine of the replica *)
-        log_state (print_node id) (print_state rep');
+        log_state (node2string (Obj.magic id)) (s2string rep');
         replicas#replace_replica id rep';
         (* (message without current replica) :: (next messages) @ (newly created messages) *)
         let (response, failed) = self#run_replicas (dm' :: dms @ dmsgs) in

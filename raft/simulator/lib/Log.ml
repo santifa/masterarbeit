@@ -17,11 +17,16 @@ let log_res thread t d avg  =
                  ^ "; average: " ^ Batteries.String.of_list (Prelude.Time.time2string avg)
                  ^ "]" ^ Colors.kNRM);;
 
-let log_test name msg =
-  print_endline (Colors.kLGRN ^ "Test " ^ name ^ ":\t" ^ msg ^ Colors.kNRM);;
+let log_test_failed result expected =
+  print_endline (Colors.kLGRN ^ "Test(failed): Expected " ^ expected ^ " : Result " ^ result ^ Colors.kNRM);;
+
+let log_test_success result =
+  print_endline (Colors.kLGRN ^ "Test(success): " ^ result ^ Colors.kNRM);;
 
 let log_msgs typ msgs =
-  print_endline (Colors.kGRN ^ typ ^ " :\t" ^ msgs ^ Colors.kNRM);;
+  print_endline (Colors.kGRN ^ typ ^ ":\t" ^ msgs ^ Colors.kNRM);;
 
 let log_state name node =
   print_endline (Colors.kCYN ^ "Node " ^ name ^ ":\t" ^ node ^ Colors.kNRM);;
+
+let coq2string x = String.of_char_list x;;
