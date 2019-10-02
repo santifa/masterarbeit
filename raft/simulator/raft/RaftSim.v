@@ -454,6 +454,13 @@ Section RaftInstance.
     | candidate => "Candidate"
     end.
 
+  Definition node_state2string (s : NodeState) : string :=
+    match s with
+    | leader l => leader_state2string l
+    | follower => "Follower"
+    | candidate => "Candidate"
+    end.
+
     (** Give a string representation of some nodes states **)
   Definition state2string (s : RaftState) : string :=
     record_concat "Replica state"

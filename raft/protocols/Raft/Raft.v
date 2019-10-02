@@ -69,6 +69,8 @@ Section Raft.
     Build_Leader_State (create_next_index followers next_index)
                        (create_match_index followers).
 
+ 
+
   (*! Node State !*)
   (* Indicates which type a node currently has. *)
   Inductive NodeState :=
@@ -115,7 +117,7 @@ Section Raft.
       }.
 
   (** The initial state for all nodes on bootup. **)
-  Definition state0 : RaftState :=
+ Definition state0 : RaftState :=
     Build_State
       term0 (* zero at first boot *)
       [] (* No clients added *)
@@ -549,6 +551,39 @@ Section Raft.
       | init_msg d => handle_init_msg slf state d
       | debug_msg d => handle_debug_msg slf state d
       end.
+
+
+  (*! Define fake states for testing !*)
+ Definition initial_faked_leader_state : RaftState :=
+    Build_State
+      term0 (* zero at first boot *)
+      [] (* *)
+      None (* voted for no one. *)
+      [] (* no log entries stored *)
+      0 (* no commit done *)
+      0 (* nothing applied to state machine *)
+      5 (* some way of defining an offset is needed *)
+      RaftSM_initial_state (* defined within the raft context *)
+      follower (* at default no one is leader *)
+      (Some (nat2rep 0)) (* set leader to 0 *)
+      [] (* empty list of nodes *).
+
+
+  (** An initial leader state which should only used for testing. **)
+  Definition initial_leader_state : RaftState :=
+    Build_State
+      term0 (* zero at first boot *)
+      []
+      None (* voted for no one. *)
+      [] (* no log entries stored *)
+      0 (* no commit done *)
+      0 (* nothing applied to state machine *)
+      5 (* some way of defining an offset is needed *)
+      RaftSM_initial_state (* defined within the raft context *)
+      (leader (init_leader_state [1, 2, 3])) (* define as leader with 3 followers *)
+      (Some (nat2rep 0)) (* set leader to 0 for testing *)
+      [1, 2, 3] (* set follower nodes *).
+
 
   (*! System definitions !*)
   (* match node names with state machines *)

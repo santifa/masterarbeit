@@ -678,7 +678,7 @@ Section RaftHeader.
     | forward_msg _               => MSG_STATUS_PROTOCOL
     | timer_msg _                 => MSG_STATUS_INTERNAL
     | debug_msg _                 => MSG_STATUS_PROTOCOL
-    | init_msg _                   => MSG_STATUS_EXTERNAL
+    | init_msg _                  => MSG_STATUS_EXTERNAL
     end.
 
   (** Bind the real message states to the abstract definition. **)

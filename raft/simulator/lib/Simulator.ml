@@ -54,9 +54,9 @@ type ('a) run_conf = {
 class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
   val mutable conf : ('a) run_conf = c
   val mutable replicas : ('a, 'd) replicas = new replicas
-  val mutable queue : 'c list = []
+  val mutable queue : 'c list ref = ref []
 
-  method add_to_queue (msg : 'c list) = queue = msg
+  method add_to_queue (msg : 'c list) : unit = queue := msg
 
   (** create all the replicas **)
   method virtual create_replicas : 'c list
@@ -88,7 +88,7 @@ class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
     (* start monitoring the system time *)
     let t = Prelude.Time.get_time () in
     (* run the system *)
-    let failed_to_deliver = self#run_simulation queue in
+    let failed_to_deliver = self#run_simulation !queue in
     (* stop monitoring the system *)
     let d = Prelude.Time.sub_time (Prelude.Time.get_time ()) t in
     (* calculate the average *)
@@ -116,7 +116,7 @@ class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
        let () = Nocrypto_entropy_unix.initialize () in
 
        log_info "Main" "Start replicas";
-       queue = self#create_replicas;
+       self#add_to_queue(self#create_replicas);
 
 
        log_info "Main" "Fire up client";
