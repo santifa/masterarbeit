@@ -19,15 +19,6 @@ class virtual ['a, 'b, 'c, 'd] test_simulator c t = object(self)
   (* a test is function which takes a list of response messages and returns a new set of request messages *)
   val mutable tests : ('c list -> 'c list) list = t
 
-  (** create all the replicas **)
-  method virtual create_replicas : unit
-
-  (** Convert a list of mesgs to a string **)
-  method virtual msgs2string : 'c list -> string
-
-  (** specify how the replica handles input messages **)
-  method virtual run_replicas : 'c list -> ('c list * 'c list)
-
   (** change the destination of a message **)
   method virtual change_dst : 'c -> 'a list -> 'c
 
@@ -99,12 +90,11 @@ class virtual ['a, 'b, 'c, 'd] test_simulator c t = object(self)
     | [] -> ()
     | t' :: tt ->
       log_info "Main" "Start system";
-      self#create_replicas;
-      let failed = self#run_test [] t' in
-      let s = self#msgs2string failed in
-      (match s with
-       | "" -> ()
-       | s' -> log_err "Main" ("Test failed" ^ s'));
+      let i = self#create_replicas in
+      let failed = self#run_test i t' in
+      (match failed with
+       | [] -> ()
+       | s -> log_err "Main" (" Test failed " ^ (self#msgs2string s)));
       self#run_tests tt
 
   (* maybe this could be more generalized *)

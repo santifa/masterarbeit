@@ -86,7 +86,7 @@ Section Raft.
         (* maintain the client sessions *)
         sessions: Sessions;
         (* The candidate this node voted for the current term or null if none *)
-        voted_for : (option nat);
+        voted_for : (option Rep);
         (* The replicated log data which should be persitent over crashes
          * !Use nat at the beginning! *)
         log : Log;
@@ -239,6 +239,21 @@ Section Raft.
       (current_leader s)
       (timer s).
 
+  (** Update the information what the client voted for in the currents term or none **)
+  Definition update_voted_for (s : RaftState) (slf : Rep) : RaftState :=
+    Build_State
+      (current_term s)
+      (sessions s)
+      (Some slf)
+      (log s)
+      (commit_index s)
+      (last_applied s)
+      (node_timeout s)
+      (sm_state s)
+      (node_state s)
+      (current_leader s)
+      (timer s).
+    
   (** Check if a node is the leader **)
   Definition is_leader (s : RaftState) : bool :=
     match (node_state s) with
@@ -246,6 +261,7 @@ Section Raft.
     | _ => false
     end.
 
+  (** Get the leader internals from the node type **)
   Definition get_leader (s : RaftState) : option LeaderState :=
     match (node_state s) with
     | leader l => (Some l)
@@ -274,13 +290,21 @@ Section Raft.
    ** sends messages with a fix delay to itself and keeps track of the last valid
    ** timer id. FIXME, a more performant way. **)
 
+
   (** Check if the timer is valid, if not reject the message, otherwise start election. **)
   Definition handle_timer_msg (slf : Rep) : Update RaftState Timer DirectedMsgs :=
     fun state msg =>
+      (* the internal timer has ended and no new message arrived in between *)
       if TimerDeq (timer state) msg then
-        let state' := update_node_state state candidate in
-        (* TODO: Voting *)
-        (Some state', [])
+        (* re-elect the leader *)
+        let state' := increment_term_num state in
+        let state'' := update_node_state state' candidate in
+        let state''' := update_voted_for state'' slf in
+        (* TODO: semantic or storage of last_log_index, last_log_term, last_applied, commit_index not clear *)
+        let lli := get_last_log_index (log state''') in
+        let llt := get_last_log_term (log state''') in
+        let vote := request_vote (current_term state''') slf lli llt  in
+        (Some state''', [MkDMsg (request_vote_msg vote) (other_names slf) 0])
       else (Some state, []). (* drop the message *)
 
 

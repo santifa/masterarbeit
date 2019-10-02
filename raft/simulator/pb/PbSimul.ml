@@ -34,7 +34,7 @@ class ['a, 'b, 'c, 'd] pb c = object(self)
 
   (* create the replication system with one primary and three backups *)
   method create_replicas =
-    replicas#set_replicas [to_replica PBprimary; to_replica PBbackup]
+    replicas#set_replicas [to_replica PBprimary; to_replica PBbackup]; []
 
   method msgs2string (msgs : directedMsgs) : string = msgs2string msgs
 

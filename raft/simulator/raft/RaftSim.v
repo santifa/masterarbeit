@@ -441,10 +441,10 @@ Section RaftInstance.
     | Some n => str_concat ["Current_leader: ", replica2string n]
     end.
 
-  Definition voted_for2string (c : option nat) : string :=
+  Definition voted_for2string (c : option Rep) : string :=
     match c with
     | None => "Voted_for: None"
-    | Some n => str_concat ["Voted_for: ", nat2string n]
+    | Some n => str_concat ["Voted_for: ", replica2string n]
     end.
 
   Definition node_state2string (s : NodeState) : string :=
@@ -464,7 +464,8 @@ Section RaftInstance.
                    commit_index2string (commit_index s),
                    number2string "Last_Applied" (last_applied s),
                    current_leader2string (current_leader s),
-                   node_state2string (node_state s)].
+                   node_state2string (node_state s),
+                   timer2string (timer s)].
 
   (*! System definition !*)
   (** this is the initial replica state which is used to create
@@ -629,12 +630,10 @@ Require Export ExtrOcamlString.
 
 (* maybe start internal timer here?? *)
 (* how to set some debug flag from ocaml *)
-Definition local_replica (n : Rep) (offset : nat)(*(F C : nat)*) (leader : bool) :=
-  (* if leader then @RaftLeaderreplicaSM (@Raft_I_context) *)
-  (* else *)
-  let node := @RaftReplicaSM (@Raft_I_context) in
-  let init := run_sm (node n) (init_msg offset) in
-  (node, init).
+Definition local_replica (*(F C : nat)*) (* (leader : bool) *) :=
+  @RaftReplicaSM (@Raft_I_context).
 
+(* Definition init_replica (n : Rep) (offset : nat) := *)
+(*   run_sm n (init_msg offset). *)
 
-Extraction "RaftReplicaEx.ml" state2string lrun_sm RaftdummySM local_replica DirectedMsgs2string.
+Extraction "RaftReplicaEx.ml" state2string lrun_sm RaftdummySM local_replica DirectedMsgs2string name2string.
