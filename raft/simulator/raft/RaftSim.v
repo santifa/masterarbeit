@@ -141,35 +141,35 @@ Section RaftInstance.
   Compute (take_from_log 1 l).
 
   (*! Define fake states for testing !*)
- Definition initial_faked_leader_state : RaftState :=
-    Build_State
-      term0 (* zero at first boot *)
-      [] (* *)
-      None (* voted for no one. *)
-      [] (* no log entries stored *)
-      0 (* no commit done *)
-      0 (* nothing applied to state machine *)
-      5 (* some way of defining an offset is needed *)
-      RaftSM_initial_state (* defined within the raft context *)
-      follower (* at default no one is leader *)
-      (Some (nat2rep 0)) (* set leader to 0 *)
-      timer0 (* empty list of nodes *).
+ (* Definition initial_faked_leader_state : RaftState := *)
+ (*    Build_State *)
+ (*      term0 (* zero at first boot *) *)
+ (*      [] (* *) *)
+ (*      None (* voted for no one. *) *)
+ (*      [] (* no log entries stored *) *)
+ (*      0 (* no commit done *) *)
+ (*      0 (* nothing applied to state machine *) *)
+ (*      5 (* some way of defining an offset is needed *) *)
+ (*      RaftSM_initial_state (* defined within the raft context *) *)
+ (*      follower (* at default no one is leader *) *)
+ (*      (Some (nat2rep 0)) (* set leader to 0 *) *)
+ (*      timer0 (* empty list of nodes *). *)
 
 
   (** An initial leader state which should only used for testing. **)
-  Definition initial_leader_state : RaftState :=
-    Build_State
-      term0 (* zero at first boot *)
-      []
-      None (* voted for no one. *)
-      [] (* no log entries stored *)
-      0 (* no commit done *)
-      0 (* nothing applied to state machine *)
-      5 (* some way of defining an offset is needed *)
-      RaftSM_initial_state (* defined within the raft context *)
-      (leader (after_election_leader 0 (List.map nat2rep [1, 2, 3]))) (* define as leader with 3 followers *)
-      (Some (nat2rep 0)) (* set leader to 0 for testing *)
-      timer0 (* set follower nodes *).
+  (* Definition initial_leader_state : RaftState := *)
+  (*   Build_State *)
+  (*     term0 (* zero at first boot *) *)
+  (*     [] *)
+  (*     None (* voted for no one. *) *)
+  (*     [] (* no log entries stored *) *)
+  (*     0 (* no commit done *) *)
+  (*     0 (* nothing applied to state machine *) *)
+  (*     5 (* some way of defining an offset is needed *) *)
+  (*     RaftSM_initial_state (* defined within the raft context *) *)
+  (*     (leader (after_election_leader 0 (List.map nat2rep [1, 2, 3]))) (* define as leader with 3 followers *) *)
+  (*     (Some (nat2rep 0)) (* set leader to 0 for testing *) *)
+  (*     timer0 (* set follower nodes *). *)
 
 
 
@@ -315,10 +315,10 @@ Section RaftInstance.
   Definition result2string (r : Result) : string :=
     match r with
     | client_res res => number2string "ClientResult" res
-    | append_entries_res s t =>
+    | append_entries_res t s =>
       record_concat "AppendEntriesResult"
                     [str_concat ["Success: ", bool2string s], term2string t]
-    | request_vote_res v t =>
+    | request_vote_res t v =>
       record_concat "RequestVoteResult"
                     [str_concat ["Vote_granted: ", bool2string v], term2string t]
     | register_client_res s sid l =>
@@ -435,75 +435,78 @@ Section RaftInstance.
                               next_index2string (next_index l),
                               match_index2string (match_index l)].
   
-  Definition current_leader2string (c : option Rep) : string :=
+  Definition current_leader2string (c : option name) : string :=
     match c with
     | None => "Current_leader: None"
-    | Some n => str_concat ["Current_leader: ", replica2string n]
+    | Some n => str_concat ["Current_leader: ", name2string n]
     end.
 
-  Definition voted_for2string (c : option Rep) : string :=
+  Definition voted_for2string (c : option name) : string :=
     match c with
     | None => "Voted_for: None"
-    | Some n => str_concat ["Voted_for: ", replica2string n]
+    | Some n => str_concat ["Voted_for: ", name2string n]
     end.
+
+  Definition candidate2string (c : CandidateState) :=
+    str_concat ["Votes recieved: ", nat2string (votes c)].
 
   Definition node_state2string (s : NodeState) : string :=
     match s with
     | leader l => leader_state2string l
     | follower => "Follower"
-    | candidate => "Candidate"
-    end.
-
-  Definition node_state2string (s : NodeState) : string :=
-    match s with
-    | leader l => leader_state2string l
-    | follower => "Follower"
-    | candidate => "Candidate"
+    | candidate c => record_concat "Candidate" [candidate2string c]
     end.
 
     (** Give a string representation of some nodes states **)
   Definition state2string (s : RaftState) : string :=
     record_concat "Replica state"
                   [term2string (current_term s),
-                   str_concat ["Sessions: ", list2string (sessions s) session2string],
+                   current_leader2string (leader_id s),
                    voted_for2string (voted_for s),
                    log2string (log s),
                    commit_index2string (commit_index s),
                    number2string "Last_Applied" (last_applied s),
-                   current_leader2string (current_leader s),
                    node_state2string (node_state s),
+                   str_concat ["Sessions: ", list2string (sessions s) session2string],
                    timer2string (timer s)].
 
   (*! System definition !*)
   (** this is the initial replica state which is used to create
    ** a network of replicas. **)
   (* Definition dummy_initial_state : RaftState := *)
-    (* Build_State *)
-    (*   initial_term *)
-    (*   None *)
-    (*   [] *)
-    (*   0 *)
-    (*   0 *)
-    (*   5 *)
-    (*   RaftSM_initial_state *)
-    (*   no_leader_state. *)
+  (*   Build_State *)
+  (*     initial_term *)
+  (*     None *)
+  (*     [] *)
+  (*     0 *)
+  (*     0 *)
+  (*     5 *)
+  (*     RaftSM_initial_state *)
+  (*     no_leader_state. *)
 
-  (** This is a special purpose state, which initiates a leader.
-   ** Providing an initial leader is not inteded by the raft protocol.
-   ** This state assumes that the network has 3 followers. **)
-  Definition dummy_leader_state : RaftState :=
-    Build_State
-      term0
-      []
-      None
-      []
-      0
-      0
-      5
-      RaftSM_initial_state
-      (leader (after_election_leader 0 (List.map nat2rep [1, 2, 3])))
-      (Some (nat2rep 0))
-      timer0.
+  (* (** This is a special purpose state, which initiates a leader. *)
+  (*  ** Providing an initial leader is not inteded by the raft protocol. *)
+  (*  ** This state assumes that the network has 3 followers. **) *)
+  (* Definition dummy_leader_state : RaftState := *)
+  (*   Build_State *)
+  (*     term0 *)
+  (*     None *)
+  (*     (Some (replica (nat2rep 0))) *)
+  (*     [] *)
+  (*     0 *)
+  (*     0 *)
+  (*     RaftSM_initial_state *)
+  (*     (leader (new_leader 0 (List.map nat2rep [1, 2, 3]))) *)
+  (*     [] *)
+  (*     [] *)
+  (*     150 *)
+  (*     timer0. *)
+
+  (* (* a special test leader replica *) *)
+  (* Definition RaftleaderSM (slf : Rep) : MStateMachine _ := *)
+  (*   mkSM *)
+  (*     (replica_update slf) *)
+  (*     (dummy_leader_state). *)
 
   (** Provide the dummy state machine defined within raft.v **)
   Definition RaftdummySM : MStateMachine RaftState :=
@@ -640,7 +643,10 @@ Require Export ExtrOcamlString.
 Definition local_replica (*(F C : nat)*) (* (leader : bool) *) :=
   @RaftReplicaSM (@Raft_I_context).
 
+Definition leader_replica :=
+  @RaftLeaderSM (@Raft_I_context).
+
 (* Definition init_replica (n : Rep) (offset : nat) := *)
 (*   run_sm n (init_msg offset). *)
 
-Extraction "RaftReplicaEx.ml" state2string lrun_sm RaftdummySM local_replica DirectedMsgs2string name2string.
+Extraction "RaftReplicaEx.ml" state2string lrun_sm RaftdummySM local_replica leader_replica DirectedMsgs2string name2string.

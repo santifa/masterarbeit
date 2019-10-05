@@ -17,7 +17,7 @@ include Simulator
 class virtual ['a, 'b, 'c, 'd] test_simulator c t = object(self)
   inherit ['a, 'b, 'c, 'd] simulator c
   (* a test is function which takes a list of response messages and returns a new set of request messages *)
-  val mutable tests : ('c list -> 'c list) list = t
+  val mutable tests : (string * ('c list -> 'c list)) list = t
 
   (** change the destination of a message **)
   method virtual change_dst : 'c -> 'a list -> 'c
@@ -70,7 +70,7 @@ class virtual ['a, 'b, 'c, 'd] test_simulator c t = object(self)
         let (rep',dmsgs) = self#run_sm dm rep (* (Obj.magic dm.dmMsg) *) in
         replicas#replace_replica id rep';
         (* (message without current replica) :: (next messages) @ (newly created messages) *)
-        let (response, failed) = self#run_replicas (dm' :: dms @ dmsgs) in
+        let (response, failed) = self#run_replicas (dmsgs @ dm' :: dms) in
         (response, failed)
 
   (** Run the simulation and handle client server interaction **)
@@ -85,13 +85,14 @@ class virtual ['a, 'b, 'c, 'd] test_simulator c t = object(self)
         failed_to_deliver @ self#run_test responses t
     end
 
-  method run_tests (t : ('c list -> 'c list) list) : unit =
+  method run_tests (t : (string * ('c list -> 'c list)) list) : unit =
     match t with
     | [] -> ()
     | t' :: tt ->
-      log_info "Main" "Start system";
+      print_endline " ";
+      log_info "Running test" (fst t');
       let i = self#create_replicas in
-      let failed = self#run_test i t' in
+      let failed = self#run_test i (snd t') in
       (match failed with
        | [] -> ()
        | s -> log_err "Main" (" Test failed " ^ (self#msgs2string s)));

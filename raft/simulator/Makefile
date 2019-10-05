@@ -50,7 +50,7 @@ PbTest.native: pb/PbTest.ml $(LIB)
 ### raft ###
 RaftClient.native: raft/RaftClient.ml
 	$(OCB) RaftClient.native
-	mv RaftClient.native Client.ml
+	mv RaftClient.native Client.native
 
 RaftReplica.native:
 	$(OCB) RaftReplica.native

@@ -598,10 +598,10 @@ Section RaftHeader.
   | client_res (result : nat)
   (** The follower responses to the leader if the issued requests succeds and
    ** the current term to update the leader. **)
-  | append_entries_res (success : bool) (term : Term)
+  | append_entries_res (term : Term) (success : bool)
   (** A node response to a request vote wether it votes the calling candidate
    ** and it's current term to updat the requesting node. **)
-  | request_vote_res (vote_granted : bool) (term : Term)
+  | request_vote_res (term : Term) (vote_granted : bool)
   (** Return if the client is registered and its new session id **)
   | register_client_res (status: bool) (session_id : SessionId) (leader : option Rep).
 

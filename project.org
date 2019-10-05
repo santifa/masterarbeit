@@ -1,8 +1,6 @@
 
 * Master thesis
 
-
-
 This document briefly explains my master thesis and outlines
 the steps towards the final implementation and document.
 
@@ -40,10 +38,24 @@ most part has to be finalized. The exceptions are leader election and benchmarki
 **** DONE Basic setup 
      CLOSED: [2019-09-23 Mo 10:41]
 
-**** TODO Leader Election
+**** TODO Leader Election [/]
+     
+***** DONE init and timer msg
 
-**** TODO Log replication
+***** DONE issue request votes
+
+***** DONE handle request votes
+
+***** TODO handle responses
+
+**** TODO Log replication [/]
 partialy done
+
+***** DONE replicate to other nodes log
+
+***** TODO commit to internal state machine
+
+***** DONE response to client
 
 **** DONE Internal forwarding
      CLOSED: [2019-09-23 Mo 10:47]
@@ -51,17 +63,34 @@ partialy done
 **** TODO Message queue handling
 partialy
 
-**** TODO Testing
+**** TODO Testing [/]
 partialy, currently only the simulator with test changed by hand
 
-**** TODO Benchmarking
+***** DONE lib/Simulator.ml, provide general simulator handling
+
+***** DONE lib/Test.ml, provide general test handling
+
+***** TODO lib/Client.ml, provide a general protocol client
+
+***** TODO lib/Server.ml, provide a general protocol server
+
+**** TODO Benchmarking Ideas [/]
+
+***** TODO implement same sm as pbft
+
+***** TODO count messages in the protocol
+
+***** TODO find more ideas
 
 *** Writing [1/8]
 
 This first attempt was done in german.
 
+
 **** DONE Latex setup
      CLOSED: [2019-09-23 Mo 10:48]
+
+**** TODO change setup to english
 
 **** TODO TOC
 in german
@@ -79,4 +108,5 @@ in german
 **** TODO evaluation
 
 **** TODO conclusion and further steps
+
 
