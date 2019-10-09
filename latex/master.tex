@@ -1,7 +1,7 @@
 \documentclass[11pt, a4paper]{article}
 
 %\usepackage{ngerman}
-\usepackage[ngerman]{babel}
+\usepackage[english]{babel}
 \usepackage[utf8]{inputenc} %Korrekte Kodierung der Umlaute nach UTF-8
 \usepackage[T1]{fontenc} %Korrekte Kodierung der Umlaute nach UTF-8
 \usepackage{makeidx} %Zur automatischen Indexerstellung
@@ -52,7 +52,7 @@ citecolor = black] {hyperref}
 \footskip19mm
 \parindent=0in
 
-\renewcommand{\lstlistingname}{Auflistung}
+% \renewcommand{\lstlistingname}{Auflistung}
 \apptocmd{\thebibliography}{\raggedright}{}{} % bibliography right aligned
 \newcounter{sectionnumber}
 \newcommand*\rot{\rotatebox{90}}
@@ -65,22 +65,22 @@ citecolor = black] {hyperref}
   \begin{center} 
     \mbox{}
     
-    {\large \sc Masterarbeit} \\    
+    {\large \sc Masterthesis} \\    
 
     \vspace{1cm}
   
-    {\huge Fehlertolerante Systeme in EventML (WIP)\\[1em] {\LARGE}}  
+    {\huge Implementing the RAFT consensus protocol with Velisarios in COQ\\[1em] {\LARGE}}  
         
     \vspace{2cm}
     
     \includegraphics[scale=0.05]{images/Mathnatlogo.jpg}\\[1em]
-    Universität Potsdam\\
-    Institut für Informatik \\
-    Professur Theoretische Informatik
+    University of Potsdam\\
+    Institute for Computer Science\\
+    Professorship for theoretical Computer Science
     
     \vspace{2cm}
     
-		vorgelegt von
+		submitted by
 		
     \vspace{1em}
     
@@ -88,12 +88,12 @@ citecolor = black] {hyperref}
         {Matr.-Nr. 751237}\\
 
     \vspace{2em}
-        {Aufgabenstellung und Betreuung:}\\
+        {Problem definition and supervision:}\\
         {Prof. Christoph Kreitz}\\
 		
     \vspace{3em}    
     Potsdam\\
-    29. April 2019
+    30. March 2020
   \end{center}
 \end{titlepage}
 
@@ -101,7 +101,7 @@ citecolor = black] {hyperref}
 \pagenumbering{gobble}
 % Zweite Seite = Kurzzusammenfassung
 \begin{center}
-{\bf Kurzzusammenfassung}
+{\bf Abstract}
 \end{center}
 \noindent
 
@@ -117,12 +117,12 @@ citecolor = black] {hyperref}
 \begin{appendix}
 \input{abkz.tex}
 
-\addcontentsline{toc}{section}{C~\,Abbildungsverzeichnis}
+\addcontentsline{toc}{section}{C~\,List of figures}
 %\addcontentsline{toc}{section}{~~~~Abbildungsverzeichnis} % Zeile für das Inhaltsverzeichnis
 \listoffigures
 
 \newpage
-\addcontentsline{toc}{section}{D~\,Tabellenverzeichnis}
+\addcontentsline{toc}{section}{D~\,List of tables}
 %\addcontentsline{toc}{section}{~~~~Tabellenverzeichnis} % Zeile für das Inhaltsverzeichnis
 \listoftables
 \end{appendix}
@@ -154,7 +154,7 @@ citecolor = black] {hyperref}
 
 %Hier kommt das Literaturverzeichnis
 \newpage
-\addcontentsline{toc}{section}{~~~~Literaturverzeichnis} % Zeile für das Inhaltsverzeichnis
+\addcontentsline{toc}{section}{~~~~Bibliography} % Zeile für das Inhaltsverzeichnis
 \bibliography{bibfile}
 \bibliographystyle{plain}
 

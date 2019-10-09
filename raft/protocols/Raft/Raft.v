@@ -118,6 +118,8 @@ Section Raft.
         timeout : nat;
         (* internal volatile - The id of the last send timout message. *)
         timer : Timer;
+        (* internal volatile - The timer for messages which should be resend indefinitly if no response *)
+        msg_timer : Timer;
        }.
 
   (** The initial state for all nodes on bootup. **)
@@ -134,7 +136,8 @@ Section Raft.
       [] (* No clients added *)
       [] (* empty cache *)
       0 (* the timeout gets overwritten at start up *)
-      timer0 (* start with the initial timer *).
+      timer0 (* start with the initial timer *)
+      timer0.
 
   (*! State transitions !*)
   (** If the input term is newer advance this node to the new term. **)
@@ -153,6 +156,7 @@ Section Raft.
           (cache s)
           (timeout s)
           (timer s)
+          (msg_timer s)
         else s.
 
 
@@ -175,7 +179,25 @@ Section Raft.
       (sessions s)
       (cache s)
       (timeout s)
-      (next_timer (timer s)).
+      (next_timer (timer s))
+      (msg_timer s).
+
+    (** Increment the timer id if a new timer message was send. **)
+  Definition set_msg_timer (s : RaftState) : RaftState :=
+    Build_State
+      (current_term s)
+      (voted_for s)
+      (leader_id s)
+      (log s)
+      (commit_index s)
+      (last_applied s)
+      (sm s)
+      (node_state s)
+      (sessions s)
+      (cache s)
+      (timeout s)
+      (timer s)
+      (next_timer (msg_timer s)).
 
   (** Update the timer offset on boot up. **)
   Definition update_timeout (s : RaftState) (n : nat) : RaftState :=
@@ -191,8 +213,26 @@ Section Raft.
       (sessions s)
       (cache s)
       n
-      (timer s).
+      (timer s)
+      (msg_timer s).
 
+
+  (** Replace the internal log with a new one **)
+  Definition increment_last_applied (s : RaftState) : RaftState :=
+    Build_State
+      (current_term s)
+      (voted_for s)
+      (leader_id s)
+      (log s)
+      (commit_index s)
+      ((last_applied s) + 1)
+      (sm s)
+      (node_state s)
+      (sessions s)
+      (cache s)
+      (timeout s)
+      (timer s)
+      (msg_timer s).
 
   (** Replace the internal log with a new one **)
   Definition update_log (s : RaftState) (l : Log) : RaftState :=
@@ -208,23 +248,40 @@ Section Raft.
       (sessions s)
       (cache s)
       (timeout s)
-      (timer s).
+      (timer s)
+      (msg_timer s).
 
   (** Update the state machine and index of already commited log entries **)
-  Definition update_sm (s : RaftState) (ci : nat) (sm : RaftSM) : RaftState :=
+  Definition update_sm (s : RaftState) (sm : RaftSM) : RaftState :=
     Build_State
       (current_term s)
       (voted_for s)
       (leader_id s)
       (log s)
-      ci
+      (commit_index s)
       (last_applied s)
       sm
       (node_state s)
       (sessions s)
       (cache s)
       (timeout s)
-      (timer s).
+      (timer s)
+      (msg_timer s).
+
+  (** If commit_index > last_applied -> apply log[last_applied] to sm **)
+  Definition apply_to_sm (s : RaftState) : (RaftState * option RaftSM_result) :=
+    if (last_applied s) <? (commit_index s) then
+      let s' := increment_last_applied s in
+      let e := get_log_entry (log s') (last_applied s') in
+      match e with
+      | None => (s, None) (* the log is not long enough, do not apply anything *)
+      | Some e' => (* we found the entry to apply *)
+        let (sm, result) := RaftSM_update_state (sm s) (entry e') in
+        let s'' := update_sm s sm in
+        (s'', Some result)
+      end
+    else
+      (s, None).
 
   (** Update the nodes known leader **)
   Definition update_current_leader (s : RaftState) (l : name) : RaftState :=
@@ -240,7 +297,8 @@ Section Raft.
       (sessions s)
       (cache s)
       (timeout s)
-      (timer s).
+      (timer s)
+      (msg_timer s).
 
   (** Update the sessions to accept a new client **)
   Definition update_node_state (s : RaftState) (ns : NodeState) : RaftState :=
@@ -256,17 +314,23 @@ Section Raft.
       (sessions s)
       (cache s)
       (timeout s)
-      (timer s).
+      (timer s)
+      (msg_timer s).
 
   (** shortcuts for node state transitions **)
-  Definition to_leader (s : RaftState) : RaftState :=
-    update_node_state s (leader leader_state0).
-
   Definition to_follower (s : RaftState) :=
     update_node_state s follower.
 
   Definition to_candidate (s : RaftState) :=
-    update_node_state s (candidate candidate_state0).
+    let s' := increment_term s in
+    update_node_state s' (candidate candidate_state0).
+
+  Definition to_leader (s : RaftState) (followers : list Rep) : RaftState :=
+    let lli := get_last_log_index (log s) in
+    let l := new_leader lli followers in
+    update_node_state s (leader l).
+
+
 
   (** Check if a node is the leader **)
   Definition is_leader (s : RaftState) : bool :=
@@ -282,6 +346,10 @@ Section Raft.
     | _ => None
     end.
 
+  (** Convert a node to follower state if it's term is lesser. **)
+  Definition equal_term_or_follower (s : RaftState) (t : Term) : RaftState :=
+     if TermDeq (current_term s ) t then s
+    else if TermLt (current_term s) t then increment_term (to_follower s) else s.
 
   (** Update the sessions to accept a new client **)
   Definition update_sessions (s : RaftState) (se : Sessions) : RaftState :=
@@ -297,13 +365,14 @@ Section Raft.
       se
       (cache s)
       (timeout s)
-      (timer s).
+      (timer s)
+      (msg_timer s).
 
   (** Update the information what the client voted for in the currents term or none **)
-  Definition update_voted_for (s : RaftState) (candidate : option name) : RaftState :=
+  Definition update_voted_for (s : RaftState) (c : option name) : RaftState :=
     Build_State
       (current_term s)
-      candidate
+      c
       (leader_id s)
       (log s)
       (commit_index s)
@@ -313,7 +382,8 @@ Section Raft.
       (sessions s)
       (cache s)
       (timeout s)
-      (timer s).
+      (timer s)
+      (msg_timer s).
 
   Definition add_vote (s : RaftState) : RaftState :=
     match (node_state s) with
@@ -328,22 +398,69 @@ Section Raft.
     end.
 
   (*! create messages and states !*)
+  (** Forward the messag if a leader is known **)
+  Definition mk_forward_msg (s : RaftState) (o : RaftMsg) : DirectedMsgs :=
+    match (leader_id s) with
+      (* we have no new current leader, maybe the system was recently initialized and
+       * no leader is elected yet. TODO: Ignore the message at the moment *)
+    | None => []
+    | Some l =>
+      [MkDMsg (forward_msg o) [l] 0]
+    end.
+
   (** Create a new timer message **)
-  Definition mk_timer_msg (s : RaftState) (slf : Rep) : DirectedMsg :=
-    MkDMsg (timer_msg (timer s)) [replica slf] (timeout s).
+  Definition mk_timer_msg (s : RaftState) (slf : Rep) (timeout : nat) : DirectedMsg :=
+    MkDMsg (timer_msg (timer s)) [replica slf] timeout.
 
-  (** create an answer to some request vote message **)
-  Definition mk_vote_reply_msg (t : Term) (g : bool) (n : Rep) : DirectedMsg :=
-    let response := request_vote_res t g in
-    MkDMsg (response_vote_msg response) [replica n] 0.
-
+    (** Create a vote for yourself **)
   Definition mk_vote_msg (s : RaftState) (slf : Rep) : DirectedMsg :=
     let lli := get_last_log_index (log s) in
     let llt := get_last_log_term (log s) in
     let vote := request_vote (current_term s) slf lli llt in
     MkDMsg (request_vote_msg vote) (other_names slf) 0.
 
+  (** create an answer to some request vote message **)
+  Definition mk_vote_reply_msg (t : Term) (g : bool) (n : Rep) : DirectedMsg :=
+    let response := request_vote_res t g in
+    MkDMsg (response_vote_msg response) [replica n] 0.
+
+  (** create a  heartbet message **)
+  Definition mk_heartbeat_msg (s : RaftState) (slf : Rep) : DirectedMsg :=
+    let lli := get_last_log_index (log s) in
+    let llt := get_last_log_term (log s) in
+    let beat := heartbeat (current_term s) slf lli llt (commit_index s) in
+    MkDMsg (append_entries_msg beat) (other_names slf) 0.
+
+  (** Create the replication messages which are send to the followers
+   ** To make this easy the request sends a nat as cmd to the leader and
+   ** the leader converts this into a single entry list for the log replication. **)
+  Definition mk_append_msg (slf : Rep) (s : RaftState) (entries: list Entry) : DirectedMsgs :=
+    let leader := (get_leader s) in
+    let llt := get_last_log_term (log s) in
+    let lli := get_last_log_index (log s) in
+    let msg := replicate (current_term s) slf lli llt (commit_index s) entries in
+    [MkDMsg (append_entries_msg msg) (other_names slf) 0].
+
+  (** Create a new registering result message **)
+  Definition mk_register_result_msg (c : Client) (r : Result) :=
+    [MkDMsg (register_result_msg r) [client c] 0].
+
+  (** Create a broadcast message to inform other nodes about new sessions **)
+  Definition mk_broadcast_msg (slf : Rep) (s : Sessions) :=
+    [MkDMsg (broadcast_sessions_msg s) (other_names slf) 0].
+
   (*! combine state transitions and message creation !*)
+  (** Create a new timer by setting the new id in the state and creating the corresponding msg. **)
+  Definition mk_timer (s : RaftState) (slf : Rep) : (RaftState * DirectedMsg) :=
+    let s := set_timer s in
+    let msg := mk_timer_msg s slf (timeout s) in
+    (s, msg).
+
+  (** Create a new leader timer which gets issued in 50 milliseconds interval **)
+  Definition mk_leader_timer (s : RaftState) (slf : Rep) : (RaftState * DirectedMsg) :=
+    let s := set_timer s in
+    let msg := mk_timer_msg s slf 50 in
+    (s, msg).
 
   (*! The message handling - Update function !*)
   (** The semantics is that an incoming message gets handled by an appropriate
@@ -352,14 +469,7 @@ Section Raft.
    ** some delay in milliseconds. Since a message leaves the type abstract the implementation
    ** decides the type used and returned. **)
 
-
   (*! System boot up !*)
-  (** Create a new timer by setting the new id in the state and creating the corresponding msg. **)
-  Definition mk_timer (s : RaftState) (slf : Rep) : (RaftState * DirectedMsg) :=
-    let s := set_timer s in
-    let msg := mk_timer_msg s slf in
-    (s, msg).
-
   (** A - If the system boots up, the node gets an init message with the
    **     timer offset. The node start it's internal message timer. **)
   Definition handle_init_msg (slf : Rep) : Update RaftState nat DirectedMsgs :=
@@ -367,6 +477,68 @@ Section Raft.
       let s := update_timeout state timeout in
       let (s', msg) := mk_timer s slf in
       (Some s', [msg]).
+
+  (*! Register some client at the network !*)
+  (** L _ Handle incoming new clients **)
+  (** Some client sends an empty register_client message and the leader creates a session
+   ** for this client. This session is distributed across the network.
+   **
+   ** The papers approach is to handle regiter messages like normal log replication messages.
+   ** No checks are done if the distribution was successfully since all client messages
+   ** are forwarded to the leader. So, the disribution is implemented as a showcase. **)
+  Definition handle_register (slf : Rep) : Update RaftState RegisterClient DirectedMsgs :=
+    fun state msg =>
+        match msg with
+        | register_client c =>
+          match (node_state state) with
+          | leader _ =>
+            let (sessions, id) := add_session (sessions state) c in
+            let s' := update_sessions state sessions in
+            let result := register_client_res true id (Some slf) in
+            let broadcast := mk_broadcast_msg slf sessions in
+            (Some s', mk_register_result_msg c result ++ broadcast)
+          | _ =>
+            (* forward as everything else *)
+            let forward := mk_forward_msg state (register_msg msg) in
+            (Some state, forward)
+         end
+       end.
+
+  (** F - Handle a leader brodacast with new sessions by just replacing the own sessions. **)
+  Definition handle_sessions_broadcast (slf : Rep) : Update RaftState Sessions DirectedMsgs :=
+    fun state sessions =>
+      match (node_state state) with
+      | leader _ => (Some state, [])
+      | _ => (Some (update_sessions state sessions), [])
+      end.
+
+  (*! Internal Forwarding !*)
+  (** The internal forwarding is used to keep the client network handling easy from
+   ** the clients perspective. A wrongly delivered message (node not leader) is forwarded
+   ** to the clients last known leader.
+   ** FIXME: If there is currently no leader the messages is dropped.
+   ** If the assumed leader is not a leader the message gets forwarded again.
+   ** The leader node unpacks all the layers and sends the request to itself. **)
+
+  (** Recursivly unwrap the forward message until the original request is returned. **)
+  Fixpoint unpack_forward_msg (f : RaftMsg) : RaftMsg :=
+    match f with
+    | forward_msg f => unpack_forward_msg f
+    | f => f
+    end.
+
+  (** L - Handle fowarded message - unpack and send original message to self. **)
+  Definition handle_forward_msg (slf : Rep) : Update RaftState RaftMsg DirectedMsgs :=
+    fun state f =>
+      match (node_state state) with
+      | leader _ =>
+        (* maybe there is a better way of handling this. *)
+        let msg := unpack_forward_msg f in
+        (Some state, [MkDMsg msg [(replica slf)] 0])
+      (* Either forward the message to the current leader or ignore it.
+       * Maybe a TODO to handle the first encountered messages if there is no leader. *)
+      | _ => (Some state, (mk_forward_msg state f))
+      end.
 
   (*! Timer !*)
   (** The raft protocol enforces that every node has an internal timer which gets reseted
@@ -376,26 +548,29 @@ Section Raft.
 
   (** The node converts to candidate state and starts the election protocol **)
   Definition start_election (state : RaftState) (slf : Rep) : (RaftState * DirectedMsg) :=
-        let s' := increment_term state in
-        let s'' := update_node_state s' (candidate candidate_state0) in
-        let s''' := update_voted_for s'' (Some (replica slf)) in
-        let msg := mk_vote_msg s''' slf in
-        (s''', msg).
+    let s := to_candidate state in
+    let s' := update_voted_for s (Some (replica slf)) in
+    let msg := mk_vote_msg s' slf in
+    (s', msg).
 
-  (** A - Check if the timer is valid, if not reject the message, otherwise start election. **)
+  (** A - Check if the timer is valid, if not reject the message, otherwise start election.
+   **     A leader uses a faster timer to maintain authority **)
   Definition handle_timer_msg (slf : Rep) : Update RaftState Timer DirectedMsgs :=
     fun state msg =>
       (* the internal timer has ended and no new message arrived in between *)
       if TimerDeq (timer state) msg then
         (* keep the internal timer running *)
-          let (s, timer) := mk_timer state slf in
           match node_state state with
           | leader l => (* as a leader ignore the timeouts, since the leader doesn't send msgs
                         * to itself. Keep the timer running for the time the node looses
                         * the leader state. *)
-            (Some s, [timer])
+            let (s, timer) := mk_leader_timer state slf in
+            let beat := mk_heartbeat_msg s slf in
+            (Some s, [beat; timer])
           | _ => (* the leader failed to respond or the election timed out. *)
-            let (s', msg) := start_election s slf in
+            (* let s := to_candidate state in *)
+            let (s, msg) := start_election state slf in
+            let (s', timer) := mk_timer s slf in
             (Some s', [msg; timer])
           end
       else (Some state, []). (* not the right timer -> drop the message *)
@@ -410,7 +585,7 @@ Section Raft.
 
   (** Return true if the logs are equal and (not voted yet or already voted for) **)
   Definition valid_vote state candidate lli llt : bool :=
-    let valid_log := check_last_log lli llt (log state) in
+    let valid_log := check_last_log (log state) lli llt in
     valid_candidate state candidate && valid_log.
 
    (** A - all nodes in either way respond to a vote request.
@@ -419,96 +594,48 @@ Section Raft.
     ** F - Check if the vote is valid and maybe grant the vote **)
   Definition handle_request_vote (slf : Rep) : Update RaftState RequestVote DirectedMsgs :=
     fun state msg =>
+      (* reissue a new timer *)
+      let (s, timer) := mk_timer state slf in
       match msg with
-      | request_vote t node lli llt =>
-        if TermLt t (current_term state) then
-          (Some state, [mk_vote_reply_msg (current_term state) false node])
+      | request_vote t candi lli llt =>
+        if TermLt t (current_term state) then (* ignore the vote is from an old term *)
+          (Some state, [mk_vote_reply_msg (current_term state) false candi]) (* keep the timer running *)
         else
-          let s := advance_term state t in (* check and advance the current term *)
-          if andb (if leader_id state then false else true)
-                  (check_last_log lli llt (log state)) then
-            match voted_for s with
+          let s' := equal_term_or_follower s t in (* check and advance the current term *)
+          (* return false if there is some current leader *)
+          if andb (if leader_id state then false else true) 
+                  (check_last_log (log state) lli llt ) then
+            match voted_for s' with
             | None =>
-              let s' := update_voted_for s (Some (replica node)) in
-              (Some s', [mk_vote_reply_msg (current_term state) true node])
+              let s'' := update_voted_for s' (Some (replica candi)) in
+              (Some s'', [mk_vote_reply_msg (current_term state) true candi; timer])
             | Some (replica c) =>
-              let valid := if rep_deq c node then true else false in
-              (Some s, [mk_vote_reply_msg (current_term state) valid node])
-            | _ => (Some s, [mk_vote_reply_msg (current_term state) false node])
+              let valid := if rep_deq c candi then true else false in
+              (Some s', [mk_vote_reply_msg (current_term state) valid candi; timer])
+            | _ => (Some s', [mk_vote_reply_msg (current_term state) false candi]) (* a vote for a client?*)
             end
-          else (Some s, [mk_vote_reply_msg (current_term state) false node])
+              (* either we have a current leader or we have unequal logs*)
+          else (Some s, [mk_vote_reply_msg (current_term state) false candi; timer])
       end.
-          
-      (*     (* let s' := update_voted_for s voted_for in (* hold the last voted for *) *) *)
-          
-      (*     (* let granted := if (TermLt t (current_term s)) *) *)
-      (*     (*              then false else valid_vote state node lli llt in *) *)
-      (*   let voted := if granted then (Some (replica node)) else voted_for in *)
-      (*   let msg := mk_vote_reply_msg (current_term s) granted node in *)
-      (*   if granted then *)
-      (*     let (s, timer) := mk_timer s slf in *)
-      (*     (Some s, [msg; timer]) *)
-      (*   else *)
-      (*     (Some state, []) *)
-      (* end. *)
 
-  (** C - Handle incoming votes from candidates. **)
-  (* Definition handle_request_vote (slf : Rep) : Update RaftState RequestVote DirectedMsgs := *)
-  (*   fun state msg => *)
-  (*     match msg with *)
-  (*     | request_vote t node lli llt => *)
-  (*       match node_state state with *)
-  (*       | leader _ => *)
-  (*         (* the leader test if their is a newer term or ignores the message *) *)
-  (*          if TermLt (current_term state) t then *)
-  (*            (* there is a higher term so step back as leader *) *)
-  (*            let (s, timer) := mk_timer state slf in *)
-  (*            let s' := update_node_state s follower in *)
-  (*            let s'' := advance_term s' t in *)
-  (*            (Some s'', [timer]) *)
-  (*          else (Some state, []) (* otherwise ignore the message *) *)
-  (*       | candidate _ => *)
-  (*         (* a candidate either returns to follower if there is a newer term *)
-  (*          * or responses with false if it's an old vote or the log didn't match *)
-  (*          * or grants the vote if the term and the log matches. *)
-  (*          * The granting is first-comes-first-served. *) *)
-  (*         if TermLt (current_term state) t then *)
-  (*           (* there is a higher term so step back as candidate *) *)
-  (*           let (s, timer) := mk_timer state slf in *)
-  (*           let s' := update_node_state s follower in *)
-  (*           let s'' := advance_term s' t in *)
-  (*           (Some s'', [timer]) *)
-  (*         else if TermLt t (current_term state) then *)
-  (*                (* the vote is for a previous term, ack with denied vote *) *)
-  (*                (Some state, [mk_vote_reply_msg (current_term state) false node]) *)
-  (*              else if valid_vote state node lli llt then (* grant vote if its valid *) *)
-  (*                     let (s, timer) := mk_timer state slf in *)
-  (*                     let s' := (update_voted_for s (replica node)) in *)
-  (*                     (Some s', [mk_vote_reply_msg (current_term s') true node; timer]) *)
-  (*                   else (* deny vote if it's not valid *) *)
-  (*                     (Some state, [mk_vote_reply_msg (current_term state) false node]) *)
-  (*       | follower => *)
-  (*         (* the follower implementation is not really provide. *)
-  (*          * So assume a follower could grant votes if the term is higher or equal *)
-  (*          * and the logs are matching *) *)
-  (*         if TermLt t (current_term state) then *)
-  (*           (* respond false to a request from a previous term *) *)
-  (*           (Some state, [mk_vote_reply_msg (current_term state) false node]) *)
-  (*         else if valid_vote state node lli llt then *)
-  (*                (* grant vote if its valid and restart timer *) *)
-  (*                let (s, timer) := mk_timer state slf in *)
-  (*                let s' := (update_voted_for s (replica node)) in *)
-  (*                (Some s', [mk_vote_reply_msg (current_term s') true node; timer]) *)
-  (*              else (* otherwise deny vote  *) *)
-  (*                (Some state, [mk_vote_reply_msg (current_term state) false node]) *)
-  (*       end *)
-  (*     end. *)
+  (* Definition test := *)
+  (*   let votes := 2 in *)
+  (*   let limit := Nat.div2 num_replicas in *)
+  (*   if (Nat.ltb limit votes) then true else false. *)
+
+  (* Compute (Nat.div2 (List.length reps)). *)
+  (* Compute (test). *)
 
   Definition try_to_become_leader (s : RaftState) (slf : Rep) : (RaftState * list DirectedMsg) :=
     let votes := get_votes s in
-    let reps := List.fold_left (fun acc _ => acc + 1) (other_names slf) 0 in
-    (* if (Nat.div votes reps) > 1 then (s, []) else (s, []). *)
-    (s, []).
+    let limit := Nat.div2 num_replicas in (* the minimum of votes needed are >50% *)
+    if (Nat.ltb limit votes) then (* we have a majority *)
+      let s' := to_leader s (other_replicas slf) in
+      let msg := mk_heartbeat_msg s' slf in
+      let s'' := update_current_leader s' (replica slf) in
+      (s'', [msg])
+    else (s, []). (* we have no majority yet *)
+
 
   (** C - Handle incoming voting results from candidates. **)
   Definition handle_response_vote (slf : Rep) : Update RaftState Result DirectedMsgs :=
@@ -518,49 +645,18 @@ Section Raft.
         if g then (* the vote was granted, check if we have the majority *)
           let s := add_vote state in
           let (s', msgs) := try_to_become_leader s slf in
-          let (s'', timer) := mk_timer s' slf in
-          (Some s'', msgs ++ [timer])
+          if is_leader s' then
+                 let (s'', timer) := mk_leader_timer s' slf in
+                 (Some s'', msgs ++ [timer])
+          else
+            let (s'', timer) := mk_timer s' slf in
+            (Some s'', msgs ++ [timer])
         else
-          (Some state, [])
-      | _ =>
+          let s := equal_term_or_follower state t in
+          (Some s, [])
+      | _ => (* ignore the message if not a voting message result *)
         (Some state, [])
-      end. (* ignore the message if not a voting message *)
-
-
-  (*! Internal Forwarding !*)
-  (** The internal forwarding is used to keep the client network handling easy from
-   ** the clients perspective. A wrongly delivered message (node not leader) is forwarded
-   ** to the clients last known leader.
-   ** FIXME: If there is currently no leader the messages is dropped.
-   ** If the assumed leader is not a leader the message gets forwarded again.
-   ** The leader node unpacks all the layers and sends the request to itself. **)
-
-  Definition mk_forward_msg (s : option name) (o : RaftMsg) : DirectedMsgs :=
-    match s with
-      (* we have no new current leader, maybe the system was recently initialized and
-       * no leader is elected yet. TODO: Ignore the message at the moment *)
-    | None => []
-    | Some l =>
-      [MkDMsg (forward_msg o) [l] 0]
-    end.
-
-  (** Recursivly unwrap the forward message until the original request is returned. **)
-  Fixpoint unpack_forward_msg (f : RaftMsg) : RaftMsg :=
-    match f with
-    | forward_msg f => unpack_forward_msg f
-    | f => f
-    end.
-
-  (** L - Handle fowarded message - unpack and send original message to self. **)
-  Definition handle_forward_msg (slf : Rep) : Update RaftState RaftMsg DirectedMsgs :=
-    fun state f =>
-      if is_leader state then
-        (* maybe there is a better way of handling this. *)
-        let msg := unpack_forward_msg f in
-        (Some state, [MkDMsg msg [(replica slf)] 0])
-      (* Either forward the message to the current leader or ignore it.
-       * Maybe a TODO to handle the first encountered messages if there is no leader. *)
-      else (Some state, (mk_forward_msg (leader_id state) f)).
+      end.
 
   (*! Log replication !*)
   (** 1. If a node gets a request and it is not the leader it forwards the request.
@@ -575,18 +671,8 @@ Section Raft.
    **    it commits the log entry to the commited_log. **)
   (* TODO: resend append entry calls indefinitely if followers does not answer
    * TODO: apply log entry as committed if majority of followers succeds
-   * TODO: leader send response to server
+   * TODO: leader send response to client
    * TODO: deal with log inconsistency -> the leader needs to detect the last valid log. *)
-
-  (** Create the replication messages which are send to the followers
-   ** To make this easy the request sends a nat as cmd to the leader and
-   ** the leader converts this into a single entry list for the log replication. **)
-  Definition create_append_msg (slf : Rep) (s : RaftState) (entries: list Entry) : DirectedMsgs :=
-    let leader := (get_leader s) in
-    let llt := get_last_log_term (log s) in
-    let lli := get_last_log_index (log s) in
-    let msg := replicate (current_term s) slf lli llt (commit_index s) entries in
-    [MkDMsg (append_entries_msg msg) (other_names slf) 0].
 
   (** 1. If the next used log index is equal to the internal log index
    ** 1.1 check if the terms of the entries are matching and
@@ -609,22 +695,23 @@ Section Raft.
 
   (** If the internal commit index is lower than the provided one
    ** return min (provided_commit_index, last_log_index) **)
-  Definition new_commit_index (s : RaftState) (ci : nat) :=
-    if ((commit_index s) <? ci) then
-      let lli := get_last_log_index (log s) in
-      min ci lli
-    else (commit_index s). (* if the nodes index is higher the paper doesn't handle this case *)
+  (* Definition new_commit_index (s : RaftState) (ci : nat) := *)
+  (*   if ((commit_index s) <? ci) then *)
+  (*     let lli := get_last_log_index (log s) in *)
+  (*     min ci lli *)
+  (*   else (commit_index s). (* if the nodes index is higher the paper doesn't handle this case *) *)
 
   (** Check if there are new commits and apply them to the local committed log. **)
-  Definition commit (s : RaftState) (ci : nat) :=
-    let new_ci := new_commit_index s ci in
-    let log := take_from_log new_ci (log s) in
-    (update_sm s new_ci (sm s)).
+  (* Definition commit (s : RaftState) (ci : nat) := *)
+  (*   let new_ci := new_commit_index s ci in *)
+  (*   let log := take_from_log new_ci (log s) in *)
+  (*   (update_sm s new_ci (sm s)). *)
 
   (** L - Handle client input to the system. **)
   (** Forward the message if the request reaches the wrong node.
    ** As leader generate the entries from the request and apply the entries to the
-   ** internal log. Afterwards send AppendEntries messages to the followers. **)
+   ** internal log. Afterwards send AppendEntries messages to the followers.
+   ** A follower gets an request if last_log_index >= next_index for a follower **)
   Definition handle_request (slf : Rep) : Update RaftState ClientRequest DirectedMsgs :=
     fun state r =>
       if is_leader state then
@@ -633,20 +720,18 @@ Section Raft.
         | client_request c si ri cmd =>
           if (valid_session (sessions state) si) then
           let entry := [new_entry (term (current_term state)) cmd] in
-          (* create the replication messages for all leaders *)
-          let dmsgs := create_append_msg slf state entry in
-          (* apply the messages to your own log
-           * Paper missing description about how to add as a leader, current
-ly use the same fn as the followers *)
+          (* apply the messages to your own log *)
           let lli := get_last_log_index (log state) in
-          let new_state := (update_log state (append_entries2log entry lli (current_term state) state)) in
-          (Some new_state, dmsgs)
+          let s := (update_log state (append_entries2log entry lli (current_term state) state)) in
+          (* create the replication messages for all nodes *)
+          let dmsgs := mk_append_msg slf s entry in
+          (Some s, dmsgs)
           else
             (Some state, []) (* ignore the message if there is no session *)
         end
       else
       (* Some node that forwards *)
-        let msg := mk_forward_msg (leader_id state) (request_msg r) in
+        let msg := mk_forward_msg state (request_msg r) in
         (Some state, msg).
 
   (** F - Handle append entries messages which are used as heartbeat and log replication. **)
@@ -659,76 +744,42 @@ ly use the same fn as the followers *)
    ** 3.2 Apply the entries to the internal log by removing false entries and response with success and the current term **)
   Definition handle_append_entries (slf : Rep) : Update RaftState AppendEntries DirectedMsgs :=
     fun state msg =>
-      if is_leader state then (Some state, []) (* this shouldn't happen *)
-      else
-        match msg with
-        (* leader timeout reset *)
-        | heartbeat => (Some state, []) (* TODO: ignore election at the moment *)
-        (* log replication *)
-        | replicate t l lli llt ci entries =>
-          if (TermLt t (current_term state)) then
-            (* reply false if the replication term is lower than the current term *)
+      match (node_state state), msg with
+      | leader _, _ => (Some state, []) (* a leader ignores append entries messages *)
+      | _, heartbeat t l lli llt ci => (* adhere to the beat and update yourself *)
+        let s := equal_term_or_follower state t in
+        let s' := update_current_leader s (replica l) in
+        let (s'', timer) := mk_timer s' slf in
+        (Some s'', [timer]) (* we recieved a heartbeat and restart our internal interval *)
+      | _, replicate t l lli llt ci entries => (* replicate and update yourself *)
+        let s := equal_term_or_follower state t in
+        let s' := update_current_leader s (replica l) in
+        if (TermLt t (current_term state)) then
+          (* reply false if the replication term is lower than the current term *)
+          let result := append_entries_res (current_term state) false in
+          (Some state, [MkDMsg (append_entries_result_msg result) [replica l] 10])
+        else
+          if (negb (check_last_log (log state) lli llt )) then
+            (* reply false if the last log index or term does not match *)
             let result := append_entries_res (current_term state) false in
-            (Some state, [MkDMsg (append_entries_result_msg result) [replica l] 10])
+            (Some state, [MkDMsg (append_entries_result_msg result) [replica l] 20])
           else
-            if (negb (check_last_log lli llt (log state))) then
-              (* reply false if the last log index or term does not match *)
-              let result := append_entries_res (current_term state) false in
-              (Some state, [MkDMsg (append_entries_result_msg result) [replica l] 20])
-            else
-              (* handle the replication request *)
-              let new_log := append_entries2log entries lli t state in
-              let result := append_entries_res (current_term state) true in
-              let s := (update_log state new_log) in
-              let s' := (commit s ci) in
-              let s'' := (update_current_leader s' (replica l)) in
-              (Some s'', [MkDMsg (append_entries_result_msg result) [replica l] 0])
-        end.
+            (* handle the replication request *)
+            let new_log := append_entries2log entries lli t state in
+            let result := append_entries_res (current_term state) true in
+            let s := (update_log state new_log) in
+            let (s', _) := apply_to_sm s in
+            (* let s'' := (update_current_leader s' (replica l)) in *)
+            (Some s', [MkDMsg (append_entries_result_msg result) [replica l] 0])
+      end.
 
   (** L - Handle results messages from followers. **)
   Definition handle_append_entries_result (slf : Rep) : Update RaftState Result DirectedMsgs :=
     fun state r =>
-      if is_leader state then
-        (* let c := [Raftclient client] in *)
-        (* (Some state, [MkDMsg (ResponseMsg (ClientRes cmd)) c 0]) *)
-        (Some state, [])
-
-      else (Some state, []). (* this shoudln't happen *)
-
-  (*! Register some client at the network !*)
-  Definition create_register_result_msg (c : Client) (r : Result) :=
-    [MkDMsg (register_result_msg r) [client c] 0].
-
-  Definition create_broadcast_msg (slf : Rep) (b : RaftMsg) :=
-    [MkDMsg b (other_names slf) 0].
-
-  (** L _ Handle incoming new clients **)
-  (** Some client sends an empty register_client message and the leader creates a session
-   ** for this client. This session is distributed across the network.
-   **
-   ** The papers approach is to handle regiter messages like normal log replication messages.
-   ** No checks are done if the distribution was successfully since all client messages
-   ** are forwarded to the leader. So, the disribution is implemented as a showcase. **)
-  Definition handle_register (slf : Rep) : Update RaftState RegisterClient DirectedMsgs :=
-    fun state msg =>
-      if is_leader state then
-        match msg with (* we're the leader and register the client *)
-        | register_client c =>
-          let (sessions, id) := add_session (sessions state) c in
-          let s' := update_sessions state sessions in
-          let result := register_client_res true id (Some slf) in
-          let broadcast := create_broadcast_msg slf (broadcast_sessions_msg sessions) in
-          (Some s', create_register_result_msg c result ++ broadcast)
-        end
-      else
-        let forward := mk_forward_msg (leader_id state) (register_msg msg) in
-        (Some state, forward). (* forward messsage if we're not the leader *)
-
-  (** F - Handle a leader brodacast with new sessions by just replacing the own sessions. **)
-  Definition handle_sessions_broadcast (slf : Rep) : Update RaftState Sessions DirectedMsgs :=
-    fun state sessions =>
-      if is_leader state then (Some state, [])
-      else (Some (update_sessions state sessions), []).
+      match (node_state state) with
+      | leader l => (Some state, [])
+      | _ => (Some state, []) (* the results are for the leader *)
+      end.
 
   (*! maybe useless !*)
   (** Cl - A client handles the response for the register message of the client - nothing atm **)
@@ -829,6 +880,7 @@ ly use the same fn as the followers *)
       []
       []
       150
+      timer0
       timer0.
 
   (** This binding should only used for testing. **)

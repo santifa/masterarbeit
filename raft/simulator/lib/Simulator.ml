@@ -96,7 +96,7 @@ class virtual ['a, 'b, 'c, 'd] simulator c = object(self)
     (* print the messages which failed to deliver as string *)
     let s = self#msgs2string failed_to_deliver in
     (match s with
-     | "" -> ()
+     | "[]" -> ()
      | s' -> log_err "Main" ("Failed to deliver" ^ s'));
     (* print some results if the time is right *)
     (if timestamp mod period = 0 then

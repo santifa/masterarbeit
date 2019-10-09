@@ -537,12 +537,18 @@ Section RaftHeader.
   (** The first index is 1 **)
   Definition get_last_log_index (l : Log) : nat := get_last_log_index_util l 1.
 
-  (** Check if at position i the entry has the entry term "t". **)
-  Fixpoint check_last_log (i : nat) (t : Term) (l : Log) : bool :=
+  Fixpoint get_log_entry (l : Log) (i : nat) : option Entry :=
     match l with
-    | [] => true (* if the log is empty any new entry is accepted *)
+    | [] => None
+    | x :: xs => if i == 1 then Some x else get_log_entry xs (i-1)
+    end.
+
+  (** Check if at position i the entry has the entry term "t". **)
+  Fixpoint check_last_log (l : Log) (i : nat) (t : Term) : bool :=
+    match l with
+    | [] => true (* if the log is empty and a new entry is accepted *)
     | {|entry_term := t'|} :: [] => if (TermDeq t t') then true else false
-    | _ :: xs => check_last_log (i - 1) t xs
+    | _ :: xs => check_last_log xs (i - 1) t 
     end.
 
   (** Take e elements from the log. Start from the end of the list. **)
@@ -580,7 +586,8 @@ Section RaftHeader.
    ** the last used index number and it's term number. At last the leaders last known
    ** index used and the list of entries to replicate. **)
   Inductive AppendEntries :=
-  | heartbeat
+  | heartbeat (term : Term) (leader : Rep) (last_log_index : nat)
+              (last_log_term : nat) (commit_index : nat)
   | replicate (term : Term) (leader : Rep) (last_log_index : nat)
               (last_log_term : Term) (commit_index : nat) (entry : list Entry).
 

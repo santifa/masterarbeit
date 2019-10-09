@@ -21,7 +21,7 @@ pbft: general pbft-ext PbftReplica.native PbftClient.native RsaKey.native PbftSi
 
 raft: general raft-ext general raft-tests raft-demonstrations
 
-raft-tests: RaftTest.native
+raft-tests: RaftTest.native RaftTestInit.native
 
 raft-demonstrations: RaftClient.native RaftSimul.native RaftReplica.native
 
@@ -33,9 +33,13 @@ sim-ext: Simulator.v
 
 pb-ext: sim-ext
 	coqc $(COQ_PATH) pb/PbSim.v
+	mv PbReplicaEx.ml pb/
+	mv PbReplicaEx.mli pb/
 
 raft-ext: sim-ext
 	coqc $(COQ_PATH) raft/RaftSim.v
+	mv RaftReplicaEx.ml raft/
+	mv RaftReplicaEx.mli raft/
 
 pbft-ext: sim-ext
 	coqc $(COQ_PATH) pbft/PBFTsim.v
@@ -61,6 +65,12 @@ RaftSimul.native: raft/RaftSimul.ml
 
 RaftTest.native: raft/RaftTest.ml
 	$(OCB) RaftTest.native
+
+RaftTestInit.native: raft/RaftTestInit.ml
+	$(OCB) RaftTestInit.native
+
+RaftTestElection.native: raft/RaftTestElection.ml
+	$(OCB) RaftTestElection.native
 
 ### pbft ###
 PbftReplica.native:
@@ -105,6 +115,19 @@ cleano:
 	rm -Rf _build
 
 clean:
+	rm -f *.cmo
+	rm -f *.cmi
+	rm -f *.cma
+	rm -f *.native
+	rm -f *.byte
+	rm -f a.out
+	rm -Rf _build
+	rm -f *.glob
+	rm -f *.vo
+	rm -f .*.aux
+	rm -f *.dat
+
+cleana:
 	rm -f *.cmo
 	rm -f *.cmi
 	rm -f *.cma

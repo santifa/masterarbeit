@@ -134,9 +134,9 @@ Section RaftInstance.
   Definition l2 : Log := [new_entry (term 0) 0, new_entry (term 1) 3].
   Compute(get_last_log_term l).
   Compute (get_last_log_index l2).
-  Compute (check_last_log 2 (term 1) l).
-  Compute (check_last_log 1 (term 0) []).
-  Compute (check_last_log 3 (term 2) l).
+  (* Compute (check_last_log l 2 (term 1)). *)
+  Compute (check_last_log [] 1 (term 0)).
+  Compute (check_last_log l 3 (term 2)).
   Compute (take_from_log 0 l).
   Compute (take_from_log 1 l).
 
@@ -291,10 +291,13 @@ Section RaftInstance.
 
   Definition append_entries2string (a : AppendEntries) : string :=
     match a with
-    | heartbeat => "Heartbeat"
-    | replicate t r lli llt ci e =>
+    | heartbeat t l lli llt ci =>
+      record_concat "Heartbeat"
+                    [term2string t, replica2string l, last_log_index2string lli,
+                     last_log_term2string llt, commit_index2string ci]
+    | replicate t l lli llt ci e =>
       record_concat "Replicate"
-                    [term2string t, replica2string r, last_log_index2string lli,
+                    [term2string t, replica2string l, last_log_index2string lli,
                      last_log_term2string llt, commit_index2string ci, entries2string e]
     end.
 
@@ -373,9 +376,7 @@ Section RaftInstance.
     end.
 
   Definition DirectedMsgs2string (l : DirectedMsgs) : string :=
-    str_concat ["Dmsgs: ", list2string l DirectedMsg2string].
-
-
+    list2string l DirectedMsg2string.
 
   Definition TimedDirectedMsg2string (m : TimedDirectedMsg) : string :=
     match m with
@@ -383,7 +384,7 @@ Section RaftInstance.
     end.
 
   Definition TimedDirectedMsgs2string (l : TimedDirectedMsgs) :=
-    str_concat ["Tdmsgs: ", list2string l TimedDirectedMsg2string].
+    list2string l TimedDirectedMsg2string.
 
   (*   Definition MonoSimulationState2string (s : MonoSimulationState) : string := *)
 (*     match s with *)
