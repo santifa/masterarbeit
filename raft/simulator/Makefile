@@ -11,7 +11,7 @@ OCB = ocamlbuild $(OCB_FLAGS)
 # coq flags
 COQ_PATH = -R ../coq-tools Tools -R ../velisarios Velisarios -R ../protocols Protocols -R . Simulator
 
-LIB=$(lib/%.ml)
+LIB = $(lib/%.ml)
 
 default: general raft
 
@@ -21,7 +21,7 @@ pbft: general pbft-ext PbftReplica.native PbftClient.native RsaKey.native PbftSi
 
 raft: general raft-ext general raft-tests raft-demonstrations
 
-raft-tests: RaftTest.native RaftTestInit.native
+raft-tests: RaftTest.native RaftTestInit.native RaftTestElection.native
 
 raft-demonstrations: RaftClient.native RaftSimul.native RaftReplica.native
 
@@ -101,9 +101,6 @@ sext:
 	(cd ..; make PBFT/PBFTcollision_resistant.vo)
 	coqc -R ../coq-tools util -R ../model model -R ../PBFT PBFT -R ../PrimaryBackup PrimaryBackup -R ../runtime runtime -R ../TwoThirds TwoThirds Simulator.v
 	coqc -R ../coq-tools util -R ../model model -R ../PBFT PBFT -R ../PrimaryBackup PrimaryBackup -R ../runtime runtime -R ../TwoThirds TwoThirds PBFTsim_mac.v
-
-oldext:
-	coqc -R ../coq-tools util -R ../model model -R ../PBFT PBFT -R ../PrimaryBackup PrimaryBackup -R ../runtime runtime -R ../TwoThirds TwoThirds PBFTsim.v
 
 cleano:
 	rm -f *.cmo

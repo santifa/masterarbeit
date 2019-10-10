@@ -23,8 +23,9 @@ let rec reorder (msgs : directedMsgs) : directedMsgs =
   match msgs with
   | [] -> []
   | x :: xs ->
-    match (Obj.magic x.dmMsg)with
-    | Timer_msg _ -> xs @ [x]
+    match (Obj.magic x.dmMsg), (Obj.magic x.dmDelay) with
+    | Timer_msg _, 50 -> xs (* loose the leader timer *)
+    | Timer_msg _, _ -> xs @ [x]
     | _ -> x :: reorder xs
 
 let mk_init n =

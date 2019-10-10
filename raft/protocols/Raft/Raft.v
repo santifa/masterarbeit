@@ -603,8 +603,8 @@ Section Raft.
         else
           let s' := equal_term_or_follower s t in (* check and advance the current term *)
           (* return false if there is some current leader *)
-          if andb (if leader_id state then false else true) 
-                  (check_last_log (log state) lli llt ) then
+          if andb (if leader_id s' then false else true) 
+                  (check_last_log (log s') lli llt ) then
             match voted_for s' with
             | None =>
               let s'' := update_voted_for s' (Some (replica candi)) in
