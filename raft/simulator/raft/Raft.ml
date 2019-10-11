@@ -24,15 +24,11 @@ let to_leader n =
   let timer = Timer_msg timer0 in
   let (node', d) = lrun_sm  node (Obj.magic timer) in
   log_msgs "Leader" (msgs2string d);
-  (* let msg = { dmMsg = Obj.magic timer; dmDst = [d]; dmDelay = 0 } in *)
   ({ id = Obj.magic (Replica (Obj.magic n)); replica = node' }, d)
 
 (* create a normal node without any initialization *)
 let to_replica n =
   let node = local_replica (Obj.magic n) in
-  (* let init = Init_msg (rand n) in
-   * let (node', d) = lrun_sm (node (Obj.magic n)) (Obj.magic init) in
-   * log_msgs "Main" (msgs2string d); *)
   { id = Obj.magic (Replica (Obj.magic n)); replica = node }
 
 let mk_init n =
@@ -43,8 +39,6 @@ let mk_init n =
 let to_replica_w_init n =
   let node = local_replica (Obj.magic n) in
   let init = mk_init n in
-  (* let (node', d) = lrun_sm node (Obj.magic init) in *)
-  (* log_msgs "Main" (msgs2string d); *)
   ({ id = Obj.magic (Replica (Obj.magic n)); replica = node }, [init])
 
 (* test if the first message is a client message *)

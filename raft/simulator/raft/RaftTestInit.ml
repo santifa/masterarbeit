@@ -6,6 +6,14 @@ open Core
 open Test
 open Raft
 (* test the boot up of the system and the first leader election*)
+let max_rounds = 4
+let rounds = ref 0
+
+let new_round dm =
+  match (Obj.magic dm.dmMsg) with
+  | Append_entries_msg (Heartbeat (_, _, _, _, _)) ->
+    rounds := !rounds + 1
+  | _ -> ()
 
 (* reorder the queue that timer messages put to the back *)
 let rec reorder (msgs : directedMsgs) : directedMsgs =
@@ -51,33 +59,38 @@ class ['a, 'b, 'c, 'd] raft c t = object(self)
     (* restart loop if there a no destinations *)
     | [] -> self#run_replicas dms
     | id :: ids ->
-      log_msgs "Procesing" (self#msgs2string [dm]) (* ((print_dmsgs [dm]) "") *);
-      (* create a new message without the taken id *)
-      let dm' = self#change_dst dm ids (* { dmMsg = dm.dmMsg; dmDst = ids; dmDelay = dm.dmDelay } *) in
-      (* find the replica mathing the id *)
-      match replicas#find_replica id with
-      | None ->
-        let failed_to_deliver = self#change_dst dm [id] in
-        let resp = self#get_response [failed_to_deliver] in
-        (* requeue message which failed to deliver ? *)
-        let (response, failed) = self#run_replicas (dm' :: dms) in
-        (match resp with
-         | None -> (response, failed_to_deliver :: failed)
-         | Some resp' -> (resp' :: response, failed))
+      new_round dm;
+      let is_last_round = (!rounds / 3) in
+      if max_rounds <= is_last_round then
+        ([], [])
+      else begin
+        log_msgs "Procesing" (self#msgs2string [dm]) (* ((print_dmsgs [dm]) "") *);
+        (* create a new message without the taken id *)
+        let dm' = self#change_dst dm ids (* { dmMsg = dm.dmMsg; dmDst = ids; dmDelay = dm.dmDelay } *) in
+        (* find the replica mathing the id *)
+        match replicas#find_replica id with
+        | None ->
+          let failed_to_deliver = self#change_dst dm [id] in
+          let resp = self#get_response [failed_to_deliver] in
+          (* requeue message which failed to deliver ? *)
+          let (response, failed) = self#run_replicas (dm' :: dms) in
+          (match resp with
+           | None -> (response, failed_to_deliver :: failed)
+           | Some resp' -> (resp' :: response, failed))
 
-      | Some rep ->
-        (* we have found the replica *)
-        (* run the state machine on the message input *)
-        let (rep',dmsgs) = lrun_sm rep.replica (Obj.magic dm.dmMsg) in
-        (* *          let (rep',dmsgs) = self#run_sm dm rep (* (Obj.magic dm.dmMsg) *) in *)
-        log_state (coq2string (name2string id)) (coq2string (state2string rep'.sm_state));
-        replicas#replace_replica id rep';
-        (* (message without current replica) :: (next messages) @ (newly created messages) *)
-        let f' = reorder (dmsgs @ dm' :: dms) in
-        let (response, failed) = self#run_replicas f' in
-        (response, failed)
+        | Some rep ->
+          (* we have found the replica *)
+          (* run the state machine on the message input *)
+          let (rep',dmsgs) = lrun_sm rep.replica (Obj.magic dm.dmMsg) in
+          (* *          let (rep',dmsgs) = self#run_sm dm rep (* (Obj.magic dm.dmMsg) *) in *)
+          log_state (coq2string (name2string id)) (coq2string (state2string rep'.sm_state));
+          replicas#replace_replica id rep';
+          (* (message without current replica) :: (next messages) @ (newly created messages) *)
+          let f' = reorder (dmsgs @ dm' :: dms) in
+          let (response, failed) = self#run_replicas f' in
+          (response, failed)
+      end
 end
-
 (* This runs forever so run with $ ... | head -n 100 to see the heartbeat *)
 let init (responses : directedMsgs) : directedMsgs =
   match responses with
