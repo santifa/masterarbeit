@@ -32,7 +32,7 @@ and evaluation of the protocol and the second part is about the writing needed f
 
 The parts are partly filled with things left undone or workarounds and hints.
 
-*** Implementation [2/7]
+*** Implementation [4/10]
 
 The implementation is growing and all todo's are already touched but
 most part has to be finalized. The exceptions are leader election and benchmarking/evaluation.
@@ -50,7 +50,8 @@ the log replication and the third the safety properties. The last part is not to
      Velisarios is added as submodule for reference but is copied into
      the raft directory for development.
 
-**** TODO Leader Election [5/5]
+**** DONE Leader Election [5/5]
+     CLOSED: [2019-10-14 Mo 13:42]
 
      The parts can be viewed by running RaftTestInit and RaftTestElection.
      Undone are Cluster membership changes, Leadership transfer extension
@@ -72,13 +73,16 @@ the log replication and the third the safety properties. The last part is not to
       CLOSED: [2019-10-14 Mo 12:55]
 
 ***** DONE Heartbeat
+      The heartbeat is send every time and no differentiation between
+      normal append entry messages and heartbeat messages is done.
+
 
 **** TODO Log replication [1/4]
 
      This parts can be viewed by running RaftTest.
      Undone are Log compaction, read-only queries
 
-***** DONE issue replicate to other nodes log
+***** DONE issue replicate to other nodes log and handle replicate messages
 
 ***** TODO handle replicate response
 
@@ -94,10 +98,23 @@ the log replication and the third the safety properties. The last part is not to
      The paper proposes that nodes reject messages from 
      client with hints to the current leader.
 
+**** DONE Client registering
+     CLOSED: [2019-10-14 Mo 15:50]
+
+     A client opens a session. A session is hold as long as the system runs.
+
 **** TODO Client request caching
+     The already processed requests are fetched.
 
 **** TODO Message queue handling
-partialy
+     partialy
+
+**** TODO resend messages
+
+     Messsages which gets no repsonds after time t
+     gets resend indefinitly.
+     Replicate and RequestVote gets resend.
+     
 
 **** TODO Testing [2/7]
 partialy, currently only the simulator with test changed by hand
@@ -124,12 +141,9 @@ partialy, currently only the simulator with test changed by hand
 
 ***** TODO find more ideas
 
-
-
-
 *** Writing [3/9]
 
-This first attempt was done in german.
+    The first attempt was done in german.
 
 **** DONE Latex setup
      CLOSED: [2019-09-23 Mo 10:48]

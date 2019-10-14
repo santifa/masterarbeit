@@ -328,7 +328,7 @@ Section RaftHeader.
   (** This implementation keeps sessions until the network restarts.
    ** A session is a tuple of some proposed id, the corresponding clien (maybe useless)
    ** and the last issued request id. The request ids are incremented monotonically. **)
-  Notation Sessions := (list (SessionId * Client * RequestId)).
+  Notation Sessions := (list (SessionId * Client)).
 
   (** Return the las found session if some **)
   Fixpoint get_last_session (s : Sessions) :=
@@ -342,18 +342,18 @@ Section RaftHeader.
     let session := get_last_session s in
     match session with
     | None => session_id0
-    | Some (si, _, _) => si
+    | Some (si, _) => si
     end.
 
   (** Register some client **)
   Definition add_session (s : Sessions) (c : Client) : (Sessions * SessionId) :=
     let si := next_session_id (last_session_id s) in
-    ((si, c, request_id0) :: s, si).
+    ((si, c) :: s, si).
 
   Fixpoint get_session (s : Sessions) (i : SessionId) :=
     match s with
     | [] => None
-    | (si, _, _) as x :: xs => if (SessionIdDeq si i) then Some x else get_session xs i
+    | (si, _) as x :: xs => if (SessionIdDeq si i) then Some x else get_session xs i
     end.
 
   (** Check if a session is valid. **)
@@ -363,24 +363,48 @@ Section RaftHeader.
     | Some _ => true
     end.
 
+  (*! Cache results !*)
+  (** The cache handles two issues.
+   ** First a client request is not duplicated, since all successfull requests are
+   ** entered in the cache and the lookup of old request is faster. **)
+  Record Cache :=
+    Build_Cache
+      {
+        id : SessionId;
+        rid : RequestId;
+        result : RaftSM_result;
+      }.
+
+
+  (** An entry is added to the cache, if the request is already in should be checked beforehand. **)
+  Definition add2cache (c : list Cache) (sid : SessionId)
+             (rid : RequestId) (r : RaftSM_result) : list Cache :=
+    let entry := Build_Cache sid rid r in
+    entry :: c.
+
   (** returns wether the request id was already processed or not.
    ** The implementation returns None, if no session is found,
-   ** false if not processed, true if processed**)
-  Definition already_processed_request (s : Sessions) (si : SessionId) (ri : RequestId) : option bool :=
-    match get_session s si with
-    | None => None
-    | Some (_, _, ri') => if RequestIdDeq ri ri' then Some true else Some false
+   ** none if not processed, some result if processed**)
+  Fixpoint processed_request (c : list Cache) (si : SessionId) (ri : RequestId) : option RaftSM_result :=
+    match c with
+    | [] => None
+    | c' :: cs =>
+      let si' := id c' in
+      let ri' := rid c' in
+      if (SessionIdDeq si si')
+      then if (RequestIdDeq ri ri') then Some (result c') else processed_request cs si ri
+      else processed_request cs si ri
     end.
 
   (** If a new request is processed, increment the request id.
    ** We assume that request ids are incremented monotonically on booth sides. **)
-  Fixpoint increase_request_id (s : Sessions) (si : SessionId) : Sessions :=
-    match s with
-    | [] => s (* do nothing if session not found *)
-    | (si', c, ri) as x :: xs => if SessionIdDeq si si'
-                              then (si', c, next_request_id ri) :: xs
-                              else x :: increase_request_id xs si
-    end.
+  (* Fixpoint increase_request_id (s : Sessions) (si : SessionId) : Sessions := *)
+  (*   match s with *)
+  (*   | [] => s (* do nothing if session not found *) *)
+  (*   | (si', c, ri) as x :: xs => if SessionIdDeq si si' *)
+  (*                             then (si', c, next_request_id ri) :: xs *)
+  (*                             else x :: increase_request_id xs si *)
+  (*   end. *)
 
   (*! Terms and progress !*)
   (** Within this protocol the global time is divided into chunks called terms.
@@ -548,7 +572,7 @@ Section RaftHeader.
     match l with
     | [] => true (* if the log is empty and a new entry is accepted *)
     | {|entry_term := t'|} :: [] => if (TermDeq t t') then true else false
-    | _ :: xs => check_last_log xs (i - 1) t 
+    | _ :: xs => check_last_log xs (i - 1) t
     end.
 
   (** Take e elements from the log. Start from the end of the list. **)
@@ -602,7 +626,7 @@ Section RaftHeader.
   (** The result type provides the different results used within the protocol. **)
   Inductive Result :=
   (** The leader sends the client the response if his state machine. **)
-  | client_res (result : nat)
+  | client_res (result : RaftSM_result)
   (** The follower responses to the leader if the issued requests succeds and
    ** the current term to update the leader. **)
   | append_entries_res (term : Term) (success : bool)
@@ -692,4 +716,3 @@ Section RaftHeader.
   Global Instance Raft_I_get_msg_status : MsgStatus := MkMsgStatus Raftmsg2status.
 
 End RaftHeader.
-
