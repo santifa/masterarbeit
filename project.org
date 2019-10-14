@@ -30,40 +30,76 @@ correctness proofs are left out and the usage in the real world is left for the 
 The thesis milestones are split into two parts. The first parts deals with the implementation
 and evaluation of the protocol and the second part is about the writing needed for a master thesis.
 
+The parts are partly filled with things left undone or workarounds and hints.
+
 *** Implementation [2/7]
 
 The implementation is growing and all todo's are already touched but
-most part has to be finalized. The exceptions are leader election and benchmarking.
+most part has to be finalized. The exceptions are leader election and benchmarking/evaluation.
+
+The raft protocol is split into three parts. The first part is the leader election, the second
+the log replication and the third the safety properties. The last part is not touched by this thesis.
 
 **** DONE Basic setup 
      CLOSED: [2019-09-23 Mo 10:41]
 
-**** TODO Leader Election [/]
+     There are two main parts: 
+     The latex directory for the writting stuff and the raft directory
+     for the implementation.
      
+     Velisarios is added as submodule for reference but is copied into
+     the raft directory for development.
+
+**** TODO Leader Election [5/5]
+
+     The parts can be viewed by running RaftTestInit and RaftTestElection.
+     Undone are Cluster membership changes, Leadership transfer extension
+
+
+***** DONE state transitions (follower, leader, candidate)
+
+***** DONE Term handling
+
 ***** DONE init and timer msg
+      
+      The init messages are added to the protocol to provide a system boot.
 
-***** DONE issue request votes
+***** DONE issue request vote
 
-***** DONE handle request votes
+***** DONE handle request vote
 
-***** TODO handle responses
+***** DONE handle request vote responses
+      CLOSED: [2019-10-14 Mo 12:55]
 
-**** TODO Log replication [/]
-partialy done
+***** DONE Heartbeat
 
-***** DONE replicate to other nodes log
+**** TODO Log replication [1/4]
 
-***** TODO commit to internal state machine
+     This parts can be viewed by running RaftTest.
+     Undone are Log compaction, read-only queries
 
-***** DONE response to client
+***** DONE issue replicate to other nodes log
+
+***** TODO handle replicate response
+
+***** TODO commit to leaders internal state machine
+
+***** TODO commit to others internal state machines
+
+***** TODO response to client
 
 **** DONE Internal forwarding
      CLOSED: [2019-09-23 Mo 10:47]
+     
+     The paper proposes that nodes reject messages from 
+     client with hints to the current leader.
+
+**** TODO Client request caching
 
 **** TODO Message queue handling
 partialy
 
-**** TODO Testing [/]
+**** TODO Testing [2/7]
 partialy, currently only the simulator with test changed by hand
 
 ***** DONE lib/Simulator.ml, provide general simulator handling
@@ -74,6 +110,12 @@ partialy, currently only the simulator with test changed by hand
 
 ***** TODO lib/Server.ml, provide a general protocol server
 
+***** TODO Test split election
+
+***** TODO Test reeletion
+
+***** TODO Test normal election + heartbeat
+
 **** TODO Benchmarking Ideas [/]
 
 ***** TODO implement same sm as pbft
@@ -82,18 +124,24 @@ partialy, currently only the simulator with test changed by hand
 
 ***** TODO find more ideas
 
-*** Writing [1/8]
+
+
+
+*** Writing [3/9]
 
 This first attempt was done in german.
-
 
 **** DONE Latex setup
      CLOSED: [2019-09-23 Mo 10:48]
 
-**** TODO change setup to english
+**** DONE change setup to english
+     CLOSED: [2019-10-14 Mo 13:33]
 
-**** TODO TOC
-in german
+**** DONE TOC
+     CLOSED: [2019-10-14 Mo 13:34]
+     
+     This means the abitrary parts of the document.
+     Table of figures, abbreviations etc.
 
 **** TODO introduction
 in german
@@ -108,5 +156,16 @@ in german
 **** TODO evaluation
 
 **** TODO conclusion and further steps
+
+*** Other Ideas
+
+    Maybe use the c3p auditorium for a presentation about consensus protocols and
+    proved programming. The COQ Ocaml Interface.
+
+
+
+
+
+
 
 
