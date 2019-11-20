@@ -8,39 +8,95 @@ A distributed system is one in which the failure of a computer you didn't even
 know existed can render your own computer unusable. - Leslie Lamport
 \end{quote}
 
-In der modernen Welt sind Computer allgegenwärtig und mit den Entwicklungen
-der letzten 20 Jahre haben Netzwerke von Computern eine immer wichtigere Rolle
-für die Entwicklung der Menschheit gespielt. Sie ermöglichen physikalische
-Limitierung der Ressourcen eines Computers aufzuweichen durch Bündelung
-mehrerer Computer zu einem Virtuellen. Verteilte Systeme die sich einem Nutzer
-als ein koheräntes System darstellen, sind in vielen Anwendungsfällen essential
-für moderne Softwareanwendungen geworden, zum Beispiel Datenbanken die
-auf mehrere Computer verteilt sind. Solche verteilten Systeme ermöglichen
-es das Ausfälle einzelner Teilnehmer keinen Einfluss auf das Gesamtsystem haben,
-solange noch genügend Teilnehmer verbleiben. Solche Ausfälle können nicht nur
-durch dne Ausfall eines Computer entstehen, auch Netzwerkverbindungen können
-ausfallen oder extrem langsam sein. Damit Informationen zwischen den
-Instanzen gleich sind wurden Protokolle entwickelt, die auf die speziellen
-Gegebenheiten angepasst sind.
+Since the begin of the last century the pace of societies development increases
+at an ever increasing speed. Due to, upcoming of modern technology and computer
+systems after the second world war. Computer systems started out as single
+mounstrous machines operated by a hand-full of designated scientists on
+their own. At the late 60s the Arpanet tries to connect all these individual
+machines building computational networks of mainframes. Since then the
+modern computer systems changed. Their becoming cheaper and more powerfull
+by introducing multicore CPUs and a whole loot of other technologies.
+A modern desktop computer systems beats an old mainframe by computational power,
+space and pricing by orders of magnitude. Also, pluggable small computers
+find their way to markets offering low costs and a near desktop like experience.
+The networks between computers increased either way by performance and
+networking.
 
-Solche Protokolle sind bekanntermaßen schwer zu implementieren und stellen
-die Entwickler vor die Herausforderung wie man sie testet. Da sie darauf
-basieren, dass Teile eines verteilten Systems unerwartet ausfallen können,
-ist die Anzahl der Möglichen Fehler extrem Groß und schwer in definierten
-Umgebungen zu replizieren. Auch die Verifikation gestaltet sich als
-schwierig, da viele Interaktionen statt finden und keine zeitliche
-Kausalität angenommen werden kann.
+These two developments (networking and performance) makes it inevitable
+to build modern systems out of multiple larger and not so large computer
+systems connected by high-speed connections. Since these networks are fast
+enough there is no need for the computer system to be at the same geographically
+position. Computers building such a network are called distributed systems
+which scale from a hand-full of systems to thousands of computing devices. 
+Andrew S. Tanenbaum and Maarten van Steen described such a systems as:
 
-Mit Hilfe von Theorembeweisern und formalen Methoden der Theoretischen
-Informatik ist es Möglich Teile der Mathematik zu formalisieren und
-diese zur Verifikation von formalisierten Algorithmen zu verwenden.
-Die ``Logic of Events'' ist eine mathematische Theorie, um Protokolle
-in verteilten Systemen zu beschreiben.
-Die Theorie wurde in der Programmiersprache EventML umgesetzt, welches eine
-ML-Dialekt ist. sie besitzt eine Schnittstelle zu NUPRL, einem Theorembeweiser,
-um Eigenschaften verteilter Protokolle formal zu beweisen.
-Außerdem ist es mit EventML möglich ausführbare Programme zu erzeugen und
-diese auch in Simulationen zu testen und genauer zu untersuchen.
+\begin{quote}
+  A distributed system is a collection of autonomous computing elements
+  that appears to its users as a single coherent system.~\cite{tanenbaum2017distributed}
+\end{quote}
+
+From this weak specification follows that a distributed system is not a fixed
+number of computing devices but a highly dynamic system where computers can
+join, leave or fail and the topology and the network connections can change.
+Each system is able to behave independently from all other systems in limited
+ways and at every moment a user interacts with this system as if it were one.
+
+These two main aspects implies the need for abstracting away common components
+of a distributed system in a transparent way. Distributed systems shall be
+geographically divers, speed up computations through the amount of nodes,
+handle ressource sharing within the network and be fault-tolerant in limited
+ways.
+
+But why build such complex systems which scale from a single computer system
+to thousands of nodes? There is a wide range of applications which are used in
+everyday life ranging from data intensive to computational intensive
+applications. For example modern weather forecasting uses multiple complex
+models to describe and compute the possible weather for the next days.
+Banking software should run reliable across all bank branches, ATMs and
+online banking systems. Industry plants uses geographically dispersed
+controllers and sensors to collect data and regulate the plant.
+The SETI project utilized millions of computer systems to search for
+extra-terrestrial life. Also, the CERN integrates computer system from
+all over the world to analyse the data produced by the accelerator and
+collider to answer fundamental questions in science.~\cite{ghosh2014distributed}
+These are just a few examples and can be easily extendend by numerous
+more applications and possible future applications.
+
+
+
+% In der modernen Welt sind Computer allgegenwärtig und mit den Entwicklungen
+% der letzten 20 Jahre haben Netzwerke von Computern eine immer wichtigere Rolle
+% für die Entwicklung der Menschheit gespielt. Sie ermöglichen physikalische
+% Limitierung der Ressourcen eines Computers aufzuweichen durch Bündelung
+% mehrerer Computer zu einem Virtuellen. Verteilte Systeme die sich einem Nutzer
+% als ein koheräntes System darstellen, sind in vielen Anwendungsfällen essential
+% für moderne Softwareanwendungen geworden, zum Beispiel Datenbanken die
+% auf mehrere Computer verteilt sind. Solche verteilten Systeme ermöglichen
+% es das Ausfälle einzelner Teilnehmer keinen Einfluss auf das Gesamtsystem haben,
+% solange noch genügend Teilnehmer verbleiben. Solche Ausfälle können nicht nur
+% durch dne Ausfall eines Computer entstehen, auch Netzwerkverbindungen können
+% ausfallen oder extrem langsam sein. Damit Informationen zwischen den
+% Instanzen gleich sind wurden Protokolle entwickelt, die auf die speziellen
+% Gegebenheiten angepasst sind.
+
+% Solche Protokolle sind bekanntermaßen schwer zu implementieren und stellen
+% die Entwickler vor die Herausforderung wie man sie testet. Da sie darauf
+% basieren, dass Teile eines verteilten Systems unerwartet ausfallen können,
+% ist die Anzahl der Möglichen Fehler extrem Groß und schwer in definierten
+% Umgebungen zu replizieren. Auch die Verifikation gestaltet sich als
+% schwierig, da viele Interaktionen statt finden und keine zeitliche
+% Kausalität angenommen werden kann.
+
+% Mit Hilfe von Theorembeweisern und formalen Methoden der Theoretischen
+% Informatik ist es Möglich Teile der Mathematik zu formalisieren und
+% diese zur Verifikation von formalisierten Algorithmen zu verwenden.
+% Die ``Logic of Events'' ist eine mathematische Theorie, um Protokolle
+% in verteilten Systemen zu beschreiben.
+% Die Theorie wurde in der Programmiersprache EventML umgesetzt, welches eine
+% ML-Dialekt ist. sie besitzt eine Schnittstelle zu NUPRL, einem Theorembeweiser,
+% um Eigenschaften verteilter Protokolle formal zu beweisen.
+% Außerdem ist es mit EventML möglich ausführbare Programme zu erzeugen und
+% diese auch in Simulationen zu testen und genauer zu untersuchen.
 
 %Forschungsfragen:
 In dieser Arbeit werden die folgenden Forschungsfragen erörtert:

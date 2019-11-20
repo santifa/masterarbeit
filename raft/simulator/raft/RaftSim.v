@@ -14,7 +14,7 @@ Section RaftInstance.
 
   (*! notations !*)
   Notation Log := (list Entry).
-  Notation Sessions := (list (SessionId * Client * RequestId)).
+  Notation Sessions := (list (SessionId * Client)).
 
   (* ================== TIME ================== *)
   (*! Define timing stuff !*)
@@ -248,10 +248,10 @@ Section RaftInstance.
     | request_id i => number2string "Request" i
     end.
 
-  Definition session2string (s : (SessionId * Client * RequestId)) : string :=
+  Definition session2string (s : (SessionId * Client)) : string :=
     match s with
-    | (sid, c, ri) => record_concat "Session"
-                               [session_id2string sid, client2string c, request_id2string ri]
+    | (sid, c) => record_concat "Session"
+                               [session_id2string sid, client2string c]
     end.
 
   Definition register_client2string (r : RegisterClient) :=
@@ -317,10 +317,10 @@ Section RaftInstance.
 
   Definition result2string (r : Result) : string :=
     match r with
-    | client_res res => number2string "ClientResult" res
-    | append_entries_res t s =>
+    | client_res staus res => number2string "ClientResult" res
+    | append_entries_res t status s =>
       record_concat "AppendEntriesResult"
-                    [str_concat ["Success: ", bool2string s], term2string t]
+                    [str_concat ["Success: ", bool2string status], term2string t]
     | request_vote_res t v =>
       record_concat "RequestVoteResult"
                     [str_concat ["Vote_granted: ", bool2string v], term2string t]
@@ -595,6 +595,8 @@ Extract Inlined Constant nat2string    => "Prelude.char_list_of_int".
 
 (* numbers *)
 Extract Inlined Constant Nat.modulo    => "(mod)".
+Extract Inlined Constant random_init => "Random.init"
+Extract Inlined Constant random => "Random.int"
 
 (* lists *)
 Extract Inlined Constant forallb => "List.for_all".

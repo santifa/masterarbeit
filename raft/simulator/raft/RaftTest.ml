@@ -18,7 +18,7 @@ class ['a, 'b, 'c, 'd] raft c t = object(self)
 
   method get_dsts dm = dm.dmDst
 
-  method change_dst dm ids = 
+  method change_dst dm ids =
     { dmMsg = dm.dmMsg; dmDst = ids; dmDelay = dm.dmDelay }
 
   method msgs2string (msgs : directedMsgs) : string = msgs2string msgs
@@ -40,7 +40,7 @@ let test_register (responses : directedMsgs) : directedMsgs =
     | Append_entries_msg (Heartbeat (_, _, _, _, _)) ->
       let dest = [Obj.magic (Replica (Obj.magic 0))] in
       let register = Register_msg (Obj.magic 0) in
-      ({ dmMsg = Obj.magic register; dmDst = dest; dmDelay = 0 } :: []) 
+      ({ dmMsg = Obj.magic register; dmDst = dest; dmDelay = 0 } :: [])
     | _ -> log_test_failed "Wrong response" ""; []
 
 let request s = Client_request ((Obj.magic 0), (Obj.magic s), (Obj.magic 1), (Obj.magic 1))
@@ -70,6 +70,8 @@ let test_replication (responses : directedMsgs) : directedMsgs =
         let dest = [Obj.magic l] in
         msgs @ ({ dmMsg = Obj.magic request_msg; dmDst = dest; dmDelay = 0 } :: [])
       end else begin log_test_failed "Registering failed" ""; [] end
+    | Register_result_msg (Client_res (r, s)) ->
+      log_test_success ("Result is " ^ (Int.to_string (Obj.magic s))); []
     | _ -> log_test_failed "Request failed" ""; []
 
 let _ =

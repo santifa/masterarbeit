@@ -35,6 +35,7 @@ eine frühere Fertigstellung wird angestrebt.
 
 *** TODO Einleitung neu schreiben
     SCHEDULED: <2019-04-25 Do>
+
     Bezug auf Vereteilte System und Wichtigkeit dieser.
     Schwierigkeiten bei der Implementierung, Verweis auf RAFT Argumente
 *** Zeitraum <2019-04-25 Do>--<2019-09-30 Mo>

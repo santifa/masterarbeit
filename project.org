@@ -56,7 +56,6 @@ the log replication and the third the safety properties. The last part is not to
      The parts can be viewed by running RaftTestInit and RaftTestElection.
      Undone are Cluster membership changes, Leadership transfer extension
 
-
 ***** DONE state transitions (follower, leader, candidate)
 
 ***** DONE Term handling
@@ -102,6 +101,8 @@ the log replication and the third the safety properties. The last part is not to
      CLOSED: [2019-10-14 Mo 15:50]
 
      A client opens a session. A session is hold as long as the system runs.
+     A special broadcast message is used, the paper propeses that appendentry calls are used,
+     to replicate the sessions across the network.
 
 **** TODO Client request caching
      The already processed requests are fetched.
