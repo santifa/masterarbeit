@@ -62,6 +62,47 @@ collider to answer fundamental questions in science.~\cite{ghosh2014distributed}
 These are just a few examples and can be easily extendend by numerous
 more applications and possible future applications.
 
+The state of the art technique to build such complex system that can
+tolerate arbitrary faults is to use byzantine fault-tolerant state-machine
+replication. With this technique every service can be modelled as a
+set of services which replicate the whole systems state across all
+nodes. Faulty replicas are masked behind a set of healthy replicas
+which are operating in consensus.~\cite{rahli2018velisarios}
+
+Most consensus protocols to build distributed systems are derived from
+the original Paxos protocol from Leslie Lamport~\cite{lamport2001paxos}
+which tend to be quite complex and only informal
+described.~\cite{ongaro2014search}
+As competitor RAFT was introduced which follows an approach to be
+easy to understand and therefore easier to implement.
+
+Yet building such systems is a tedious and error prone process and
+as mentioned by~\cite{dragoi2015need} most of these systems are only
+described in pseudo-code or formal but without executable code.
+Due to the heavy parallel thinking required to build distributed
+systems and the mostly informal reasoning makes the process quite
+complex, expensive and time-consuming.
+
+To tackle these problems and provide guarantees for the correctness and
+security of the code one should use the highest standards known to mankind
+today. That is, that one should prove the correctness of the formal specification and
+through checking and refining the specification by a machine which produces
+executable code, a correct and safe distributed system is modelled.~\cite{rahli2018velisarios}
+
+Vincent Rahli et al. build a framework for the COQ theorem-prover
+to model these complex systems which provides formal knowledge about distributed
+systems. Using this framework this master thesis tries to implement
+the basic RAFT consensus algorithm and compares it to the PBFT implementation
+done by Vincent Rahli et al.~\cite{rahli2018velisarios}
+Not part of the thesis are the proves for correctness.
+
+This thesis is divided as follows. The first chapter explains the
+mathematical foundation and the Velisarios framework. The second chapter
+explains the RAFt protocol and compares it to the ones derived from Paxos.
+Afterwards, the implementation is presented and explained. The fourth chapter
+evaluates the implementation and the last one gives a short summary and a
+brief outlook.
+
 
 
 % In der modernen Welt sind Computer allgegenwärtig und mit den Entwicklungen
@@ -99,17 +140,17 @@ more applications and possible future applications.
 % diese auch in Simulationen zu testen und genauer zu untersuchen.
 
 %Forschungsfragen:
-In dieser Arbeit werden die folgenden Forschungsfragen erörtert:
-\begin{itemize}
-  \item 
-\end{itemize}
+% In dieser Arbeit werden die folgenden Forschungsfragen erörtert:
+% \begin{itemize}
+%   \item 
+% \end{itemize}
 
-%Struktur:
+% %Struktur:
 
-Im nächsten Abschnitt werden die Grundlagen für die ``Logic of Events'' nach
-Bickford hergeleitet und diese Eingeführt. Danach wird EventML
-als Programmiersprache genauer vorgestellt. In Abschnitt~\ref{sec_3} wird
-der Prozess von EventML zu asuführbaren Code genauer betrachtet. Danach wird gezeigt wie
-NUPRL Eigenschaften von verteilten Protokollen beweisen kann. Die Simulation
-von in EventML geschriebenen Systemen wird im Abschnitt~\ref{sec_5} gezeigt.
-Im letzten Abschnitt wird eine Zusammenfassung und ein Ausblick gegeben.
+% Im nächsten Abschnitt werden die Grundlagen für die ``Logic of Events'' nach
+% Bickford hergeleitet und diese Eingeführt. Danach wird EventML
+% als Programmiersprache genauer vorgestellt. In Abschnitt~\ref{sec_3} wird
+% der Prozess von EventML zu asuführbaren Code genauer betrachtet. Danach wird gezeigt wie
+% NUPRL Eigenschaften von verteilten Protokollen beweisen kann. Die Simulation
+% von in EventML geschriebenen Systemen wird im Abschnitt~\ref{sec_5} gezeigt.
+% Im letzten Abschnitt wird eine Zusammenfassung und ein Ausblick gegeben.

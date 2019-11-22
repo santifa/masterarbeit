@@ -1,5 +1,5 @@
-\section{Eventlogik}
-\label{sec_logik}
+\section{Logic of Events}
+\label{sec_logic}
 
 % TODO
 % Aussagenlogik +
@@ -10,23 +10,57 @@
 % Eventlogik +?
 % RAFT Zensusprotokoll
 
+This chapter introduces the logical and programmatic foundations needed for this
+thesis. To achive this, it is split into two parts. The first part introduces
+the reader with the Logic of Events which is the theoretical foundation for the
+Velisarios framework. The second part provides a practical introduction to
+the basics of COQ and programming with Velisarios.
+
+\subsection{Logic}
+
+The Logic of Events was introduced by Bickford and
+Constable~\cite{bickford2003logic} to describe parallel systems which
+consists out of nodes and events happening between them. To follow
+the explenation a brief overview about propositional logic, predicativ logic,
+constructive logic and type theorie is presented.
+
+\paragraph{Propositional Logic}
+The oldest known logic uses atoms and logical connective to formalize
+statements about the world. Statements in classical logic can be either
+\textbf{true} or \textbf{false}. The table~\ref{tab:proplogic} provides
+a short description for the logical connectives and their meaning.
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{c|c}
+    Connective & Description\\\hline
+    $A,B,C,...$ & Atoms used in statements\\
+    $\neg$ & Negation of some atom or statement\\
+    $\vee$ & \\
+    $\wedge$ & \\
+    $\Rightarrow$ & \\
+    $\Leftrightarrow$ & \\
+  \end{tabular}
+  \caption{Logical connectives}
+  \label{tab:proplogic}
+\end{table}
 
 
-%% einleitung %%
-In diesem Kapitel wird die Eventlogik~\cite{bickford2003logic} nach Bickford und
-Constable vorgestellt. Dazu werden vorher die benötigten grundlegenden Logiken
-und Theorien eingeführt. Zuerst wird kurz die Aussagenlogik erklärt und die
-darauf aufbauende Prädikatenlogik, welche grundlegend sind um ein Verständnis
-für die späteren Formeln zu liefern. Danach wird auf die intuitionistische
-Interpretationsweise und konstruktive Logik eingegangen. Als weitere Grundlagen
-werden ein Einführung in die Typentheorie und Automatentheorie gegeben, soweit
-dass für das weitere Verständnis der Eventlogik notwendig ist.
+% %% einleitung %%
+% In diesem Kapitel wird die Eventlogik~\cite{bickford2003logic} nach Bickford und
+% Constable vorgestellt. Dazu werden vorher die benötigten grundlegenden Logiken
+% und Theorien eingeführt. Zuerst wird kurz die Aussagenlogik erklärt und die
+% darauf aufbauende Prädikatenlogik, welche grundlegend sind um ein Verständnis
+% für die späteren Formeln zu liefern. Danach wird auf die intuitionistische
+% Interpretationsweise und konstruktive Logik eingegangen. Als weitere Grundlagen
+% werden ein Einführung in die Typentheorie und Automatentheorie gegeben, soweit
+% dass für das weitere Verständnis der Eventlogik notwendig ist.
 
-\subsection{Grundlegende Logiken}
-Die Mathematische Logik ist eine mathematische Theorie in der andere
-mathematische Modell mit Hilfe "`naiver Logik"' formalisiert werden können.
-Die mathematische Logik bietet damit eine Metasprache zur Untersuchung anderer
-mathematischer Modelle.~\cite{heinemann2013logik}
+% \subsection{Grundlegende Logiken}
+% Die Mathematische Logik ist eine mathematische Theorie in der andere
+% mathematische Modell mit Hilfe "`naiver Logik"' formalisiert werden können.
+% Die mathematische Logik bietet damit eine Metasprache zur Untersuchung anderer
+% mathematischer Modelle.~\cite{heinemann2013logik}
 
 \paragraph{Aussagenlogik}
 Sie ist die älteste Logik und benutzt aus Grundelement Aussagen (Atome,

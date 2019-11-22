@@ -141,7 +141,7 @@ partialy, currently only the simulator with test changed by hand
 ***** TODO count messages in the protocol
 
 ***** TODO find more ideas
-
+      
 *** Writing [3/9]
 
     The first attempt was done in german.
