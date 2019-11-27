@@ -1,51 +1,6 @@
 \section{Logic of Events}
 \label{sec_logic}
 
-% TODO
-% Aussagenlogik +
-% Prädikatenlogik 1. Ordnung +
-% intuitionistische Logik +
-% Martin Löf Typentheorie
-% Automatentheorie NEA?
-% Eventlogik +?
-% RAFT Zensusprotokoll
-
-This chapter introduces the logical and programmatic foundations needed for this
-thesis. To achive this, it is split into two parts. The first part introduces
-the reader with the Logic of Events which is the theoretical foundation for the
-Velisarios framework. The second part provides a practical introduction to
-the basics of COQ and programming with Velisarios.
-
-\subsection{Logic}
-
-The Logic of Events was introduced by Bickford and
-Constable~\cite{bickford2003logic} to describe parallel systems which
-consists out of nodes and events happening between them. To follow
-the explenation a brief overview about propositional logic, predicativ logic,
-constructive logic and type theorie is presented.
-
-\paragraph{Propositional Logic}
-The oldest known logic uses atoms and logical connective to formalize
-statements about the world. Statements in classical logic can be either
-\textbf{true} or \textbf{false}. The table~\ref{tab:proplogic} provides
-a short description for the logical connectives and their meaning.
-
-\begin{table}[h]
-  \centering
-  \begin{tabular}{c|c}
-    Connective & Description\\\hline
-    $A,B,C,...$ & Atoms used in statements\\
-    $\neg$ & Negation of some atom or statement\\
-    $\vee$ & \\
-    $\wedge$ & \\
-    $\Rightarrow$ & \\
-    $\Leftrightarrow$ & \\
-  \end{tabular}
-  \caption{Logical connectives}
-  \label{tab:proplogic}
-\end{table}
-
-
 % %% einleitung %%
 % In diesem Kapitel wird die Eventlogik~\cite{bickford2003logic} nach Bickford und
 % Constable vorgestellt. Dazu werden vorher die benötigten grundlegenden Logiken
@@ -62,105 +17,200 @@ a short description for the logical connectives and their meaning.
 % Die mathematische Logik bietet damit eine Metasprache zur Untersuchung anderer
 % mathematischer Modelle.~\cite{heinemann2013logik}
 
-\paragraph{Aussagenlogik}
-Sie ist die älteste Logik und benutzt aus Grundelement Aussagen (Atome,
-Literale) zur Formalisierung. Aussagen sind können entweder \textbf{wahr}
-oder \textbf{falsch} sein. \textbf{Terme} sind aussagenlogische Formeln
-bei der einzelne Aussagen über \textbf{Junktoren} verbunden sind.~\cite{heinemann2013logik}
+% \paragraph{Aussagenlogik}
+% Sie ist die älteste Logik und benutzt aus Grundelement Aussagen (Atome,
+% Literale) zur Formalisierung. Aussagen sind können entweder \textbf{wahr}
+% oder \textbf{falsch} sein. \textbf{Terme} sind aussagenlogische Formeln
+% bei der einzelne Aussagen über \textbf{Junktoren} verbunden sind.~\cite{heinemann2013logik}
+
+% \begin{defi}
+%   Sei $\Sigma_A := \{V,(,),\neg,\vee,\wedge,\Rightarrow,\Leftrightarrow,\bot,\top\}$ das Alphabet der Aussagenlogik, wobei $\top$ für
+% wahr, $\bot$ für falsch, $\neg$ für die Negation, $\vee$ für die Disjunktion, $\wedge$ für die
+% Konjunktion , $\Rightarrow$ für die Implikation und $\Leftrightarrow$ für die Äquivalenz steht.
+% \begin{itemize}
+% \item $V:=\{p_0,p_1,..\}$  ist die Menge der Variablen oder Symbole
+% \item $T\subseteq W(\Sigma)$  ist die Menge der Terme die über $\Sigma$ gebildet werden können 
+% \end{itemize}
+% \end{defi}
+
+% \begin{defi}
+%   Ein Term ist definiert als
+%   \begin{itemize}
+%   \item $V\subseteq T$
+%   \item $\{\top,\bot\}\subseteq T$
+%   \item $\{\neg\alpha,(\alpha\vee\beta),(\alpha\wedge\beta),(\alpha\Rightarrow\beta),(\alpha\Leftrightarrow\beta)\}\subseteq T$, falls $\alpha,\beta\in T$
+%   \end{itemize}
+% \end{defi}
+
+% Als Beispiel kann der Satz "`Wenn X keine Zahl ist, dann kommt danach ein
+% Buchstabe."' in die Formel
+% \[
+%   \neg x_{Z} \Rightarrow x_{B}
+% \]
+% übersetzt werden.
+
+% Terme können ausgewertet werden und ihnen Wahrheitswerte zugeordnet werden.
+% Dazu werden Interpretationen für die vorkommenden Variablen angegeben.
+
+% \begin{defi}
+%   Die Interpretation ist eine mögliche Belegung für einen Term $t$ und
+%   wird als $I:L(t)\rightarrow \{wahr,falsch\} \Leftrightarrow t^I$ geschrieben.
+%   Eine Interpretation die eine Formel $t^I$ wahr werden lässt, \textbf{erfüllt}
+%   diese Formel.
+% \end{defi}
+
+% Eine besondere Art eines Terms ist die \texttt{Tautologie} bei der jegliche
+% Interpretion wahr wird. Eine Tautologie ist eine allgemeingültige Ausage.
+
+% \begin{defi}
+%   Axiome sind Terme einer Logik, die ohne Angabe von Rechtfertigungen als wahr angenommen
+%   werden. Axiome werden zumeist als semantische Tautologien gewählt, wobei sie
+%   syntaktisch gesehen formale Terme ohne besondere Bedeutung sind.
+% \end{defi}
+
+% Aus den Tautologien und Axiomen einer Logik können weitere Terme abgeleitet
+% werden. Zur Ableitung weiterer gültiger Terme aus einer Logik werden
+% Schlussregeln oder Inferenzregel benutzt. Ein System aus Inferenzregeln zum
+% Schließen über Tautologien und möglicherweise Axiomen einer Logik wird Kalkül genannt.
+
+% \begin{defi}
+%   Sei $\Gamma$ eine endliche Menge von Termen einer Logik und $C$ ein Term der Logik.
+%   Dann ist $C$ aus $\Gamma$ ableitbar, wenn es eine Folge von Inferenzregeln
+%   $r_0,...,r_n$ und Termen $C_0,...,C_n$ gibt, so dass $C_n = C$ und
+%   $\Gamma_0\vdash_{r_0}C_0 ... \Gamma_n\vdash_{r_n}C_n$ wobei $\Gamma_i$ die Menge aller Axiome, Terme
+%   aus $\Gamma$ und bisher abgeleiteten Terme enthält.
+% \end{defi}
+
+% \subsection{Prädikatenlogik}
+% Die Prädikatenlogik stellt eine Erweiterung der Aussagenlogik dar.
+% Bei der Aussagenlogik werden atomare Aussagen oder Literale mit konkreten
+% Wahrheitswerten belegt. In der Aussagenlogik können nicht alle Aussagen
+% mit Wahrheitswerten belegt werden, da manche Belegungen von der inneren
+% Struktur der Aussage abhängen. Zum Beispiel der Satz "`x ist eine Primzahl"'
+% hängt von einer konkreten Belegung $x$ ab und ist in der Aussagenlogik kein
+% valides Literal. Diese Abhängigkeit wird durch Prädikate ausgedrückt.~\cite{heinemann2013logik}
+
+% \begin{defi}
+%   Das Alphabet der Prädikatenlogik ist $\Sigma_P := \{\exists,\forall,F,V,P\} \cup \Sigma_A$, wobei
+%   $\exists$ als \texttt{es existiert} und $\forall$ als \texttt{für alle gilt} gelesen wird.
+%   $V$ ist die Menge der Variablen, $P$ ist die Menge der Prädikate und $F$ ist die Menge der
+%   Funktionen in der Prädikatenlogik.
+% \end{defi}
+
+% \begin{defi}
+%   Ein \textbf{Prädikat} der Stelligkeit \textbf{n} ordnet einem Variablentupel
+%   $(x_1,...,x_n)$ der Mengen $M_1,...,M_n$ Wahrheitswerte zu, daraus folgt
+%   $P(x_1,...,x_n) \rightarrow \{wahr, falsch\}$ wobei $x_i\in M_i$ für $i\in \{1,...,n\}$.
+% \end{defi}
+% Ein Prädikat, dass ein Tupel erfüllt, ordnet dem Tupel den Wahrheitswert wahr zu.
+
+% \begin{defi}
+%   Sei $\mathbb{F}=\Cup^{\infty}_{i=0}\mathbb{F}^i$ für jedes $0\le i$ ein Alphabet von
+%   i-stelligen Funktionssymbolen und $\mathbb{V}$ ein Alphabet von Variablen,
+%   dann sind Terme der Prädikatenlogik definiert als:
+%   \begin{itemize}
+%   \item $x\in\mathbb{V}$ ist ein Term
+%   \item $f\in\mathbb{F}^0$ ist ein 0-stelliges Funktionssymbole und eine Term der
+%     eine Konstante ist
+%   \item $t_1,...,t_n$ sind Terme und $f\in\mathbb{F}^n$ ein n-stelliges
+%     Funktionssymbol, dann ist $f(t_1,...,t_n)$ ein Term
+%   \end{itemize}  
+% \end{defi}~\cite{kreitz1994automatisierte}
+
+% TODO
+% Aussagenlogik +
+% Prädikatenlogik 1. Ordnung +
+% intuitionistische Logik +
+% Martin Löf Typentheorie
+% Automatentheorie NEA?
+% Eventlogik +?
+% RAFT Zensusprotokoll
+
+
+
+This chapter introduces the logical and programmatic foundations needed for this
+thesis. To achive this, it is split into two parts. The first part introduces
+the reader with the Logic of Events which is the theoretical foundation for the
+Velisarios framework. The second part provides a practical introduction to
+the basics of COQ and programming with Velisarios.
+
+\subsection{Logic}
+
+The Logic of Events was introduced by Bickford and
+Constable~\cite{bickford2003logic} to describe parallel systems which
+consists out of nodes and events happening between them. To follow
+the explenation a brief overview about propositional logic, predicativ logic,
+constructive logic and type theorie is presented.
+
+\paragraph{Propositional Logic}
+The oldest known logic uses atoms or a set of primitive symbols and logical
+connective or a set of operator symbols to formalize
+terms or propositions about the world. Statements in classical logic can be either
+\textbf{true} or \textbf{false}. The table~\ref{tab:proplogic} provides
+a short description for the logical connectives and their meaning.~\cite{heinemann2013logik}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{c|c|c}
+    Symbols & Example & Description\\\hline
+    $A,B,C,...$ & $P, Q$ & Atoms used in propositions.\\
+    $\neg$ & $\neg P$ & Negation of some atom or proposition.\\
+    $\vee$ & $P \vee Q$ & The disjuction of two propositions.\\
+    $\wedge$ & $P \wedge Q$ & The conjunction of two propositions.\\
+    $\Rightarrow$ & $P \Rightarrow Q$ & The implication of two propositions.\\
+    $\Leftrightarrow$ & $P \Leftrightarrow Q$ & The equivalence composed of two propositions.\\
+  \end{tabular}
+  \caption{Logical connectives}
+  \label{tab:proplogic}
+\end{table}
+
+To make sense out these defined terms these need to be evaluated. To do so,
+the atoms are assigned to thruth values which is called the \textit{interpretation}.~\cite{tuschik1994mathematische}
 
 \begin{defi}
-  Sei $\Sigma_A := \{V,(,),\neg,\vee,\wedge,\Rightarrow,\Leftrightarrow,\bot,\top\}$ das Alphabet der Aussagenlogik, wobei $\top$ für
-wahr, $\bot$ für falsch, $\neg$ für die Negation, $\vee$ für die Disjunktion, $\wedge$ für die
-Konjunktion , $\Rightarrow$ für die Implikation und $\Leftrightarrow$ für die Äquivalenz steht.
-\begin{itemize}
-\item $V:=\{p_0,p_1,..\}$  ist die Menge der Variablen oder Symbole
-\item $T\subseteq W(\Sigma)$  ist die Menge der Terme die über $\Sigma$ gebildet werden können 
-\end{itemize}
+  More formal, an interpreation is a sample assigned for a term $t$ with
+  $I:L(t)\rightarrow \{true,false\} \leftrightarrow t^I$. Interpretation which suffices the term
+  $t^I$ are called a \textit{model}.
 \end{defi}
 
+The most defined formal systems using terms which are taken as truth without
+proof or justification. These terms are called \textit{axioms}. These are syntactically
+without meaning but semantically always the truth.~\cite{tuschik1994mathematische}
+
+To gather new knowledge out of axioms, terms and atoms a way to conclude
+new terms is needed. This can be done by adding \textit{inference rules} to
+the system. These rules derive new terms oder conclusions out of a given
+set of propositions. Such a formal system is called \textit{logical calculus}.
+
+\paragraph{Predicate logic}
+The predicate logic is an extension of the propositional logic.
+For instance, the statement ``x is a prime number'' can't be described
+in propositional logic since the thruth value depends on the structure of $x$.
+The predicate logic adds \textit{quantifiers} and \textit{predicates} to the
+system to describe atoms with variable structures.~\cite{heinemann2013logik}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{c|c|c}
+    Symbols & Example & Description\\\hline
+    $a,b,...$ & $x,y$ & The set of variables $\mathcal{V}$.\\
+    $P_0^n,Q_1^n,...$ & $P(x_1,...,x_n)$ & The set of predicates $\mathcal{P}$ with arity $n$
+                                          which evaluates to $\{true,false\}$\\
+    $f_0^n,g_1^n,...$ & $f(t_1,...,t_2)$ & The set of formulas $\mathcal{F}$with arity $n$\\
+    $\forall$ & $\forall x.P(f(x))$ & The quantifier means that for all possible allocations the term holds.\\
+    $\exists$ & $\exists x.P(x)\Rightarrow Q$ & The quantifier means that for some allocations the term holds.\\
+    $=$ & $x = y$ & The equality is added as connective to the alphabet.\\
+  \end{tabular}
+  \caption{Overview of predicate logic symbols}
+  \label{tab:predlogic}
+\end{table}
+
+The table,\ref{tab:predlogic} presents the extension made by the predicate logic.
+
 \begin{defi}
-  Ein Term ist definiert als
-  \begin{itemize}
-  \item $V\subseteq T$
-  \item $\{\top,\bot\}\subseteq T$
-  \item $\{\neg\alpha,(\alpha\vee\beta),(\alpha\wedge\beta),(\alpha\Rightarrow\beta),(\alpha\Leftrightarrow\beta)\}\subseteq T$, falls $\alpha,\beta\in T$
-  \end{itemize}
+  
 \end{defi}
 
-Als Beispiel kann der Satz "`Wenn X keine Zahl ist, dann kommt danach ein
-Buchstabe."' in die Formel
-\[
-  \neg x_{Z} \Rightarrow x_{B}
-\]
-übersetzt werden.
-
-Terme können ausgewertet werden und ihnen Wahrheitswerte zugeordnet werden.
-Dazu werden Interpretationen für die vorkommenden Variablen angegeben.
-
-\begin{defi}
-  Die Interpretation ist eine mögliche Belegung für einen Term $t$ und
-  wird als $I:L(t)\rightarrow \{wahr,falsch\} \Leftrightarrow t^I$ geschrieben.
-  Eine Interpretation die eine Formel $t^I$ wahr werden lässt, \textbf{erfüllt}
-  diese Formel.
-\end{defi}
-
-Eine besondere Art eines Terms ist die \texttt{Tautologie} bei der jegliche
-Interpretion wahr wird. Eine Tautologie ist eine allgemeingültige Ausage.
-
-\begin{defi}
-  Axiome sind Terme einer Logik, die ohne Angabe von Rechtfertigungen als wahr angenommen
-  werden. Axiome werden zumeist als semantische Tautologien gewählt, wobei sie
-  syntaktisch gesehen formale Terme ohne besondere Bedeutung sind.
-\end{defi}
-
-Aus den Tautologien und Axiomen einer Logik können weitere Terme abgeleitet
-werden. Zur Ableitung weiterer gültiger Terme aus einer Logik werden
-Schlussregeln oder Inferenzregel benutzt. Ein System aus Inferenzregeln zum
-Schließen über Tautologien und möglicherweise Axiomen einer Logik wird Kalkül genannt.
-
-\begin{defi}
-  Sei $\Gamma$ eine endliche Menge von Termen einer Logik und $C$ ein Term der Logik.
-  Dann ist $C$ aus $\Gamma$ ableitbar, wenn es eine Folge von Inferenzregeln
-  $r_0,...,r_n$ und Termen $C_0,...,C_n$ gibt, so dass $C_n = C$ und
-  $\Gamma_0\vdash_{r_0}C_0 ... \Gamma_n\vdash_{r_n}C_n$ wobei $\Gamma_i$ die Menge aller Axiome, Terme
-  aus $\Gamma$ und bisher abgeleiteten Terme enthält.
-\end{defi}
-
-\subsection{Prädikatenlogik}
-Die Prädikatenlogik stellt eine Erweiterung der Aussagenlogik dar.
-Bei der Aussagenlogik werden atomare Aussagen oder Literale mit konkreten
-Wahrheitswerten belegt. In der Aussagenlogik können nicht alle Aussagen
-mit Wahrheitswerten belegt werden, da manche Belegungen von der inneren
-Struktur der Aussage abhängen. Zum Beispiel der Satz "`x ist eine Primzahl"'
-hängt von einer konkreten Belegung $x$ ab und ist in der Aussagenlogik kein
-valides Literal. Diese Abhängigkeit wird durch Prädikate ausgedrückt.~\cite{heinemann2013logik}
-
-\begin{defi}
-  Das Alphabet der Prädikatenlogik ist $\Sigma_P := \{\exists,\forall,F,V,P\} \cup \Sigma_A$, wobei
-  $\exists$ als \texttt{es existiert} und $\forall$ als \texttt{für alle gilt} gelesen wird.
-  $V$ ist die Menge der Variablen, $P$ ist die Menge der Prädikate und $F$ ist die Menge der
-  Funktionen in der Prädikatenlogik.
-\end{defi}
-
-\begin{defi}
-  Ein \textbf{Prädikat} der Stelligkeit \textbf{n} ordnet einem Variablentupel
-  $(x_1,...,x_n)$ der Mengen $M_1,...,M_n$ Wahrheitswerte zu, daraus folgt
-  $P(x_1,...,x_n) \rightarrow \{wahr, falsch\}$ wobei $x_i\in M_i$ für $i\in \{1,...,n\}$.
-\end{defi}
-Ein Prädikat, dass ein Tupel erfüllt, ordnet dem Tupel den Wahrheitswert wahr zu.
-
-\begin{defi}
-  Sei $\mathbb{F}=\Cup^{\infty}_{i=0}\mathbb{F}^i$ für jedes $0\le i$ ein Alphabet von
-  i-stelligen Funktionssymbolen und $\mathbb{V}$ ein Alphabet von Variablen,
-  dann sind Terme der Prädikatenlogik definiert als:
-  \begin{itemize}
-  \item $x\in\mathbb{V}$ ist ein Term
-  \item $f\in\mathbb{F}^0$ ist ein 0-stelliges Funktionssymbole und eine Term der
-    eine Konstante ist
-  \item $t_1,...,t_n$ sind Terme und $f\in\mathbb{F}^n$ ein n-stelliges
-    Funktionssymbol, dann ist $f(t_1,...,t_n)$ ein Term
-  \end{itemize}  
-\end{defi}~\cite{kreitz1994automatisierte}
 
 Zur Darstellung von konkreten Sprachen müssen Bezeichner aus der Menge aller
 Bezeichner aussortiert werden. Damit wird eine konkrete Sprache mit einem Typ
@@ -182,7 +232,7 @@ Damit ist es möglich die Formeln der Prädikatenlogik zu definieren.
     die gewöhnliche Gleichheit ausdrückt.
   \item $t_1,...,t_n$ mit $n\geq1$ sind Terme und $P\in\mathbb{P}^n$ ein n-stelliges
     Prädikatensymbol, dann ist $P(t_1,...,t_n)$ eine atomare Formel
-  \item $A,B$ sind Formel, $x\in\mathbb{V}$ eine Variable udn $T\in\mathbb{T}$ ein
+  \item $A,B$ sind Formel, $x\in\mathbb{V}$ eine Variable und $T\in\mathbb{T}$ ein
     Typenbezeichner, dann sind $\neg A$, $A\vee B$, $A\wedge B$, $A\Rightarrow B$, $\forall x:T.A$, $\exists
     x:T.A$ und $(A)$ Formeln
   \end{itemize}
