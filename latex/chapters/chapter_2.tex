@@ -117,6 +117,45 @@
 %   \end{itemize}  
 % \end{defi}~\cite{kreitz1994automatisierte}
 
+% Zur Darstellung von konkreten Sprachen müssen Bezeichner aus der Menge aller
+% Bezeichner aussortiert werden. Damit wird eine konkrete Sprache mit einem Typ
+% versehen.
+% \begin{defi}
+%   Ein Typ $T$ ist eine Paar $(I,J)$ mit $I\subseteq P$ und $J\subseteq F$.
+% \end{defi}~\cite{heinemann2013logik}
+
+% Damit ist es möglich die Formeln der Prädikatenlogik zu definieren.
+
+% \begin{defi}
+%   Sei $\mathbb{P}^i$ mit $0\le i$ ein i-stelliges Prädikatenalphabet,
+%   $\mathbb{P}=\Cup^{\infty}_{i=0}\mathbb{P}^i$ und $\mathbb{T}$ ein Alphabet von Typen,
+%   dann ist eine Formel der Prädikatenlogik definiert als:
+%   \begin{itemize}
+%   \item $P\in\mathbb{P}^0$ ist ein 0-stelliges Prädikatensymbol und damit P eine
+%     atomare Formel oder Aussagenvariable
+%   \item $t_1$ und $t_2$ sind Terme, dann ist $t_1 = t_2$ eine atomare Formel,
+%     die gewöhnliche Gleichheit ausdrückt.
+%   \item $t_1,...,t_n$ mit $n\geq1$ sind Terme und $P\in\mathbb{P}^n$ ein n-stelliges
+%     Prädikatensymbol, dann ist $P(t_1,...,t_n)$ eine atomare Formel
+%   \item $A,B$ sind Formel, $x\in\mathbb{V}$ eine Variable und $T\in\mathbb{T}$ ein
+%     Typenbezeichner, dann sind $\neg A$, $A\vee B$, $A\wedge B$, $A\Rightarrow B$, $\forall x:T.A$, $\exists
+%     x:T.A$ und $(A)$ Formeln
+%   \end{itemize}
+% \end{defi}~\cite{kreitz1994automatisierte}
+
+% Eine Interpretation für eine prädikatenlogische Formel ist lediglich eine
+% Erweiterung der aussagenlogischen Interpretation, um die Belegungen von
+% n-stelligen Prädikat- und Funktionssymbolen.~\cite{heinemann2013logik}
+
+% \paragraph{Bindung}
+% Zur besseren Lesbarkeit werden Klammer für die Bindungsstärke von Junktoren
+% zumeist weggelassen. Dadurch ergibt sich die implizite Bindungsreihenfolge:
+% $\neg,\wedge,\vee,\Rightarrow,\exists,\forall$.~\cite{kreitz1994automatisierte}
+
+% Die Prädikatenlogik stellt das Grundgerüst, auf dessen Basis die später
+% vorgestellte Eventlogik steht. Sie ermöglicht die Formalisierung von natürlichen
+% Aussagen und Theorien, sowie die Überprüfung derer Gültigkeit.
+
 % TODO
 % Aussagenlogik +
 % Prädikatenlogik 1. Ordnung +
@@ -140,7 +179,8 @@ The Logic of Events was introduced by Bickford and
 Constable~\cite{bickford2003logic} to describe parallel systems which
 consists out of nodes and events happening between them. To follow
 the explenation a brief overview about propositional logic, predicativ logic,
-constructive logic and type theorie is presented.
+constructive logic and type theorie is presented. It is assumed that the reader
+is already familiar with the basic logical systems.
 
 \paragraph{Propositional Logic}
 The oldest known logic uses atoms or a set of primitive symbols and logical
@@ -160,7 +200,7 @@ a short description for the logical connectives and their meaning.~\cite{heinema
     $\Rightarrow$ & $P \Rightarrow Q$ & The implication of two propositions.\\
     $\Leftrightarrow$ & $P \Leftrightarrow Q$ & The equivalence composed of two propositions.\\
   \end{tabular}
-  \caption{Logical connectives}
+  \caption{Overview of propositional logic symbols}
   \label{tab:proplogic}
 \end{table}
 
@@ -180,7 +220,8 @@ without meaning but semantically always the truth.~\cite{tuschik1994mathematisch
 To gather new knowledge out of axioms, terms and atoms a way to conclude
 new terms is needed. This can be done by adding \textit{inference rules} to
 the system. These rules derive new terms oder conclusions out of a given
-set of propositions. Such a formal system is called \textit{logical calculus}.
+set of propositions. Such a formal system is called \textit{logical calculus}.~\cite{tuschik1994mathematische}
+
 
 \paragraph{Predicate logic}
 The predicate logic is an extension of the propositional logic.
@@ -205,51 +246,20 @@ system to describe atoms with variable structures.~\cite{heinemann2013logik}
   \label{tab:predlogic}
 \end{table}
 
-The table,\ref{tab:predlogic} presents the extension made by the predicate logic.
+The table\,\ref{tab:predlogic} presents the extension made by the predicate logic.
+Since the predicate logic is mathematically used to describe objects,
+structure and their relations it is useful to define such structures.~\cite{heinemann2013logik}
 
 \begin{defi}
-  
+  The type $T$ is a pair of $(I,J)$ where $I\subseteq P$ and $J\subseteq F$.
+  Therefore, predicates are relations between objects of the underlying
+  structure.
 \end{defi}
 
+The interpretation is similar to propositional logic execept it is
+extended with $n$-artity predicate- and functionsymbols.~\cite{heinemann2013logik}
 
-Zur Darstellung von konkreten Sprachen müssen Bezeichner aus der Menge aller
-Bezeichner aussortiert werden. Damit wird eine konkrete Sprache mit einem Typ
-versehen.
-\begin{defi}
-  Ein Typ $T$ ist eine Paar $(I,J)$ mit $I\subseteq P$ und $J\subseteq F$.
-\end{defi}~\cite{heinemann2013logik}
-
-Damit ist es möglich die Formeln der Prädikatenlogik zu definieren.
-
-\begin{defi}
-  Sei $\mathbb{P}^i$ mit $0\le i$ ein i-stelliges Prädikatenalphabet,
-  $\mathbb{P}=\Cup^{\infty}_{i=0}\mathbb{P}^i$ und $\mathbb{T}$ ein Alphabet von Typen,
-  dann ist eine Formel der Prädikatenlogik definiert als:
-  \begin{itemize}
-  \item $P\in\mathbb{P}^0$ ist ein 0-stelliges Prädikatensymbol und damit P eine
-    atomare Formel oder Aussagenvariable
-  \item $t_1$ und $t_2$ sind Terme, dann ist $t_1 = t_2$ eine atomare Formel,
-    die gewöhnliche Gleichheit ausdrückt.
-  \item $t_1,...,t_n$ mit $n\geq1$ sind Terme und $P\in\mathbb{P}^n$ ein n-stelliges
-    Prädikatensymbol, dann ist $P(t_1,...,t_n)$ eine atomare Formel
-  \item $A,B$ sind Formel, $x\in\mathbb{V}$ eine Variable und $T\in\mathbb{T}$ ein
-    Typenbezeichner, dann sind $\neg A$, $A\vee B$, $A\wedge B$, $A\Rightarrow B$, $\forall x:T.A$, $\exists
-    x:T.A$ und $(A)$ Formeln
-  \end{itemize}
-\end{defi}~\cite{kreitz1994automatisierte}
-
-Eine Interpretation für eine prädikatenlogische Formel ist lediglich eine
-Erweiterung der aussagenlogischen Interpretation, um die Belegungen von
-n-stelligen Prädikat- und Funktionssymbolen.~\cite{heinemann2013logik}
-
-\paragraph{Bindung}
-Zur besseren Lesbarkeit werden Klammer für die Bindungsstärke von Junktoren
-zumeist weggelassen. Dadurch ergibt sich die implizite Bindungsreihenfolge:
-$\neg,\wedge,\vee,\Rightarrow,\exists,\forall$.~\cite{kreitz1994automatisierte}
-
-Die Prädikatenlogik stellt das Grundgerüst, auf dessen Basis die später
-vorgestellte Eventlogik steht. Sie ermöglicht die Formalisierung von natürlichen
-Aussagen und Theorien, sowie die Überprüfung derer Gültigkeit.
+\paragraph{Constructivism and intuitionistic logic}
 
 
 \subsection{intuitionistische Logik}
