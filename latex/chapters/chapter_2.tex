@@ -156,6 +156,68 @@
 % vorgestellte Eventlogik steht. Sie ermöglicht die Formalisierung von natürlichen
 % Aussagen und Theorien, sowie die Überprüfung derer Gültigkeit.
 
+% \subsection{intuitionistische Logik}
+% Bisher wurden die Logik mit ihrer klassischen Interpretation vorgestellt.
+% Dabei wird angenommen das eine Aussage entweder wahr oder falsch ist.
+% Anders ausgedrückt kann ein mathematische Objekt entweder existieren oder
+% nicht. Beweise auf Grundlage dieser Interpretationsansicht erfordern keine
+% konstruktive Herleitung, wie ein solches Objekt zu modellieren ist.
+% Das Gesetz vom ausgesschlossenen Dritten $A\vee\neg A$, die doppelte Negation $\neg\neg A\Rightarrow
+% A$, Wiederspruchsbeweise und "`ex falso sequitur quodlibet"' gehören zu den
+% problematischen Beweisansätzen, die keine intrinsische Rechtfertigung
+% benötigen.~\cite{sep-logic-intuitionistic}
+
+% Brouwer hat 1908 festegestellt, dass $A\vee\neg A$ angewendet auf unendliche
+% abzählbare Mengen zu Problemen führt. Ein Beispiel dafür ist die Goldbach
+% Vermutung, die annimmt, dass jede Zahl $> 2$ als Summe zweier Primzahlen
+% geschrieben werden kann. Diese Aussage ist bis heute unbewiesen. Die klassische
+% Logik umschifft solche Probleme in dem sie annimmt, dass weder die Aussage, noch 
+% ihr Gegenteil gleichzeitig falsch sein kann, ohne eine konstruktive
+% Rechtfertigung dafür zu liefern. Dabei ist es für den geneeigten Leser
+% einsichtig, dass keine einfache Funktion, nach der Church-Turing These, 
+% gefunden werden kann, die in absehbarer Zeit eine Lösung oder Beweis der
+% Aussage liefert.~\cite{sep-logic-intuitionistic, sep-mathematics-constructive}
+
+% Der Intuitionismus und die konstruktive Mathematik lehnen diese Art der
+% Beweisführung und die Allgemeingültigkeit der vorher erwähnten Gesetze ab.
+% Dabei werden verschiedene logische Operationen anders interpretiert.
+% Zum Beispiel wird von der Disjunktion $A\vee B$ verlangt, dass sie angeben kann
+% welcher Teil beweisbar ist und einen entsprechenden Beweis (Evidenz)
+% dafür liefert.~\cite{kreitz1994automatisierte}
+
+% \begin{defi}
+%   Die intuitionistische Interpretation der Prädikatenlogik setzt sich aus
+%   Evidenzen zusammen die in den Teilaussagen gefordert sind.
+%   \begin{itemize}
+%   \item Jedes Literal $q$ besitzt eine Evidenz $e$
+%   \item Um $P\vee Q$ zu beweisen, ist entweder die Evidenz für $P$ oder $Q$
+%     notwendig
+%   \item Um $P\wedge Q$ zu beweisen, ist die Evidenz von $P$ und $Q$ notwendig
+%   \item Um $P\Rightarrow Q$ zu beweisen, muss ein Algorithmus angegeben werden, der jede
+%     Evidenz für $P$ in eine Evidenz für $Q$ umwandelt 
+%   \item Um $\neg P$ zu beweisen, muss gezeigt werden, dass es keinen Beweis gibt
+%   \item Um $\exists x:T.P(x)$ zu beweisen, muss ein Objekt vom Typ $T$ konstruiert
+%     und gezeigt werden, dass $P$ hält.
+%   \item Um $\forall x\in T.P(x)$ muss gezeigt werden, dass jedes Objekt $x$ den Typ $T$
+%     hat und darunter $P$ beweisbar ist.
+%   \end{itemize}
+% \end{defi}~\cite{sep-mathematics-constructive}
+
+% Die intuitionistische Logik ermöglicht damit Kalküle zu entwickeln auf
+% deren Grundlage beweisbare logische Schlüsse erzeu
+% gt werden können.
+% Damit kann sie als eine höhere Programmiersprache angesehen werden.
+% Beweise die konstruiert werden können mit Hilfe der Curry-Howard Isomorphie
+% in Typsysteme überführt werden und ausprogrammiert werden.~\cite{constable1970constructive}
+
+% \subsection{Martin-Löf Typentheorie}
+% Verschiedene Kalküle wurden für die Prädikatenlogik entwickelt.
+% In dieser Arbeit wird nur auf die Typentheorie von Per Martin Löf eingegangen,
+% da sie die Grundlage für den interaktiven Theorembeweiser
+% NuPRL\footnote{\url{http://www.nuprl.org/Intro/intro.html}} ist. In NuPRL ist
+% die später vorgestellte Eventlogik formalisiert und bewiesen worden.
+
+
 % TODO
 % Aussagenlogik +
 % Prädikatenlogik 1. Ordnung +
@@ -259,69 +321,127 @@ structure and their relations it is useful to define such structures.~\cite{hein
 The interpretation is similar to propositional logic execept it is
 extended with $n$-artity predicate- and functionsymbols.~\cite{heinemann2013logik}
 
-\paragraph{Constructivism and intuitionistic logic}
+\paragraph{Intuitionistic logic}
+The propositional and predicate logic are presented with the classical
+interpretation. The classical interpretation assumes that every statement
+is either $true$ or $false$ or more elaborated a mathematical object either
+exists or not. Therfore, proofs with classical interpretation don't care
+about how such an object is constructed. For example the law of double
+negation eliminitation  $\neg\neg A\Rightarrow A$ or the Aristotelian law of excluded
+middle $A \vee \neg A$, are such problematic laws. These laws don't provide
+intrinsic justification, in the way that they don't construct an object
+of that type or prove that it ``exists''.~\cite{sep-logic-intuitionistic, kreitz1994automatisierte}
+
+This problem was found by Brouwer in 1908. He observed that $A \vee \neg A$
+applied on infinite sets lead to problems. An example is the Goldbach
+conjencture which assumes that every number $> 2$ can be expressed out of
+two prime numbers. The classical logic uses a wider interpretation
+the law of excluded middle to get around this problem. It assumes
+that one of the cases must be true and none of them is not an option.
+As a side-effect such an interpretation rejects to be generally
+appliable to mathematical computational models.~\cite{sep-logic-intuitionistic, sep-mathematics-constructive} 
+
+The \textit{intuitionism} is a mathematical direction of thinking which
+rejects the line of argument and universality of the law of excluded middle
+and other laws of that type. For this reason, the intuitionism demands
+that mathematical statements are seen as constructive statements.
+For instance, the exists quantifiers $\exists x.A$ is re-interpeted in a way
+that a real object can be given and is not only a theoretical one.
+Logical connective are also re-intepreted that they give a way
+of constructing a proof with real objects and at every time one can
+say which way the proof uses. One can see from the \textit{evidence}
+of some proof with the disjunction $A\vee B$ which part of the disjunction
+leads to a correct proof.~\cite{kreitz1994automatisierte}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{c|c}
+    Symbols &  Description\\\hline
+    $q$ & Every literal $q$ has some evidence $e$.\\
+    $P\vee Q$ & The proof demands either an evidence for $P$ or $Q$.\\
+    $P\wedge Q$ & The proof demands an evidence for booth $P$ and $Q$.\\
+    $P\Rightarrow Q$ & The proof demands an algorithm which converts every proof for $P$
+             into one for $Q$.\\
+    $\neg P$ & To proof the abscence one must show that there is no proof for it.\\
+    $\exists x:T.P(x)$ & The proof needs an constructed object of type $T$ which holds for $P$.\\
+    $\forall x:T.P(x)$ & The proofs demands that for every object $x$ out of the type $T$
+                   $P$ is proofable.
+  \end{tabular}
+  \caption{Interpretation of intuitionistic logical symbols~\cite{sep-mathematics-constructive}}
+  \label{tab:intsymbols}
+\end{table}
+
+the table~\ref{tab:intsymbols} show the interpretation for the logical
+symbols in intuitionistic logic. As an application example, proofs about
+programs can only be done \textit{constructive} since a proof of contradiction
+says nothing about how to construct such a program or if the program
+fulfills some property.~\cite{kreitz1994automatisierte}
+Therefore, within the rest of this theses logical
+statements uses the intuitionistic logical interpretation. 
+
+\paragraph{proofs-as-program}
+Taken the intuitionistic interpretation into computer science then for
+mathematical questions the result is a piece of code which can be
+executed. This means, that for some typed piece of code the same
+rules apply as well as for the intuitionistic logic. There are
+fundamentally the same concept in different areas.
+For instance, an elementary programming problem consists out of
+some specification or formula in a logical theory and as a solution
+some computational function satisfying the formula. At least, the
+proof is the explenation or link between the specification and the
+solution.~\cite{bates1985proofs}
+This paradigm is called \textit{proofs-as-programs} and the foundation
+for modern theoretical work where programs are written by proofing their
+specification with the help of some theorem prover. The extracted runnable
+functional program is called a~\cite{realizer} for the proof. 
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{c|c}
+    Type & Proposition\\\hline
+    Type variable $a'$ & Atomic proposition $A$\\
+    Function type $\rightarrow$ & Implication $\Rightarrow$\\
+    Product type $*$ & Conjunction $\wedge$\\
+    Union type $+$ & Disjunction $\vee$\\
+    \texttt{unit} & \textit{true} \\
+    \texttt{void} or type without values & \textit{false}\\
+    $A\rightarrow \{\}$ & Negation $\neg$ \\
+  \end{tabular}
+  \caption{The isomorphism between types and logic.}
+  \label{tab:proofsasprogs}
+\end{table}
+
+Table~\ref{tab:proofsasprogs} show the Curry-Howard isomorphism between
+logical proposition and types used to describe function behavior.
+
+As an example consider the statement
+\[
+  \forall x:T.\exists y:S.R(x,y)
+\]
+which can be transformed into a program $f$ from the type $T\rightarrow S$.
+The function $f$ holds for any $x\in T$ with $R(x,f(x))$ is true.
+Modern theorem proving systems extract the constructive content and
+produce the function described by the proof automatically.
+The resulting function is \textit{extracted} from the proof
+and can be simulated or run on a real system.~\cite{bickford2009component}
+Such functions are also called \textit{correct-by-construction}.
+
+Over the last decades new constructive methods are developed which
+extend the proofs-as-programm paradigma by applying it to distributed
+systems. Such programs are not pure functional which means they have
+side-effects, an internal state, multiple agents in a system which
+communicate via messages and so forth. Extracting programms
+are much harder since the specification is inherently tied to
+the logical structure of distributed systems. these logical
+structures are called \textit{event structures} and one of these
+is the \textit{logic of events}.~\cite{bickford2009component}
 
 
-\subsection{intuitionistische Logik}
-Bisher wurden die Logik mit ihrer klassischen Interpretation vorgestellt.
-Dabei wird angenommen das eine Aussage entweder wahr oder falsch ist.
-Anders ausgedrückt kann ein mathematische Objekt entweder existieren oder
-nicht. Beweise auf Grundlage dieser Interpretationsansicht erfordern keine
-konstruktive Herleitung, wie ein solches Objekt zu modellieren ist.
-Das Gesetz vom ausgesschlossenen Dritten $A\vee\neg A$, die doppelte Negation $\neg\neg A\Rightarrow
-A$, Wiederspruchsbeweise und "`ex falso sequitur quodlibet"' gehören zu den
-problematischen Beweisansätzen, die keine intrinsische Rechtfertigung
-benötigen.~\cite{sep-logic-intuitionistic}
+\subsection{Logic of events}
+The following section presents the logical language \textit{logic of events},
+presented by Mark Bickford and Richard L. Constable in different
+papers~\cite{bickford2003logic, bickford2005causal, bickford2009component}.
 
-Brouwer hat 1908 festegestellt, dass $A\vee\neg A$ angewendet auf unendliche
-abzählbare Mengen zu Problemen führt. Ein Beispiel dafür ist die Goldbach
-Vermutung, die annimmt, dass jede Zahl $> 2$ als Summe zweier Primzahlen
-geschrieben werden kann. Diese Aussage ist bis heute unbewiesen. Die klassische
-Logik umschifft solche Probleme in dem sie annimmt, dass weder die Aussage, noch 
-ihr Gegenteil gleichzeitig falsch sein kann, ohne eine konstruktive
-Rechtfertigung dafür zu liefern. Dabei ist es für den geneeigten Leser
-einsichtig, dass keine einfache Funktion, nach der Church-Turing These, 
-gefunden werden kann, die in absehbarer Zeit eine Lösung oder Beweis der
-Aussage liefert.~\cite{sep-logic-intuitionistic, sep-mathematics-constructive}
-
-Der Intuitionismus und die konstruktive Mathematik lehnen diese Art der
-Beweisführung und die Allgemeingültigkeit der vorher erwähnten Gesetze ab.
-Dabei werden verschiedene logische Operationen anders interpretiert.
-Zum Beispiel wird von der Disjunktion $A\vee B$ verlangt, dass sie angeben kann
-welcher Teil beweisbar ist und einen entsprechenden Beweis (Evidenz)
-dafür liefert.~\cite{kreitz1994automatisierte}
-
-\begin{defi}
-  Die intuitionistische Interpretation der Prädikatenlogik setzt sich aus
-  Evidenzen zusammen die in den Teilaussagen gefordert sind.
-  \begin{itemize}
-  \item Jedes Literal $q$ besitzt eine Evidenz $e$
-  \item Um $P\vee Q$ zu beweisen, ist entweder die Evidenz für $P$ oder $Q$
-    notwendig
-  \item Um $P\wedge Q$ zu beweisen, ist die Evidenz von $P$ und $Q$ notwendig
-  \item Um $P\Rightarrow Q$ zu beweisen, muss ein Algorithmus angegeben werden, der jede
-    Evidenz für $P$ in eine Evidenz für $Q$ umwandelt 
-  \item Um $\neg P$ zu beweisen, muss gezeigt werden, dass es keinen Beweis gibt
-  \item Um $\exists x:T.P(x)$ zu beweisen, muss ein Objekt vom Typ $T$ konstruiert
-    und gezeigt werden, dass $P$ hält.
-  \item Um $\forall x\in T.P(x)$ muss gezeigt werden, dass jedes Objekt $x$ den Typ $T$
-    hat und darunter $P$ beweisbar ist.
-  \end{itemize}
-\end{defi}~\cite{sep-mathematics-constructive}
-
-Die intuitionistische Logik ermöglicht damit Kalküle zu entwickeln auf
-deren Grundlage beweisbare logische Schlüsse erzeugt werden können.
-Damit kann sie als eine höhere Programmiersprache angesehen werden.
-Beweise die konstruiert werden können mit Hilfe der Curry-Howard Isomorphie
-in Typsysteme überführt werden und ausprogrammiert werden.~\cite{constable1970constructive}
-
-
-\subsection{Martin-Löf Typentheorie}
-Verschiedene Kalküle wurden für die Prädikatenlogik entwickelt.
-In dieser Arbeit wird nur auf die Typentheorie von Per Martin Löf eingegangen,
-da sie die Grundlage für den interaktiven Theorembeweiser
-NuPRL\footnote{\url{http://www.nuprl.org/Intro/intro.html}} ist. In NuPRL ist
-die später vorgestellte Eventlogik formalisiert und bewiesen worden.
 
 
 
