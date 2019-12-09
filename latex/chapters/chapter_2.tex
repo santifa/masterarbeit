@@ -29,7 +29,7 @@
 % Konjunktion , $\Rightarrow$ für die Implikation und $\Leftrightarrow$ für die Äquivalenz steht.
 % \begin{itemize}
 % \item $V:=\{p_0,p_1,..\}$  ist die Menge der Variablen oder Symbole
-% \item $T\subseteq W(\Sigma)$  ist die Menge der Terme die über $\Sigma$ gebildet werden können 
+% \item $T\subseteq W(\Sigma)$  ist die Menge der Terme die über $\Sigma$ gebildet werden können
 % \end{itemize}
 % \end{defi}
 
@@ -114,7 +114,7 @@
 %     eine Konstante ist
 %   \item $t_1,...,t_n$ sind Terme und $f\in\mathbb{F}^n$ ein n-stelliges
 %     Funktionssymbol, dann ist $f(t_1,...,t_n)$ ein Term
-%   \end{itemize}  
+%   \end{itemize}
 % \end{defi}~\cite{kreitz1994automatisierte}
 
 % Zur Darstellung von konkreten Sprachen müssen Bezeichner aus der Menge aller
@@ -171,10 +171,10 @@
 % abzählbare Mengen zu Problemen führt. Ein Beispiel dafür ist die Goldbach
 % Vermutung, die annimmt, dass jede Zahl $> 2$ als Summe zweier Primzahlen
 % geschrieben werden kann. Diese Aussage ist bis heute unbewiesen. Die klassische
-% Logik umschifft solche Probleme in dem sie annimmt, dass weder die Aussage, noch 
+% Logik umschifft solche Probleme in dem sie annimmt, dass weder die Aussage, noch
 % ihr Gegenteil gleichzeitig falsch sein kann, ohne eine konstruktive
 % Rechtfertigung dafür zu liefern. Dabei ist es für den geneeigten Leser
-% einsichtig, dass keine einfache Funktion, nach der Church-Turing These, 
+% einsichtig, dass keine einfache Funktion, nach der Church-Turing These,
 % gefunden werden kann, die in absehbarer Zeit eine Lösung oder Beweis der
 % Aussage liefert.~\cite{sep-logic-intuitionistic, sep-mathematics-constructive}
 
@@ -194,7 +194,7 @@
 %     notwendig
 %   \item Um $P\wedge Q$ zu beweisen, ist die Evidenz von $P$ und $Q$ notwendig
 %   \item Um $P\Rightarrow Q$ zu beweisen, muss ein Algorithmus angegeben werden, der jede
-%     Evidenz für $P$ in eine Evidenz für $Q$ umwandelt 
+%     Evidenz für $P$ in eine Evidenz für $Q$ umwandelt
 %   \item Um $\neg P$ zu beweisen, muss gezeigt werden, dass es keinen Beweis gibt
 %   \item Um $\exists x:T.P(x)$ zu beweisen, muss ein Objekt vom Typ $T$ konstruiert
 %     und gezeigt werden, dass $P$ hält.
@@ -216,6 +216,138 @@
 % da sie die Grundlage für den interaktiven Theorembeweiser
 % NuPRL\footnote{\url{http://www.nuprl.org/Intro/intro.html}} ist. In NuPRL ist
 % die später vorgestellte Eventlogik formalisiert und bewiesen worden.
+
+%% eventlogik %%
+% \subsection{Eventlogik}
+
+% Mark Bickford und Richard L. Constable haben in verschiedenen
+% Papern~\cite{bickford2003logic, bickford2005causal, bickford2009component} eine Logik zur Beschreibung
+% von Ereignissen in verteilten Systemen vorgestellt. Die Eventlogik ist so
+% aufgebaut, dass eine breite Menge von Systemen beschrieben werden kann, auch
+% außerhalb des eigentlichen Anwendungsgebietes des verteilten Rechnes
+% (Distributed Computing).  Die Logik ist auf der
+% intuitionistischen Logik aufgebaut und folgt dem ``correct-by-construction''
+% Ansatz. Bei diesem Ansatz werden aus Beweisen für Formeln korrekte Implementierungen für
+% diese gewonnen.~\cite{bates1985proofs}
+
+% Dafür wird eine abstrakte Spezifikationssprache eingeführt welche durch
+% ein Berechenbarkeitsmodell repräsentiert wird.
+% Schlussfolgerungen in diesem Modell werden durch Inferenzregeln dargestellt und
+% ermöglichen es, wenn eine Spezifikation erfüllbar ist, ein ausführbares
+% verteiltes System aus dem Modell zu extrahieren.~\cite{bickford2005causal}
+
+% \paragraph{typentheoretische Vorbetrachtung}
+% Um der Eventlogik eine mathematische Struktur zu geben, werden ihre
+% Elemente mit diskreten Typen beschrieben, d.h. dass ihre die Gleichheit
+% entscheidbar ist und sie voneinander disjunkt sind.
+
+% \begin{defi}
+%   $\mathbb{D}$ ist der Typ der alle diskreten Typen enthält $T\in\mathbb{D}$ mit $\{T:Type|\forall x,y : T.x = x\ in\ T \vee\neg (x = y\ in\
+%   T)\}$.
+% \end{defi}
+
+% \subsubsection{Events}
+% Events bilden die Grundbausteine der Eventlogik.
+% Sie stellen Aktionen dar die in Raum und Zeit passieren und
+% werden ohne Zeitdauer definiert.
+% Die Zeitdauer eines Events würde sich auf die physische Zeit der
+% Umsetzung beziehen und wurde der zur Vereinfachung
+% wegabstrahiert.~\cite{bickford2005causal}
+
+
+% \begin{defi}
+%   Ein Event $e$ ist die atomare Einheit und kausal geordnet, d.h.
+%   $e< e'$ wenn $e$ zeitlich vor $e''$ passiert ist.
+% \end{defi}
+
+% \begin{defi}
+%   Events $e\in E$ sind in einem Eventraum strukturiert. Dieser besteht
+%   aus einzelnen $loci$ oder Entitäten an denen Events passieren.
+% \end{defi}
+
+% Der Eventraum ist dynamisch aufgebaut, so dass über die Zeit neue Entitäten
+% hinzugefügt oder entfernt werden können. Damit die Entitäten im Raum
+% unterschieden werden können besitzen sie beobachtbare Eigenschaften, wie zum
+% Beispiel Koordinaten oder eine ID. Zur theoretischen Betrachtung reicht es aus,
+% wenn Entitäten durch einen diskreten Typen und eine ID unterschieden werden können.~\cite{bickford2005causal}
+
+% \begin{defi}
+%   Jede Entität ist mit jeder anderen Entität über mindestens
+%   einen Kommunikationsweg ($link$) verbunden.
+% \end{defi}
+
+% Für die $links$ wird das nicht-byzantinische Fehlermodell angenommen,
+% wobei die Verbindungen unzuverlässig sind, aber die Nachrichten nicht
+% verfälschen. Ein Event kann zur Kommunikation Nachrichten über einen
+% $link$ versenden.
+
+
+% Da Events an Entitäten gebunden sind, können sie kausal strukturiert werden.
+% Damit können Events folgendermaßen formalisiert werden.
+% \begin{gather*}
+%   \textbf{E:}\mathbb{D}\notag\\
+%   \textbf{Loc:}\mathbb{D}\\
+%   \textbf{pred?:} E\rightarrow (E+Loc)\\
+%   \textbf{sender?:} E\rightarrow (E+Unit)
+% \end{gather*}
+
+% E ist ein Event und Loc eine Entität. Die Funktion $pred?$ gibt entweder das
+% vorherige Event an der Entität zurück oder die Entität, wenn es das erste Event
+% war. Die Funktion $sender?$ gibt des Event $e'$ zurück, dass das Event $e$
+% ausgelöst hat oder den leeren Typ.~\cite{bickford2005causal}
+
+% Mit diesen Grundannahmen können die Funktionen $first?$, die bestimmt ob
+% ein Event das Erste ist, dass bei einer Entität passiert und $recv?$,
+% dass bestimmt ob ein Event ein Empfangsevent ist, definiert werden.
+
+% \begin{gather*}
+%   \textbf{first?:}E\rightarrow (E\rightarrow (E+Loc))\rightarrow B\\
+%   first?(e,pred?) = if\ is\_left(pred?(e))\ then\ true\ else\ false\\
+%   \textbf{recv?:}E\rightarrow (E\rightarrow (E+Unit))\rightarrow B\\
+%   recv?(e,sender?) = if\ is\_left(sender?(e))\ then\ true\ else\ false\\
+% \end{gather*}
+
+% Mit Hilfe dieser Funktionen lässt sich die Eingangserwähnte kausale Ordnung auf Events
+% $e < e'$ definieren als:
+% \[
+%   pred!(e,e') == (\neg first(e')\Rightarrow e = pred?(e')) \vee e = sender(e')
+% \]
+% $pred!$ bildet eine transitive Hülle und stellt damit eine wohlgeordnete
+% entscheidbare Ordnung der Form $e < e'$ dar. Als letztes fehlen noch
+% drei Grundaxiome für den geordneten Eventraum.~\cite{bickford2005causal}
+
+% \begin{axiom}
+%   Wenn ein Event $e$ ein Signal sendet, dann gibt es ein Event $e'$, so dass für
+%   jedes Event $e''$ gilt, $e'' = e'$ oder $e'' < e'$.\\
+%   \[
+%     \forall e:E \exists e':E. \forall e'':E . (recv?(e'') \& sender?(e'')=e)\Rightarrow (e' = e' \vee e'' < e)
+%   \]
+% \end{axiom}
+
+% \begin{axiom}
+%   Die Funktion $pred?$ ist injektiv.
+%   \[
+%     \forall e,e':E.loc(e) = loc(e')\Rightarrow pred?(e) = pred?(e')\Rightarrow e=e'
+%   \]
+% \end{axiom}
+
+% \begin{axiom}
+%   Die Funktion $pred!$ bildet eine starke wohlfundierte Ordnung.
+%   \[
+%     \exists f:E\rightarrow \mathbb{N}.\forall e,e':E.pred!(e,e')\rightarrow f(e)<f(e')
+%   \]
+% \end{axiom}
+
+% \begin{defi}
+%   Die folgenden Notationen werden als Abkürzung verwendet, um Events die an einem
+%   Ort stattfinden zu quantifizieren.
+%   \[
+%     \forall e@i.P == \forall e:E.(loc(e) = i\Rightarrow P)
+%   \]
+%   \[
+%     \exists e@i.P == \exists e:E.(loc(e) = i\Rightarrow P)
+%   \]
+% \end{defi}
 
 
 % TODO
@@ -253,7 +385,7 @@ a short description for the logical connectives and their meaning.~\cite{heinema
 
 \begin{table}[h]
   \centering
-  \begin{tabular}{c|c|c}
+  \begin{tabular}{c|c|l}
     Symbols & Example & Description\\\hline
     $A,B,C,...$ & $P, Q$ & Atoms used in propositions.\\
     $\neg$ & $\neg P$ & Negation of some atom or proposition.\\
@@ -284,7 +416,6 @@ new terms is needed. This can be done by adding \textit{inference rules} to
 the system. These rules derive new terms oder conclusions out of a given
 set of propositions. Such a formal system is called \textit{logical calculus}.~\cite{tuschik1994mathematische}
 
-
 \paragraph{Predicate logic}
 The predicate logic is an extension of the propositional logic.
 For instance, the statement ``x is a prime number'' can't be described
@@ -294,7 +425,7 @@ system to describe atoms with variable structures.~\cite{heinemann2013logik}
 
 \begin{table}[h]
   \centering
-  \begin{tabular}{c|c|c}
+  \begin{tabular}{c|c|l}
     Symbols & Example & Description\\\hline
     $a,b,...$ & $x,y$ & The set of variables $\mathcal{V}$.\\
     $P_0^n,Q_1^n,...$ & $P(x_1,...,x_n)$ & The set of predicates $\mathcal{P}$ with arity $n$
@@ -339,7 +470,7 @@ two prime numbers. The classical logic uses a wider interpretation
 the law of excluded middle to get around this problem. It assumes
 that one of the cases must be true and none of them is not an option.
 As a side-effect such an interpretation rejects to be generally
-appliable to mathematical computational models.~\cite{sep-logic-intuitionistic, sep-mathematics-constructive} 
+appliable to mathematical computational models.~\cite{sep-logic-intuitionistic, sep-mathematics-constructive}
 
 The \textit{intuitionism} is a mathematical direction of thinking which
 rejects the line of argument and universality of the law of excluded middle
@@ -355,29 +486,29 @@ leads to a correct proof.~\cite{kreitz1994automatisierte}
 
 \begin{table}[h]
   \centering
-  \begin{tabular}{c|c}
+  \begin{tabular}{c|l}
     Symbols &  Description\\\hline
     $q$ & Every literal $q$ has some evidence $e$.\\
-    $P\vee Q$ & The proof demands either an evidence for $P$ or $Q$.\\
+    $P\vee Q$ & The proof demands either an evidence for $P$ or $Q$ and mark it.\\
     $P\wedge Q$ & The proof demands an evidence for booth $P$ and $Q$.\\
-    $P\Rightarrow Q$ & The proof demands an algorithm which converts every proof for $P$
-             into one for $Q$.\\
+    $P\Rightarrow Q$ & The proof demands an effective algorithm which\\
+           & converts every proof for $P$ into one for $Q$.\\
     $\neg P$ & To proof the abscence one must show that there is no proof for it.\\
     $\exists x:T.P(x)$ & The proof needs an constructed object of type $T$ which holds for $P$.\\
-    $\forall x:T.P(x)$ & The proofs demands that for every object $x$ out of the type $T$
-                   $P$ is proofable.
+    $\forall x:T.P(x)$ & The proofs demands that for every object $x$ out of the type $T$\\
+                 &  $P$ there is an effective algorithm which computes a proof.
   \end{tabular}
-  \caption{Interpretation of intuitionistic logical symbols~\cite{sep-mathematics-constructive}}
+  \caption{Intuitionistic interpretation of the typed predicate logic~\cite{sep-mathematics-constructive}}
   \label{tab:intsymbols}
 \end{table}
 
-the table~\ref{tab:intsymbols} show the interpretation for the logical
-symbols in intuitionistic logic. As an application example, proofs about
+the table~\ref{tab:intsymbols} show the intuitionistic interpretation for the logical
+symbols in typed predicate logic. As an application example, proofs about
 programs can only be done \textit{constructive} since a proof of contradiction
 says nothing about how to construct such a program or if the program
 fulfills some property.~\cite{kreitz1994automatisierte}
 Therefore, within the rest of this theses logical
-statements uses the intuitionistic logical interpretation. 
+statements uses the intuitionistic logical interpretation.
 
 \paragraph{proofs-as-program}
 Taken the intuitionistic interpretation into computer science then for
@@ -393,7 +524,7 @@ solution.~\cite{bates1985proofs}
 This paradigm is called \textit{proofs-as-programs} and the foundation
 for modern theoretical work where programs are written by proofing their
 specification with the help of some theorem prover. The extracted runnable
-functional program is called a~\cite{realizer} for the proof. 
+functional program is called a~\textit{realizer} for the proof.
 
 \begin{table}[h]
   \centering
@@ -442,139 +573,189 @@ The following section presents the logical language \textit{logic of events},
 presented by Mark Bickford and Richard L. Constable in different
 papers~\cite{bickford2003logic, bickford2005causal, bickford2009component}.
 
+The logic of events is an approach to find an adequate logic for distributed
+systems. It should bear the power of explaining and providing the
+technical needs for a constructive logic. The logic build on an
+abstract high level without the binding to a specific computational
+oder executional model. This provides the room for the creative building
+of distributed system and their verification. Therefore, the realization
+is excluded because it needs a deep understanding of systems programming.
+These can be implemented and verified on another level an provided for
+the logic of events as realizer or extractor.~\cite{bickford2005causal}
 
+The main idea is to describe a causal system which is defined by it's
+behavior on cause and effect, like in interacting computational systems
+or likewise physical systems.~\cite{bickford2005causal}
+The ideas are based on the early work from Lamport on ``Time, clocks, and
+the ordering of events in a distributed system''~\cite{lamport1978time}
+and Winskel on ``An introduction to event
+structures''~\cite{winskel1988introduction}.
 
-
-%% eventlogik %%
-\subsection{Eventlogik}
-
-Mark Bickford und Richard L. Constable haben in verschiedenen
-Papern~\cite{bickford2003logic, bickford2005causal, bickford2009component} eine Logik zur Beschreibung
-von Ereignissen in verteilten Systemen vorgestellt. Die Eventlogik ist so
-aufgebaut, dass eine breite Menge von Systemen beschrieben werden kann, auch
-außerhalb des eigentlichen Anwendungsgebietes des verteilten Rechnes
-(Distributed Computing).  Die Logik ist auf der
-intuitionistischen Logik aufgebaut und folgt dem ``correct-by-construction''
-Ansatz. Bei diesem Ansatz werden aus Beweisen für Formeln korrekte Implementierungen für
-diese gewonnen.~\cite{bates1985proofs}
-
-Dafür wird eine abstrakte Spezifikationssprache eingeführt welche durch
-ein Berechenbarkeitsmodell repräsentiert wird.
-Schlussfolgerungen in diesem Modell werden durch Inferenzregeln dargestellt und
-ermöglichen es, wenn eine Spezifikation erfüllbar ist, ein ausführbares
-verteiltes System aus dem Modell zu extrahieren.~\cite{bickford2005causal}
-
-
-\paragraph{typentheoretische Vorbetrachtung}
-Um der Eventlogik eine mathematische Struktur zu geben, werden ihre
-Elemente mit diskreten Typen beschrieben, d.h. dass ihre die Gleichheit
-entscheidbar ist und sie voneinander disjunkt sind.
+The atomic building blocks of the theory are events. These are action
+in space and time which are considered to be instantaneous.
 
 \begin{defi}
-  $\mathbb{D}$ ist der Typ der alle diskreten Typen enthält $T\in\mathbb{D}$ mit $\{T:Type|\forall x,y : T.x = x\ in\ T \vee\neg (x = y\ in\
-  T)\}$.
+  Two events $e$ and $e'$ are causally ordered which is denoted by $e<e'$.
 \end{defi}
 
-\subsubsection{Events}
-Events bilden die Grundbausteine der Eventlogik.
-Sie stellen Aktionen dar die in Raum und Zeit passieren und
-werden ohne Zeitdauer definiert.
-Die Zeitdauer eines Events würde sich auf die physische Zeit der
-Umsetzung beziehen und wurde der zur Vereinfachung
-wegabstrahiert.~\cite{bickford2005causal}
+The event structure is determined by events happening at discrete and separate
+points which are called \textit{entities} or \textit{loci}. Actions or events
+are located at these loci and the set of loci can change over time.
+Each loci can have different properties which are identified by some
+\textit{key} and have some type $T$. These are properties are
+\textit{observables} and their value can be measured somehow.
+The list of observalbes at some loci is called its \textit{state}.
+The interaction which happens between the entities relays on
+\textit{communication channels} which allows the entities to send
+\textit{messages} (actions) to each other. The channel structure
+can be dynamic but the links are relaible and messages can't be blocked.
+Two types of messages are distinguished. The first one is an
+external one which is recieved by another entity and the other on is triggered
+by the entity itself in response to a former event.~\cite{bickford2005causal}
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}
+
+    \def \n {5}
+    \def \radius {2.5cm}
+    \def \margin {8} % margin in angles, depends on the radius
+    % define coordinates for nodes
+    \coordinate (A) at ({360/\n * (1 - 1)}:{\radius-3.3mm});
+    \coordinate (B) at ({360/\n * (2 - 1)}:{\radius-3.3mm});
+    \coordinate (C) at ({360/\n * (3 - 1)}:{\radius-3.3mm});
+    \coordinate (D) at ({360/\n * (4 - 1)}:{\radius-3.3mm});
+    \coordinate (E) at ({360/\n * (5 - 1)}:{\radius-3.3mm});
+    
+    % draw the circle
+    \foreach \s in {1,...,\n}
+    {
+      \node[draw, circle] (\n) at ({360/\n * (\s - 1)}:\radius) {$\s$};
+      \draw[<->, >=latex] ({360/\n * (\s - 1)+\margin}:\radius) 
+      arc ({360/\n * (\s - 1)+\margin}:{360/\n * (\s)-\margin}:\radius);
+    }
+    % draw the mesh and labels
+    \draw[<->, >=latex] (A) -- (C);
+    \draw[<->, >=latex] (A) -- (D);
+    \draw[<->, >=latex] (B) -- (D);
+    \draw[<->, >=latex] (B) -- (E);
+    \draw[<->, >=latex] (C) -- (E);
+    \node at (A) [right=+6mm] {an entity};
+    \node at (A) [above=+12mm,right] {communication channel};
+  \end{tikzpicture}
+  \caption{A possible event structure}
+  \label{fig:structure}
+\end{figure}
+
+Figure~\ref{fig:structure} shows an example network of five nodes which
+are all linked together. Each of the five nodes ($A..E$) can have some internal
+and maybe observable state and messages are send over the communication channels
+to the other entities of the network. 
+
+The underlaying computational model for the entities or nodes is the
+message automata. This follows the assumption that ``the universe is run by
+computation''~\cite{bickford2005causal} and the everything can be modelled
+by functionally updating the state and the message queues on the communication
+channels of some entity. The proposed update function is $s':=f(s,v)$ where
+the next state $s'$ follows from the current state $s$ and some internal or
+external message $v$. $f$ is some arbitrary function which computes
+the update step.~\cite{bickford2005causal}
+
+To axiomatize these structure two types which are disjoint and two partial
+functions are needed. The equality of the types are decidable.
 
 \begin{defi}
-  Ein Event $e$ ist die atomare Einheit und kausal geordnet, d.h.
-  $e< e'$ wenn $e$ zeitlich vor $e''$ passiert ist.
+  The large type of discrete types is
+  $\mathcal{D}:=\{T:Type\ |\ \forall x,y:T.x=y\ in\ T\vee\neg (x=y\ in\ T)\}$.
+  \textnormal{~\cite{bickford2005causal}}
 \end{defi}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{l|l}
+    Elements & Description\\\hline
+    \textbf{E}$:\mathcal{D}$ & The type of possible discrete events.\\
+    \textbf{Loc}$:\mathcal{D}$ & The type of possible discrete entities.\\
+    \textbf{pred?}$:E\rightarrow (E+Loc)$
+             & Return either the preceding event of\\
+             & a location or the location itself.\\
+    \textbf{sender?}$:E\rightarrow (E+Unit)$
+             & Return the event which sents $e$ if e was sent or nothing.\\
+  \end{tabular}
+  \caption{The main types and functions for ordered event structures.~\cite{bickford2005causal}}
+  \label{tab:eorder}
+\end{table}
+
+Table~\ref{tab:eorder} shows the signature of event structures with order.
+
+From these functions we derive the next ones using the $is\_left$ which decides
+on union types $(A+B)$ if the element is on the left side.
+The function \[first(e)=\ if\ is\_left(pred?(e))\ then\ true\ else\ false\]
+returns true if $e$ is the first event happening at some location.
+The other function derived is $recv?(e)=\ if\ is\_left(sender?(e))\ then\ true\
+else\ false$ returns true if the event $e$ was sent by another event.~\cite{bickford2005causal}
+
+From these function we define the order relation.
 
 \begin{defi}
-  Events $e\in E$ sind in einem Eventraum strukturiert. Dieser besteht
-  aus einzelnen $loci$ oder Entitäten an denen Events passieren.
+  The strongly well-founded oder relation is
+  $pred!(e,e') == (\neg first(e') \Rightarrow e = pred?(e')) \vee e = sender(e')$.
+  This is the causal order relation from Lampert and denoted by $e<e'$.
 \end{defi}
 
-Der Eventraum ist dynamisch aufgebaut, so dass über die Zeit neue Entitäten
-hinzugefügt oder entfernt werden können. Damit die Entitäten im Raum
-unterschieden werden können besitzen sie beobachtbare Eigenschaften, wie zum
-Beispiel Koordinaten oder eine ID. Zur theoretischen Betrachtung reicht es aus,
-wenn Entitäten durch einen diskreten Typen und eine ID unterschieden werden können.~\cite{bickford2005causal}
-
-\begin{defi}
-  Jede Entität ist mit jeder anderen Entität über mindestens
-  einen Kommunikationsweg ($link$) verbunden.
-\end{defi}
-
-Für die $links$ wird das nicht-byzantinische Fehlermodell angenommen,
-wobei die Verbindungen unzuverlässig sind, aber die Nachrichten nicht
-verfälschen. Ein Event kann zur Kommunikation Nachrichten über einen
-$link$ versenden.
-
-Da Events an Entitäten gebunden sind, können sie kausal strukturiert werden.
-Damit können Events folgendermaßen formalisiert werden.
-\begin{gather*}
-  \textbf{E:}\mathbb{D}\notag\\
-  \textbf{Loc:}\mathbb{D}\\
-  \textbf{pred?:} E\rightarrow (E+Loc)\\
-  \textbf{sender?:} E\rightarrow (E+Unit)
-\end{gather*}
-
-E ist ein Event und Loc eine Entität. Die Funktion $pred?$ gibt entweder das
-vorherige Event an der Entität zurück oder die Entität, wenn es das erste Event
-war. Die Funktion $sender?$ gibt des Event $e'$ zurück, dass das Event $e$
-ausgelöst hat oder den leeren Typ.~\cite{bickford2005causal}
-
-Mit diesen Grundannahmen können die Funktionen $first?$, die bestimmt ob
-ein Event das Erste ist, dass bei einer Entität passiert und $recv?$,
-dass bestimmt ob ein Event ein Empfangsevent ist, definiert werden.
-
-\begin{gather*}
-  \textbf{first?:}E\rightarrow (E\rightarrow (E+Loc))\rightarrow B\\
-  first?(e,pred?) = if\ is\_left(pred?(e))\ then\ true\ else\ false\\
-  \textbf{recv?:}E\rightarrow (E\rightarrow (E+Unit))\rightarrow B\\
-  recv?(e,sender?) = if\ is\_left(sender?(e))\ then\ true\ else\ false\\
-\end{gather*}
-
-Mit Hilfe dieser Funktionen lässt sich die Eingangserwähnte kausale Ordnung auf Events
-$e < e'$ definieren als:
-\[
-  pred!(e,e') == (\neg first(e')\Rightarrow e = pred?(e')) \vee e = sender(e')
-\]
-$pred!$ bildet eine transitive Hülle und stellt damit eine wohlgeordnete
-entscheidbare Ordnung der Form $e < e'$ dar. Als letztes fehlen noch
-drei Grundaxiome für den geordneten Eventraum.~\cite{bickford2005causal}
+Additionally, there are three axioms that are needed to constraint the
+event structure.~\cite{bickford2005causal}
 
 \begin{axiom}
-  Wenn ein Event $e$ ein Signal sendet, dann gibt es ein Event $e'$, so dass für
-  jedes Event $e''$ gilt, $e'' = e'$ oder $e'' < e'$.\\
-  \[
-    \forall e:E \exists e':E. \forall e'':E . (recv?(e'') \& sender?(e'')=e)\Rightarrow (e' = e' \vee e'' < e)
-  \]
+  If there is an event $e$ which triggers another event, then there is an
+  event $e'$ such that for any event $e''$ which got triggered, $e''=e'$
+  or $e''<e'$.
+  \[\forall e:E.\exists e':E.\forall e'':E.(recv?(e'')\&sender?(e'')=e)\Rightarrow (e''=e'\vee e''<e)\]
 \end{axiom}
 
 \begin{axiom}
-  Die Funktion $pred?$ ist injektiv.
-  \[
-    \forall e,e':E.loc(e) = loc(e')\Rightarrow pred?(e) = pred?(e')\Rightarrow e=e'
-  \]
+  The function $pred?$ is injective.
+  \[\forall e,e':E.loc(e) = loc(e')\Rightarrow pred?(e) = pred?(e')\Rightarrow e=e'\]
 \end{axiom}
 
 \begin{axiom}
-  Die Funktion $pred!$ bildet eine starke wohlfundierte Ordnung.
-  \[
-    \exists f:E\rightarrow \mathbb{N}.\forall e,e':E.pred!(e,e')\rightarrow f(e)<f(e')
-  \]
+  The function $pred!$ is strongly well founded.
+  \[\exists f:E\rightarrow \mathbb{N}.\forall e,e':E.pred!(e,e')\Rightarrow f(e)<f(e')\]
 \end{axiom}
 
+Axiom 3 can be explained as a ``tour'' through the event structure where
+events happen as they're examined on the tour. This means that local
+events are linearly ordered at each location and a recieve only happens
+after a corresponding send.~\cite{bickford2005causal}
+
+From that assumptions we define the finite list of events before a given event as
+\[before(e):=\ if\ first(e)\ then\ []\ else\ pred?(e)\ append\ before((pred?(e)))\] 
+and likewise the finite tree of all events causally before e as
+\begin{align*}
+  prior(e):= & if\ first(e)\ then\ []\ else\\
+             & if\ recv?(e)\ then\ <e,prior(sender?(e)),prior(pred?(e))>\\
+             & else\ <e,prior(pred?(e))>
+\end{align*}
+
+This basic language allows to describe event structures but to make
+it more useful events should send values to each other. To distinguish
+between internal events a discrete type called Act is used.~\cite{bickford2005causal}
+
 \begin{defi}
-  Die folgenden Notationen werden als Abkürzung verwendet, um Events die an einem
-  Ort stattfinden zu quantifizieren.
-  \[
-    \forall e@i.P == \forall e:E.(loc(e) = i\Rightarrow P)
-  \]
-  \[
-    \exists e@i.P == \exists e:E.(loc(e) = i\Rightarrow P)
-  \]
+  The type of an event is $kind :=\ Act + Top$ where $Act$ is some
+  internal action and right some external one. The corresponding function
+  $kind: E\rightarrow Act + Top$ returns the value of some event.
 \end{defi}
+
+\begin{defi}
+  $Ty:Loc\rightarrow kinde\rightarrow Type$ returns the type of some event value at some specific
+  node. For internal events $val:E\rightarrow Ty(loc(e),kind(e))$ can be any element of
+  $Ty(e,a)$ choosen by any method.
+\end{defi}
+
+
+
+
 
 \begin{figure}
   \center
@@ -635,7 +816,7 @@ mit Nachrichten, wie in Abb.~\ref{fig:sequence} dargestellt.
 \begin{defi}
   Eine Entität kann einen Zustand haben der durch eine endliche Folge
   von Änderungen dargestellt werden kann. $s'=f(s,v)$, wobei
-  $v'$ der Folgezustand und $v$ der Wert eines Events ist.  
+  $v'$ der Folgezustand und $v$ der Wert eines Events ist.
 \end{defi}
 
 
@@ -663,7 +844,7 @@ Zustandsänderung''.~\cite{bickford2003logic}
   Ein Nachrichtenautomat ist ein abhängiger Datentyp mit der Struktur:
   $\{St, Act, Msg: Type, init: St$
     $f:(Act+Msg)\rightarrow St\rightarrow St$
-    $send:(Act+Msg)\rightarrow St\rightarrow MsgList\}$  
+    $send:(Act+Msg)\rightarrow St\rightarrow MsgList\}$
 \end{defi}
 
 % verteilte Nachrichtenautomaten
@@ -677,9 +858,11 @@ empfangen.~\cite{bickford2003logic}
 \begin{defi}
   Ein verteiltes System $V$ ist ein Tupel $V=(M,L)$ wobei $m_i\in M$ mit $i\in
   \mathbb{N}$ die Menge der teilnehmenden Nachritenautomaten ist. $L$ beschreibt
-  ein Kante in einem gerichteten Graphen und besteht aus dem Tupel $L=(s,d,m_i,m_j,Q)$ 
+  ein Kante in einem gerichteten Graphen und besteht aus dem Tupel $L=(s,d,m_i,m_j,Q)$
   mit $i,j\in \mathbb{N} und i!= j.Q$ ist eine Nachrichtenqueue.
 \end{defi}
+
+\subsection{COQ}
 
 %%% Local Variables:
 %%% mode: latex
