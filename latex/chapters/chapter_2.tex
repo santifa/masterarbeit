@@ -398,6 +398,38 @@
 % beweisbaren logischen Aussagen auch programmierbar, in dem Sinne, dass sie einen
 % Extraktterm besitzen der die Spezifikation erfüllt.~\cite{bickford2003logic}
 
+% nachrichtenautomat
+% Grundlage für die Eventlogik ist ein Nachrichtenautomat. Dieser ist ein
+% nichtdeterministischer Automat der auf Nachrichten operiert.
+% Er hat die drei Basisoperationen ``senden'', ``empfangen'' und ``interne
+% Zustandsänderung''.~\cite{bickford2003logic}
+
+% \begin{defi}
+%   Ein Event $e=(a+m)$ ist ein Typ $A+M$ der entweder eine interne Aktion $A$ enthält
+%   oder eine empfangene Nachrichten $M$.
+% \end{defi}
+
+% \begin{defi}
+%   Ein Nachrichtenautomat ist ein abhängiger Datentyp mit der Struktur:
+%   $\{St, Act, Msg: Type, init: St$
+%     $f:(Act+Msg)\rightarrow St\rightarrow St$
+%     $send:(Act+Msg)\rightarrow St\rightarrow MsgList\}$
+% \end{defi}
+
+% % verteilte Nachrichtenautomaten
+% Um verteilte Systeme darstellen zu können wird mehr als ein Nachrichtenautomat
+% benötigt, da ein Nachrichtenautomatenohne Interaktionen ein normaler
+% nichtdeterministischer Automat ist. Ein verteiltes System $V$ ist eine Menge von
+% Nachrichtenautomaten die in einem Netzwerk miteinander verknüpft sind.
+% Das Netzwerk ist fair, d.h. jede gesendete Nachricht wird auch unverändert
+% empfangen.~\cite{bickford2003logic}
+
+% \begin{defi}
+%   Ein verteiltes System $V$ ist ein Tupel $V=(M,L)$ wobei $m_i\in M$ mit $i\in
+%   \mathbb{N}$ die Menge der teilnehmenden Nachritenautomaten ist. $L$ beschreibt
+%   ein Kante in einem gerichteten Graphen und besteht aus dem Tupel $L=(s,d,m_i,m_j,Q)$
+%   mit $i,j\in \mathbb{N} und i!= j.Q$ ist eine Nachrichtenqueue.
+% \end{defi}
 
 % TODO
 % Aussagenlogik +
@@ -666,7 +698,7 @@ by the entity itself in response to a former event.~\cite{bickford2005causal}
   \centering
   \begin{tikzpicture}
 
-    \def \n {5}
+    \def \n {4}
     \def \radius {2.5cm}
     \def \margin {8} % margin in angles, depends on the radius
     % define coordinates for nodes
@@ -674,7 +706,7 @@ by the entity itself in response to a former event.~\cite{bickford2005causal}
     \coordinate (B) at ({360/\n * (2 - 1)}:{\radius-3.3mm});
     \coordinate (C) at ({360/\n * (3 - 1)}:{\radius-3.3mm});
     \coordinate (D) at ({360/\n * (4 - 1)}:{\radius-3.3mm});
-    \coordinate (E) at ({360/\n * (5 - 1)}:{\radius-3.3mm});
+    %\coordinate (E) at ({360/\n * (5 - 1)}:{\radius-3.3mm});
     
     % draw the circle
     \foreach \s in {1,...,\n}
@@ -685,10 +717,10 @@ by the entity itself in response to a former event.~\cite{bickford2005causal}
     }
     % draw the mesh and labels
     \draw[<->, >=latex] (A) -- (C);
-    \draw[<->, >=latex] (A) -- (D);
+    % \draw[<->, >=latex] (A) -- (D);
     \draw[<->, >=latex] (B) -- (D);
-    \draw[<->, >=latex] (B) -- (E);
-    \draw[<->, >=latex] (C) -- (E);
+    % \draw[<->, >=latex] (B) -- (E);
+    % \draw[<->, >=latex] (C) -- (E);
     \node at (A) [right=+6mm] {an entity};
     \node at (A) [above=+12mm,right] {communication channel};
   \end{tikzpicture}
@@ -697,7 +729,7 @@ by the entity itself in response to a former event.~\cite{bickford2005causal}
 \end{figure}
 
 Figure~\ref{fig:structure} shows an example network of five nodes which
-are all linked together. Each of the five nodes ($A..E$) can have some internal
+are all linked together. Each of the four nodes ($A..D$) can have some internal
 and maybe observable state and messages are send over the communication channels
 to the other entities of the network. 
 
@@ -801,10 +833,6 @@ between internal events a discrete type called Act is used.~\cite{bickford2005ca
   node. For internal events $val:E\rightarrow Ty(loc(e),kind(e))$ can be any element of
   $Ty(e,a)$ choosen by any method.
 \end{defi}
-
-
-
-
 
 \begin{figure}
   \center
@@ -918,39 +946,56 @@ is needed to reason about realtime properties and changes over time.~\cite{bickf
 \end{axiom}
 
 \paragraph{Computing Model}
+The prevouis points introduced the conceptual primitives needed to describe
+concurrently and asynchronously interacting processes.
+Now a a computing model as abstract realizer for the specification language is needed.
+The event structure could be realized with multiple possible approaches but
+for distributed systems the \textit{message automata} based on the IO automata
+and active objects. The message automata is a nondeterministic state machine.
+Each machine operates by sending and reacting to messages as well as
+executing internal state transistions.
+the computation is considered to be fair in terms that every send message is
+recieved.~\cite{bickford2003logic}
 
-% nachrichtenautomat
-Grundlage für die Eventlogik ist ein Nachrichtenautomat. Dieser ist ein
-nichtdeterministischer Automat der auf Nachrichten operiert.
-Er hat die drei Basisoperationen ``senden'', ``empfangen'' und ``interne
-Zustandsänderung''.~\cite{bickford2003logic}
 
 \begin{defi}
-  Ein Event $e=(a+m)$ ist ein Typ $A+M$ der entweder eine interne Aktion $A$ enthält
-  oder eine empfangene Nachrichten $M$.
+  A message automata is the dependent type record
+  \begin{align*}
+    M:=\{ & St,Act,Msg:Type\\
+        & init:St\\
+        & update:(Act+Msg)\rightarrow St\rightarrow St\\
+        & send:(Act+Msg)\rightarrow St\rightarrow MsgList\}
+  \end{align*}  
+\end{defi}
+
+A messsage automate consists out of the discrete type of state variables
+$St$. Furthermore, it is parametrized by the type of internal actions $Act$ 
+and recieved messages $Msg$. The $update$ function returns a new state
+depending on the current state and event happening. Resulting message are
+computed by the event happening and the current state of the message automata.
+A distributed system is now a collection of message automata $M_1,M_2,...$ which
+are interconnected by links. The links form a directed graph with $M_i$ at the
+nodes. Meaning, that the each location or node is a stream of alternating states
+and actions $(s_0,q_0,a_0),(s_1,q_1,a_1),....$ and the message queues as links.~\cite{bickford2003logic}
+
+\begin{defi}
+  Let $a_i$ an internal action, then is the next state
+  $s_{i+1}=update(a_i)(s_i)$ the new messag queue $q_{i+1}=enq(send(a_i)(s_i)q_i)$.
 \end{defi}
 
 \begin{defi}
-  Ein Nachrichtenautomat ist ein abhängiger Datentyp mit der Struktur:
-  $\{St, Act, Msg: Type, init: St$
-    $f:(Act+Msg)\rightarrow St\rightarrow St$
-    $send:(Act+Msg)\rightarrow St\rightarrow MsgList\}$
+  Let $a_i$ an recieved message then is the next state
+  $s_{i+1}=update(a_i)(s_i)$ and the new message queue
+  $q_{i+1}=enq(send(a_i)(s_i)deq?(a_i,q_{i+1}))$ where $deq?$ takes
+  a recieved message from the queue. 
 \end{defi}
 
-% verteilte Nachrichtenautomaten
-Um verteilte Systeme darstellen zu können wird mehr als ein Nachrichtenautomat
-benötigt, da ein Nachrichtenautomatenohne Interaktionen ein normaler
-nichtdeterministischer Automat ist. Ein verteiltes System $V$ ist eine Menge von
-Nachrichtenautomaten die in einem Netzwerk miteinander verknüpft sind.
-Das Netzwerk ist fair, d.h. jede gesendete Nachricht wird auch unverändert
-empfangen.~\cite{bickford2003logic}
+To model possible computations of the distributed system the computation
+is split into discrete progression steps index by the natural numbers $0,1,...$.
+A \textit{world} is a trace of some execution of a distributed system because
+at every location $i$ at eveery time $t$ there is some state $s(i,t)$ and action
+$a(i,t)$ and a possible empty list of messages $m(i,t)$.
 
-\begin{defi}
-  Ein verteiltes System $V$ ist ein Tupel $V=(M,L)$ wobei $m_i\in M$ mit $i\in
-  \mathbb{N}$ die Menge der teilnehmenden Nachritenautomaten ist. $L$ beschreibt
-  ein Kante in einem gerichteten Graphen und besteht aus dem Tupel $L=(s,d,m_i,m_j,Q)$
-  mit $i,j\in \mathbb{N} und i!= j.Q$ ist eine Nachrichtenqueue.
-\end{defi}
 
 \subsection{COQ}
 
