@@ -349,6 +349,55 @@
 %   \]
 % \end{defi}
 
+% Abbildung~\ref{fig:sequence} zeigt ein einfaches Beispiel über einen Eventraum,
+% der sich mit der bisherigen Theorie spezifizieren lässt. Dort wird eine 1:1
+% Kommunikation zwischen zwei Entitäten dargestellt. Jede Nachricht von S wird mit
+% einer Antwort von R quitiert, bevor eine neue Nachricht von S bei R eintrifft.
+% Diese Modell kann forlgendermaßen formalisiert werden:~\cite{bickford2005causal}
+
+% \begin{gather*}
+%   \forall s@S.\exists r'@R.s=sender?(r')\\
+%   \exists r@S.(s<r\&\exists s''@R.(r'\leq s''\& sender?(r) == s''))\\
+% %%  \forall x@S.s<x<r\Rightarrow x wird nicht an R gesendet\\
+%   \forall x@S.s<x<r\Rightarrow \neg\exists x'@R.(x=sender?(x'))
+% \end{gather*}
+
+% Als nächstes werden Events erweitert um Werte und unterschieden nach
+% $internen$ und $externen$ Events. Bei einem $externes$ Event sendet ein Sender
+% einer Nachricht über einen $link$ zu einem Empfänger. $Interne$ Events können
+% ebenfalls Werte übergeben und können durch $guards$ limitiert werden.~\cite{bickford2005causal}
+
+% \begin{defi}
+%   Der Typ eines Events ist:
+%   \[
+%     kind == (Act+Top)
+%   \]
+%   \[
+%     kind: E\rightarrow (Act+Top)
+%   \]
+%   Dabei ist Act ein diskreter Typ um unterschiedle interne Events, zu
+%   unterscheiden und Top der Wert eines externen Events.
+% \end{defi}
+
+% Eine Darstellungsform von Interaktionen und Eventräumen sind Sequenzdiagramme
+% mit Nachrichten, wie in Abb.~\ref{fig:sequence} dargestellt.
+% % EValues vllt vertiefen, funktionalität beschreiben?
+
+% \begin{defi}
+%   Eine Entität kann einen Zustand haben der durch eine endliche Folge
+%   von Änderungen dargestellt werden kann. $s'=f(s,v)$, wobei
+%   $v'$ der Folgezustand und $v$ der Wert eines Events ist.
+% \end{defi}
+
+% Die Eventlogik nach Bickford und Constable baut auf der intuitionistischen Logik
+% auf. Sie verfolgt den ``correct-by-construction'' Ansatz, nach dem ein
+% funktionales Programm aus einem konstruktiven Beweis extrahiert werden kann.
+% Die Beweise haben die Grundform $\forall x:A.\exists : B.spec(x,y)$. Der konstruktive Beweis
+% liefert einen Extraktterm, der eine Realisierung des Beweises darstellt.
+% Da die Eventlogik die konstruktive Typentheorie benutzt sind alle
+% beweisbaren logischen Aussagen auch programmierbar, in dem Sinne, dass sie einen
+% Extraktterm besitzen der die Spezifikation erfüllt.~\cite{bickford2003logic}
+
 
 % TODO
 % Aussagenlogik +
@@ -760,74 +809,115 @@ between internal events a discrete type called Act is used.~\cite{bickford2005ca
 \begin{figure}
   \center
   \begin{tikzpicture}[node distance=2cm,auto,>=stealth]
-    \node[] (server) {$R$};
-    \node[left = of server] (client) {$S$};
+    \node[] (server) {$B$};
+    \node[left = of server] (client) {$A$};
     \node[below of=server, node distance=3cm] (server_ground) {};
     \node[below of=client, node distance=3cm] (client_ground) {};
     % vertical line
     \draw (client) -- (client_ground);
     \draw (server) -- (server_ground);
     % horizontal lines
-    \draw[->] ($(client)!0.2!(client_ground)$) -- node[above,scale=1,midway]{$m_1$} ($(server)!0.3!(server_ground)$);
-    \draw[<-] ($(client)!0.5!(client_ground)$) -- node[below,scale=1,midway]{$m_2$} ($(server)!0.4!(server_ground)$);
-    \draw[->] ($(client)!0.6!(client_ground)$) -- node[below,scale=1,midway]{$m_3$} ($(server)!0.7!(server_ground)$);
-    \draw[<-] ($(client)!0.9!(client_ground)$) -- node[below,scale=1]{$m_4$} ($(server)!0.8!(server_ground)$);
+    \draw[->] ($(client)!0.2!(client_ground)$) node[above,scale=0.5,left]{$a_1(3)$} -- ($(server)!0.3!(server_ground)$) node[above,scale=0.5,right] {$recv(3)$};
+    \draw[<-] ($(client)!0.5!(client_ground)$) node[above,scale=0.5,left]{$recv(4)$} -- ($(server)!0.4!(server_ground)$) node[above,scale=0.5,right]{$b_1(4)$};
+    \draw[->] ($(client)!0.6!(client_ground)$) node[below,scale=0.5,left]{$a_2(5)$} -- ($(server)!0.7!(server_ground)$) node[below,scale=0.5,right]{$recv(5)$};
+    \draw[<-] ($(client)!0.9!(client_ground)$) node[below,scale=0.5,left]{$recv(6)$} -- ($(server)!0.8!(server_ground)$) node[below,scale=0.5,right]{$b_2(6)$};
   \end{tikzpicture}
   \label{fig:sequence}
-  \caption{Ein einfaches Sequenzdiagramm zwischen zwei Knoten ($S,R$) die jeweils
-    zwei Nachrichten ($m_i$) übertragen.}
+  \caption{A message sequence diagram with an event structure between to
+    processes A and B.}
 \end{figure}
 
-Abbildung~\ref{fig:sequence} zeigt ein einfaches Beispiel über einen Eventraum,
-der sich mit der bisherigen Theorie spezifizieren lässt. Dort wird eine 1:1
-Kommunikation zwischen zwei Entitäten dargestellt. Jede Nachricht von S wird mit
-einer Antwort von R quitiert, bevor eine neue Nachricht von S bei R eintrifft.
-Diese Modell kann forlgendermaßen formalisiert werden:~\cite{bickford2005causal}
+The figure~\ref{fig:sequence} shows a simple event structure between two
+processes. The process $A$ sends a natural number to process $B$ which adds
+one to the value and retuns the result.
 
-\begin{gather*}
-  \forall s@S.\exists r'@R.s=sender?(r')\\
-  \exists r@S.(s<r\&\exists s''@R.(r'\leq s''\& sender?(r) == s''))\\
-%%  \forall x@S.s<x<r\Rightarrow x wird nicht an R gesendet\\
-  \forall x@S.s<x<r\Rightarrow \neg\exists x'@R.(x=sender?(x'))
-\end{gather*}
-
-Als nächstes werden Events erweitert um Werte und unterschieden nach
-$internen$ und $externen$ Events. Bei einem $externes$ Event sendet ein Sender
-einer Nachricht über einen $link$ zu einem Empfänger. $Interne$ Events können
-ebenfalls Werte übergeben und können durch $guards$ limitiert werden.~\cite{bickford2005causal}
+To model the fact that an event $e$ can depend on a previous event $e'$ at
+some location the notion of state and three relations are introduced.~\cite{bickford2005causal}
 
 \begin{defi}
-  Der Typ eines Events ist:
-  \[
-    kind == (Act+Top)
-  \]
-  \[
-    kind: E\rightarrow (Act+Top)
-  \]
-  Dabei ist Act ein diskreter Typ um unterschiedle interne Events, zu
-  unterscheiden und Top der Wert eines externen Events.
+  $Identifiers$ $Id:\mathbb{D}$ are the discrte type of names of state variables where each
+  holds a value with some specific type $T:x:Id\rightarrow i:Loc\rightarrow Type$.
 \end{defi}
-
-Eine Darstellungsform von Interaktionen und Eventräumen sind Sequenzdiagramme
-mit Nachrichten, wie in Abb.~\ref{fig:sequence} dargestellt.
-% EValues vllt vertiefen, funktionalität beschreiben?
-
 
 \begin{defi}
-  Eine Entität kann einen Zustand haben der durch eine endliche Folge
-  von Änderungen dargestellt werden kann. $s'=f(s,v)$, wobei
-  $v'$ der Folgezustand und $v$ der Wert eines Events ist.
+  For each location $i$ the state is the mapping of $Id\rightarrow T(x,i)$.
+  The relations are \textbf{initially:} $x:Id\rightarrow i:Loc\rightarrow T(x,i)$,
+  \textbf{when:} $x:Id\rightarrow e:E\rightarrow T(x,loc(e))$ and \textbf{after:} $x:Id\rightarrow e:E\rightarrow T(x,loc(e))$.
 \end{defi}
 
+\begin{axiom}
+  The state of a value is for any event $e$ except the first, the value after
+  the preceding event $e'$ where $e'<e$.
+  \[\forall e:E.\neg first(e)\Rightarrow (x\ \textbf{when}\ e) = (x\ \textbf{after}\ pred(e))\]
+\end{axiom}
 
-% Die Eventlogik nach Bickford und Constable baut auf der intuitionistischen Logik
-% auf. Sie verfolgt den ``correct-by-construction'' Ansatz, nach dem ein
-% funktionales Programm aus einem konstruktiven Beweis extrahiert werden kann.
-% Die Beweise haben die Grundform $\forall x:A.\exists : B.spec(x,y)$. Der konstruktive Beweis
-% liefert einen Extraktterm, der eine Realisierung des Beweises darstellt.
-% Da die Eventlogik die konstruktive Typentheorie benutzt sind alle
-% beweisbaren logischen Aussagen auch programmierbar, in dem Sinne, dass sie einen
-% Extraktterm besitzen der die Spezifikation erfüllt.~\cite{bickford2003logic}
+The axiom refers to the fact that the value only changes after some event
+happening. The change of the state is modeled as $\triangle$ operator with the
+following definition.~\cite{bickford2005causal}
+
+\begin{defi}
+  The formula $x\triangle e = (x\ \textbf{after}\ e\ne x\ \textbf{when} e)$ returns true
+  if some event $e$ changes the state variable $x$.
+\end{defi}
+
+\begin{defi}
+  The formula $\triangle (x,e) = ||[e_1\in \textbf{before}(e)|x\triangle e_1]||$ is only defined when
+  $T(loc(e),x)$ has decidable equality and true if there are exactly $n$ changes to
+  exactly $x$ before the event $e$ happens.  
+\end{defi}
+
+\begin{defi}
+  The formula $x\triangle_n e = 0<n\wedge \triangle (x,e)=n-1\wedge x\triangle e$ returns true if there are
+  exactly $n$ changes unit $x$ and including the event $e$.
+\end{defi}
+
+The communiction between locations is modeled as a link or communication
+channel as mentioned earlier. To abstract away specific topologies the structure
+is imagened as directed graph between the nodes or locations.~\cite{bickford2005causal}
+
+\begin{defi}
+  A link between a source and destination is a labeled pair $l=<i,j>$.
+  \textbf{Link:} $\mathbb{D}$ is the discrete type of links.\\
+  \textbf{src:} $Link\rightarrow Loc$ and \textbf{dst:} $Link\rightarrow Loc$ returns the sender
+  or reciever of a message.
+\end{defi}
+
+A link can send multiple messages $m$ of $Type\ T$ over a link.
+In order to distinguish between the messages a discrete type $Tag$
+is added to the messages on the link and processed in first-in-first-out order.~\cite{bickford2005causal}
+
+\begin{defi}
+  the function $M:Link\rightarrow Tag\rightarrow Type$ types a tagged message on a link.
+\end{defi}
+
+\begin{axiom}
+  The processing happens in first in first out order.\\
+  $\forall e_1,e_2:E.recv(l,t)(e_1)\ \&\ recv(l,t)(e_2) \Rightarrow sender?(e_1)<sender?(e_2)\Rightarrow e_1<e_2$
+\end{axiom}
+
+So far, the language specification of event structures consists out of events
+which send messages over links to different or the same node and trigger new
+events based on some update function and the nodes state. In addition, time
+is needed to reason about realtime properties and changes over time.~\cite{bickford2005causal}
+
+\begin{defi}
+  Time is a map $time:E\rightarrow Time$ added to the event structure where $Time$
+  is the rational numbers. The time of events is also ordered $e_1\prec e_2\Rightarrow
+  time(e_1)\le time(e_2)$.
+\end{defi}
+
+\begin{defi}
+  State changes are modeled as step function which implicitly depending on time.
+  $discrete:Id\rightarrow Id\rightarrow \mathbb{B}$ such that a varaible $x$ can only be changed
+  from one constant to another.
+\end{defi}
+
+\begin{axiom}
+  $\neg first(e)\Rightarrow \forall t\ge 0.(x\ \textbf{when}\ e)(t)=
+  (x\ \textbf{after}\ pred(e))(t+time(pred(e))-time(e))$
+\end{axiom}
+
+\paragraph{Computing Model}
 
 % nachrichtenautomat
 Grundlage für die Eventlogik ist ein Nachrichtenautomat. Dieser ist ein
