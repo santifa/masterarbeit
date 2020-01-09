@@ -142,7 +142,7 @@ partialy, currently only the simulator with test changed by hand
 
 ***** TODO find more ideas
       
-*** Writing [3/9]
+*** Writing [5/9]
 
     The first attempt was done in german.
 
@@ -158,10 +158,12 @@ partialy, currently only the simulator with test changed by hand
      This means the abitrary parts of the document.
      Table of figures, abbreviations etc.
 
-**** TODO introduction
+**** DONE introduction
+     CLOSED: [2020-01-08 Mi 10:42]
 in german
 
-**** TODO basics, logic
+**** DONE basics, logic
+     CLOSED: [2020-01-08 Mi 10:42]
 in german
 
 **** TODO basics, coq and velisarios
