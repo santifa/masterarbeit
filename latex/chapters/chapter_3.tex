@@ -190,6 +190,24 @@ their belongings.~\cite{ongaro2014search}
 \end{itemize}
 
 \paragraph{Basics}
+A consensus protocol doesn't use real time to measure the protocol progress
+instead the time is divided into abstracts chunks of time. These chunks
+serve as the logical clock of the protocol.~\cite{ongaro2014search}
+
+\begin{defi}
+  Time is divided into terms of arbitrary length where each term
+  starts with an election phase which can be followed by a normal
+  operation phase.
+\end{defi}
+
+This can be seen in figure~\ref{fig:terms}. The first term starts with an
+election phase followed by a normal operation phase. The leader fails and
+the term ends. The next terms starts with an election phase which results in no
+new leader and the next term is started.
+Terms are numbered by consecutive integers and servers may observe term
+transitions at different times. Each server stores it current term number
+and exchanges it at every communication to detect failed leaders or outdated
+data.~\cite{ongaro2014search}
 
 \begin{figure}[ht]
   \centering
@@ -224,6 +242,16 @@ their belongings.~\cite{ongaro2014search}
   \label{fig:terms}
 \end{figure}
 
+A server can be in one of three possible states at all times.
+A server can either be a \textit{leader}, a \textit{follower} or a
+\textit{candidate}. Figure~\ref{fig:serverstates} shows the state
+and the transition between them. Only one leader is allowed in normal operation
+and all other servers are passive followers which obey the leaders commands.
+The followers aren't issueing requests on their own (except message forwardng to
+the current leader) and only respond to requests from the leader and candidates.
+The leader handles all client communication and manages log replication across
+the followers. The candidate state is only entered if the leader fails and
+a new leader needs to be elected.~\cite{ongaro2014search}
 
 \begin{figure}[ht]
   \centering
@@ -244,6 +272,110 @@ their belongings.~\cite{ongaro2014search}
   \end{tikzpicture}
   \caption{The server state transistions diagram.~\cite{ongaro2014search}}
   \label{fig:serverstates}
+\end{figure}
+
+\paragraph{Leader election}
+As stated in the figure~\ref{fig:serverstates} raft uses timeouts to handle
+leadership and election. Thus, every server has an internal timer with a
+random time (mostly between 150 and 300ms) which gets resetted with
+every message from a leader. Besides normal messages the leader uses
+heartbeat messages to reset the follower timers if the cluster is idle.
+If a follower recieves no messages over a period of time the
+follower gets an \textit{election timeout}. It assumes the leader
+failed and turns into candidate state starting a new term and
+election. The election runs as follows:~\cite{ongaro2014search}
+
+\begin{enumerate}
+\item A follower times out by recieving no messages over a period of time.
+\item A follower increments its current term and turns into candidate state.
+\item A candidate votes for itself and issues the vote to the cluster.
+\item Continue with point one until one of the follwing happens:
+  \begin{enumerate}
+  \item The candidate wins the election.
+  \item Another candidate wins the election.
+  \item The election times out with no winner.
+  \end{enumerate}
+\end{enumerate}
+
+Since this maybe happens in parallel on many servers more details
+need to take into account when determing the possible outcomes.
+
+(a) A candidate wins the election when it recieves the majority of
+votes in the cluster. Each server votes for one candidate on a
+\textit{first-comes-first-served} basis. The majority voting ensures
+the only one leader safety property. The winner imediatly starts
+by sending heartbeat messages to all other servers to implement itself
+as new leader and stop the election phase.~\cite{ongaro2014consensus}\\
+(b) A candidat may recieve messages from a possible new leader.
+The new leader is accepted if it's term is at least as large as
+the candidates one. The candidate accepts the new leader and turns
+into follower state. Otherwise, the leader is rejected and the election
+goes on.~\cite{ongaro2014consensus}\\
+(c) If multiple candidates start with the election at the same
+time or the network connection is poor enough no candidate may win
+the election. In this split vote scenario the candidate times out again
+and starts a new term and election phase.\cite{ongaro2014consensus}
+
+\paragraph{Log replication}
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}[>=stealth',shorten >=1pt,auto,node distance=4cm,semithick]
+
+    \draw[->] (-5,0) -- (3.9,0) node at (0,-0.5) {committed entries};
+    \draw[-] (-5,0.2) -- (-5,-0.2);
+
+    % first log
+    \node at (-4.4,1) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$x\leftarrow 3$};
+    \node at (-3.15,1) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$y\leftarrow 1$};
+    \node at (-1.9,1) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$y\leftarrow 9$};
+    \node at (-0.65,1) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$2$\\$x\leftarrow 2$};
+    \node at (0.61,1) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$3$\\$x\leftarrow 0$};
+    \node at (1.87,1) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$3$\\$y\leftarrow 7$};
+    \node at (3.13,1) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$3$\\$x\leftarrow 5$};
+    % second log
+    \node at (-4.4,2.5) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$x\leftarrow 3$};
+    \node at (-3.15,2.5) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$y\leftarrow 1$};
+    % third log
+    \node at (-4.4,4) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$x\leftarrow 3$};
+    \node at (-3.15,4) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$y\leftarrow 1$};
+    \node at (-1.9,4) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$y\leftarrow 9$};
+    \node at (-0.65,4) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$2$\\$x\leftarrow 2$};
+    \node at (0.61,4) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$3$\\$x\leftarrow 0$};
+    \node at (1.87,4) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$3$\\$y\leftarrow 7$};
+    \node at (3.13,4) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$3$\\$x\leftarrow 5$};
+    \node at (4.4,4) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$3$\\$x\leftarrow 4$};
+    % fourth log
+    \node at (-4.4,5.5) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$x\leftarrow 3$};
+    \node at (-3.15,5.5) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$y\leftarrow 1$};
+    \node at (-1.9,5.5) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$y\leftarrow 9$};
+    \node at (-0.65,5.5) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$2$\\$x\leftarrow 2$};
+    \node at (0.61,5.5) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$3$\\$x\leftarrow 0$};
+    % fifth log
+    \node at (-4.4,7) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$x\leftarrow 3$};
+    \node at (-3.15,7) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$y\leftarrow 1$};
+    \node at (-1.9,7) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$1$\\$y\leftarrow 9$};
+    \node at (-0.65,7) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$2$\\$x\leftarrow 2$};
+    \node at (0.61,7) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$3$\\$x\leftarrow 0$};
+    \node at (1.87,7) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$3$\\$y\leftarrow 7$};
+    \node at (3.13,7) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$3$\\$x\leftarrow 5$};
+    \node at (4.4,7) [draw,thick,rectangle,align=center,minimum height=1.2cm] {$3$\\$x\leftarrow 4$};
+    
+    \draw[decoration={brace,mirror,raise=5pt},decorate] (5,0.3) -- node[right=15pt] {followers} (5,6);
+    \node at (5,7) [right=15pt] {leader};
+    \node at (5,8.5) [right=15pt] {log index};
+    \node at (-4.4,8.5) {1};
+    \node at (-3.15,8.5) {2};
+    \node at (-1.9,8.5) {3};
+    \node at (-0.65,8.5) {4};
+    \node at (0.61,8.5) {5};
+    \node at (1.87,8.5) {6};
+    \node at (3.13,8.5) {7};
+    \node at (4.4,8.5) {8};
+    
+  \end{tikzpicture}
+  \caption{An example of logs and it's entries accross a cluster.~\cite{ongaro2014consensus}}
+  \label{fig:logs}
 \end{figure}
 
 
