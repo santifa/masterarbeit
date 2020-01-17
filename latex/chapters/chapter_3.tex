@@ -317,6 +317,30 @@ the election. In this split vote scenario the candidate times out again
 and starts a new term and election phase.\cite{ongaro2014consensus}
 
 \paragraph{Log replication}
+If a leader is elected the cluster transistions to the normal operation
+state. This means that client requests are served, the requests are
+replicated across the cluster and applied to the state machines.
+The leader processes the client requests which contain commands to
+the replicated state machine. The command is appended to the leaders
+log as a new entry. Afterwards the leader issues replication requests
+of this new entry to all other servers in parallel. If the majority
+replicated the entry the leader commits the entry to it's state machine
+and repsonds the results to the client. The follower are noticed by
+later messages of this newly committed entry. The leader
+tries the replication of an entry indefinitly if some followers
+are creashed or not responding.~\cite{ongaro2014search}
+
+Figure~\ref{fig:logs} shows the organization of the logs of five servers,
+one leader and four followers. Each entry carries the command for the state
+machine and the term number the entry was created to detect inconsistencies
+between logs. Additionally, an entry is assigned to some log index number.
+If an entry was safely replicated across the network and leader applies
+it to its state machine, then the entry is committed and durable over
+future terms. Also, the entry is eventually applied by all state machines
+in the cluster. The leader tracks the highest known log index and includes
+it in future request such that followers know which entries can be
+safely applied to their state machine. Previous entries which are
+not already applied are also applied in log order.~\cite{ongaro2014consensus}
 
 \begin{figure}[ht]
   \centering
@@ -378,25 +402,109 @@ and starts a new term and election phase.\cite{ongaro2014consensus}
   \label{fig:logs}
 \end{figure}
 
+To maintain consistency between the logs Raft uses the aforementioned
+log matching property which can be devided into two properties.
 
-%One early approach to build distributed systems based on consensus
-% is the family of Paxos protocols first introduced by Leslie Lamport
-% et al in~\cite{lamport1978time} and adjusted by many others,
-% like~\cite{lamport2001paxos, van2015paxos}. As mentioned by
-% Ongario et al in~\cite{ongaro2014search} the Paxos protocols
-% are quite difficult to understand.
+\begin{defi}
+  If two entries have the same index and term in different logs, then
+  they store the same command.
+\end{defi}
 
+\begin{defi}
+  If two entries have the same index and term in different logs, then
+  all preceding entries are identical in both logs.
+\end{defi}
 
+The leader organizes its own logs before distribution and logs stay
+consistent over time. So, a leader doesn't change previous log index
+entries and after distribution all other logs are coherent to the leaders
+one. From this follows the first property. The second one follows
+from the way an entry is replicated in the network. The leader
+inlcudes the previous entry term and index in the message. The follower only
+applies the entry if it finds the given privious term and index in its
+own log. The consitency check preserves identical logs across the
+network as long as no leader fails.~\cite{ongaro2014search}
 
-% Distributed systems are very useful to harden critical infrastructures.
-% Imagine a nuclear powerplant where every failure in the controlling computer
-% system could led to a catastroph. Such important system should be relicated
-% among a different computer located at different locations. These distributed
-% system manges a commen state among all participants. This can be done by
-% using \textit{consensus protocols} and state machines to manage a global state among
-% the network. Such protocols allow machines to act as a coherent group which
-% can tolerate failures of individual machines.~\cite{rahli2018velisarios, ongaro2014search}
+If a leader crashes the log can became inconsistent through incomplete
+replication. Also, this can be collected over multiple terms and
+crashes of leaders and followers. A follower can have additional
+or missing entries over multiple terms in regard to the current leader.
+The Raft approach to handle this inconsistencies are fairly simple.
+The leader forces the followers to duplicate the leaders log and
+remove inconsistent entries from their own logs. 
+To do so, the leader maintains a list of the next log index
+which is send to a follower (initially the next empty log index of the leader). 
+If the consistency check fails and the follower rejects to apply
+an entry the leader decrements its next log index for the follower
+and tries to replicate this entry. This happens until the leader
+finds a matching entry in the follower log which removes all
+succeding entries and the leader can apply its own log.~\cite{ongaro2014search}
 
+\paragraph{Safety}
+These mechnics doesn't ensure the safety under all circumstances.
+For example, if a leader is elected which has a shorter log
+then the leader before the new leader maybe removes already
+committed entries from the network. This would break the
+Leader Completness property mentioned earlier. So, Raft
+uses additional mechnics to ensure the correctness of
+the safety properties.~\cite{ongaro2014search}
+
+\subparagraph{Election restriction}
+To prevent nodes with an incomplete log to be elected
+Raft prevents candidates in the voting process from winning
+the election. In the voting process a candidate messages
+to at least a majority of other nodes in the network.
+The messages contains the log index and term of the candidate
+and a the voter decides if the candidates log is up-to-date
+enough to recieve that vote.~\cite{ongaro2014search}
+
+\begin{defi}
+  Given two logs, the one is more up-to-date which has
+  either the later term as last log entry or if the terms
+  are equal the highest log index. Otherwise, both logs
+  can be considered as equal.
+\end{defi}
+
+\subparagraph{Committing old entries}
+If a leader crashes before committing an entry on the
+majority of followers the new leader needs to handle
+this situation by committing the entry. Raft never commits
+log entries from previous terms by counting replicas and
+checking if they are the majority. If a new entry is committed
+to the majority of servers the leader applies the Log Matching
+property to restore log consistency across the network.
+Also, the log entries keep their term number and the
+leader doesn't overrides the term number as with other
+approaches. Thus uncommitted log entries are only
+committed indirectly by newer commits.~\cite{ongaro2014search}
+
+\subparagraph{Follower and candidate failures}
+Follower and candidate failures are fairly easy to handle.
+Since all messages in Raft are idempotent the protocol
+just resends all messages indefinitly until it gets
+an expected result.~\cite{ongaro2014search}
+
+\subparagraph{Client handling}
+On startup clients choose a random server for
+requests if the server is not the leader it rejects
+the request with additional informations about the current leader.
+Otherwise, the network can implement internal forwarding of client
+requests to the current leader. If the leader is unavailable the
+requests time out.~\cite{ongaro2014consensus}
+
+Raft supports linearizable semantics for clients. Each request
+appears to be executed once and instantaneously. This is implemented
+by assigning a unique id to every requests. The network
+caches every requests along with the corresponding reponse preventing
+it from re-executing old requests.~\cite{ongaro2014consensus}
+
+\vspace{2em}
+
+This are only the basics of the Raft algorithm which are implemented
+in this thesis. Furthermore, Raft provides description for log compaction,
+cluster membership changes and more further optimizations to the basic
+algorithms. The next main section provides more details on the
+implmenetation of the protocol within the COQ proofing system.
 
 \subsection{COQ}
 COQ is an interactive proof assistant which enables users to formalize
@@ -411,85 +519,140 @@ in a ML language style and proofs in higher order logic (HOL).
 It uses inductive definitions to represent data-structures, even infinite
 ones. Based on the Curry-Howard-Isomorphism, COQ uses an approach based
 on the \textit{Calculus of Construction} as logical
-background or metalanguage as described in the proofs-as-programs sections.~\cite{the_coq_development_team_2019_2554024, paulinmohring:hal-01094195}
+background or metalanguage as described in the proofs-as-programs
+sections.~\cite{the_coq_development_team_2019_2554024,
+  paulinmohring:hal-01094195} This subsection gives only a brief overview
+for a more comprehensive introduction use the reference documentation\footnote{\url{https://coq.inria.fr/refman/index.html}}.
 
-The Calculus of Construction is a typed polymorphic language which can
-represent inductive definitions. It is the underlying language for the
-Calculus of Inductive Construction. It is a pure and riched typed $\lambda$
-lambda-calculus which can describe terms and types.~\cite{paulinmohring:hal-01094195}
-The term includes the normal lambda operations, like binding, abstraction
-and application. The typing supports for instance  abstractions with
-dependent products and typing of types. These typing allows to ``sort''
-(a special COQ constant) types in universes and apply to them differently
-depending on the certain universe of objects.~\cite{paulinmohring:hal-01094195}
+% The Calculus of Construction is an axiom-free typed polymorphic language which can
+% represent inductive definitions. It is the underlying language for the
+% Calculus of Inductive Construction. It is a pure and riched typed $\lambda$
+% lambda-calculus which can describe terms and types.~\cite{paulinmohring:hal-01094195}
+% The term includes the normal lambda operations, like binding, abstraction
+% and application. The typing supports for instance  abstractions with
+% dependent products and typing of types. These typing allows to ``sort''
+% (a special COQ constant) types in universes and apply to them differently
+% depending on the certain universe of objects.~\cite{paulinmohring:hal-01094195}
 
+The Calculus of Construction is an axiom-free typed polymorphic language.
+The language of COQ allows to define mathematical facts by
+defining objects, like integers, sets, trees etc., and making statements
+about the facts. By combining these one can write mathematical proofs.
+The COQ compiler can automatically reason about the correctness of these
+definitions and proofs by applying the rules of the type theorie.
+Additionally COQ provides an enviroment to support the developer by
+creating programs and proofs with various tools like proof search, advanced
+notations etc.~\cite{paulin2011introduction}
 
-Inductive definitions are build on top of the pure type system.
+To enable this, COQ uses a small kernel language with only a few
+primitive constructions, e.\,g. functions, (co-)inductive definitions,
+product types, sorts. It is a pure and riched type $\lambda$-calculus which
+describes terms and types.~\cite{paulinmohring:hal-01094195}.
+It provides the basic $\lambda$ operations like binding, abstraction
+and application. Additionally, rules for type-checking and computation
+are implemented on this level allowing the aforementioned reasoning
+about the correctness.~\cite{paulin2011introduction, paulinmohring:hal-01094195}
+
+The same language can be used to represent objects, functions, propositions
+and proofs which are on the higher-level. For this, COQ provides a
+rich enviroment for designing theories, proofs and programs. For instance,
+this enviroment includes notations which are extensible, a tactic language,
+a library system. These extension are conservative and only extend the
+basic kernel in a safe manner.~\cite{paulin2011introduction}
+
 \begin{defi}
-  An inductive definitions consists of a name, a type (defined by the arity)
-  and a set of constructors, for instance \texttt{Inductive N : Type := O : N |
-    S : N $\rightarrow$ N}.
+  Every COQ object or term has a name and a type.
 \end{defi}
 
+\begin{defi}
+  Types are building an infinite well-founded hierarchy.
+  The type of types is called sort and the main sorts are:
+  \begin{itemize}
+  \item $Prop$ as the type of logical propositions.
+  \item $SProp$ as the type of strict propositions.
+  \item $Set$ as the type of small sets, for instance data types.
+  \end{itemize}~\cite{the_coq_development_team_2019_2554024}
+\end{defi}
 
-% Proof assistents are designed to support developers to proof mathematical
-% statements, write formal specifications and verify the correctness of programs.
-% One of these systems is COQ which uses the specification language
-% \textit{Gallina}. Gallina can represent programs, properties of programs
-% and proofs of these properties. Through the already mentioned
-% Curry-Howord-Isomorphism the specifications are represented by
-% \textit{Calculus of Inductive Construction}. This is a rich typed $\lambda$ calculus and
-% can be extracted to either \textit{Ocaml} or \textit{Haskell}.~\cite{the_coq_development_team_2019_2554024}
+\begin{defi}
+  To support abstraction COQ uses \textbf{Definitions} to instantiate
+  general statements with more concrete concepts used for proofs
+  or programming.~\cite{huet1997coq}
+\end{defi}
 
-% \paragraph{Gallina}
-% As already mentioned in the proof-as-programs paragraph, the metalanguage to
-% describe mathematical theories and prove the specifications of programs.
-% A theorie can consists out of numerous axioms, hypothesis, parameters,
-% lemmas, theorems and definitions for sets, predicates, functions and constants.
-% These are the logical objects describing a theorie.
-% The objects are described as terms which are typed. Types are described
-% using the same syntax as term and is a semantically subclass of term.~\cite{the_coq_development_team_2019_2554024}
-% The full syntax description can be found in the reference manual~\cite{the_coq_development_team_2019_2554024}.
+Definitions are one of the basic constructs which are used exentensivly
+to define functions and facts about the program or theory.
+Another important construct are inductive types which are used to model
+data-types, primitive relations and so on in a constructive way.~\cite{paulin2011introduction}
 
-% \paragraph{Calculus of Inductive Construction}
-% The underlying formal language of COQ is the Calculus of Inductive Construction
-% (Cic). Every expression or term in COQ have a type and Cic is the inference
-% system that checks the types of logical objects for correctness.
-% Every object that is handled by the formalism has some form of type whether it
-% be a basic datatype or more complex variants.~\cite{the_coq_development_team_2019_2554024}
+\begin{defi}
+  An inductive type declares a set of constructors which are used
+  to construct every possible entity of the type. It introduces
+  a new primitive object for the type and provides induction support
+  on that type for reasoning.~\cite{paulin2011introduction}
+\end{defi}
 
-% \begin{defi}
-%   In COQ a type is represented by $x:T$ which could be read as the element $x$
-%   that belongs to the type $T$. Types of types are named sorts which belong to
-%   the possible infinite but well-founded typing hierarchy or algebraic universe.
-% \end{defi}
+To use inductive types in functions or some other definitions COQ
+uses \textit{pattern-matching} for case analysis over the type
+constructors. It provides a strong support for this by allowing
+to match multiple patterns at once or by nesting patterns which
+is also called \textit{generalized
+  pattern-matching}.~\cite{paulin2011introduction}
+
+The last important syntactically point mentioned here is the \textit{fixpoint definition}
+which allows to build recursive functions. To keep the logic sound, COQ uses
+structural recursion instead of general recursion. This means that
+such a definitions uses an inductive type as formal argument.
+Thus, on a recursive call the compiler can check that the next
+term is structurally smaller then the previous one.~\cite{paulin2011introduction}
 
 \paragraph{Extraction}
-COQ offers the possibillity to extract typed checked logical objects into
-other programming languages. In this thesis the resulting code is extracted
-as Ocaml library which can be used to run and simulate the implemented
-protocol.
+To use the logical and functional programs in the real-world in conjunction
+with other non-proofen or type-checked languages, COQ offers
+the possibillity to extract formal code from Calculus of Inductive Construction.
+The COQ objects can be extracted into either Haskell or OCaml code and
+some objects also can be exchanged by efficient ones from the target
+language. This thesis extracts the code as OCaml library which can be
+embedded in a command-line interface or simulation or evaluation
+code for the Raft protocol.~\cite{the_coq_development_team_2019_2554024}
 
+This is only a small overview of the possibillities COQ offers. Since,
+this thesis has no focus on building proofs this part was skipped and
+only the basic elements for building functional programs are shown to
+basically understand the Velisarios framework. Other constructs
+are explained as they appear in the thesis.
 
 
 \subsection{Velisarios}
-The Logic of Events as presented in the last chapter is able to
-handle inconsistent distributed networks. Distributed systsms which are
-able to tolerate a specific amount of failed nodes or imperfect
-information about the network state share the common property of
-byzantine fault-tolerance. This is named after the \textit{Byzantine Generals
-  Problem} described by Leslie Lamport in~\cite{}.
+This chapter showed the Raft protocols and the difficulties of
+implementing distributed systems. The Logic of Events from the former
+chapter shows a formal approach to handle this difficulties in
+a consistnt theorie. It can tolerate byzantine-failures and
+imperfect informations about the network. Rahli et al. presented
+an implementation of the Logic of Events first in the NUPRL
+theorem prover named EventML~\cite{rahli2017eventml}. Later
+the system was reimplmented in COQ as Velisarios~\cite{rahli2018velisarios}.
+It aims to be a generic and extensible formal verification framework
+for developing and systematically proofing distributed networks.~\cite{rahli2018velisarios}
 
 
 
 
 
-Rahli et al presented an implementation of the logic of event
-in~\cite{rahli2018velisarios}. The implementation is written
-for the COQ theorem prover in the internal specification language,
-the calculus of construction. The framework supports to develop
-\textit{byzantine fault-tolerant} protocols in the implementation
-and mechnical proofing.~\cite{rahli2018velisarios}
+% Rahli et al presented an implementation of the logic of event
+% in~\cite{rahli2018velisarios}. The implementation is written
+% for the COQ theorem prover in the internal specification language,
+% the calculus of construction. The framework supports to develop
+% \textit{byzantine fault-tolerant} protocols in the implementation
+% and mechnical proofing.~\cite{rahli2018velisarios}
+
+% The Logic of Events as presented in the last chapter is able to
+% handle inconsistent distributed networks. Distributed systsms which are
+% able to tolerate a specific amount of failed nodes or imperfect
+% information about the network state share the common property of
+% byzantine fault-tolerance. This is named after the \textit{Byzantine Generals
+% Problem} described by Leslie Lamport in~\cite{}.
+
 
 % \begin{defi}
 %   A byzantine fault-tolerant state-machine replication (BFT-SMR) is
