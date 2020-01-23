@@ -687,7 +687,24 @@ knowledge of distributed systems.~\cite{rahli2018velisarios}
   \label{fig:velisarios}
 \end{figure}
 
+As stated in the former chapter an event is an abstract entity which handles
+recieved messages or reacts to some abstract activity which is no further
+described. Velisarios use these arbitrary events to describe arbitrary faults.
+A process reacts to messages happening at their locations one after another
+by going through their states and creating new messages (which in turn
+is a new event). Since events can be ordered by space and time a collection
+of these events can be seen as a run of a distributed systems. These are
+called \textit{event orderings}. These orderings are the main idea when proving
+properties about a distributed systems.~\cite{rahli2018velisarios}
 
+\begin{defi}
+  A property $P$ holds for a distributed system if it holds
+  for all event orderings of that system.
+\end{defi}
+
+Figure~\ref{fig:velisarios} shows an overview of the components provided
+by Velisarios. All components are abstract and parametrized to enable
+reasoning and implementation of different protocols.~\cite{rahli2018velisarios}
 
 % Rahli et al presented an implementation of the logic of event
 % in~\cite{rahli2018velisarios}. The implementation is written
