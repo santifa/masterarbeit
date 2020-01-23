@@ -635,7 +635,57 @@ the system was reimplmented in COQ as Velisarios~\cite{rahli2018velisarios}.
 It aims to be a generic and extensible formal verification framework
 for developing and systematically proofing distributed networks.~\cite{rahli2018velisarios}
 
+Schematically all byzantine fault-tolerant (BFT) protocols share the same
+higher logic of distributing, gathering and voting on knowledge
+provided to the system. Velisarios is a knowledge theory which
+helps to build such systems by providing many main components
+to reason about BFT protocols. For instance, a basic model
+of the idea of arbitrary faults, a collection of assumptions
+for reasoning, proof tactics and a general library of
+knowledge of distributed systems.~\cite{rahli2018velisarios}
 
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}[>=stealth',shorten >=1pt,auto, line width=1mm,semithick]
+
+    % background layer
+    \draw (0,0) node[rectangle, fill=gray!5, minimum width=10cm, minimum height=5cm] {};
+    \draw (-7,0) node[rectangle, fill=gray!5, minimum width=2cm, minimum height=5cm] {};
+    \draw (-7,2) node {OCaml};
+    \draw (-4,2) node {COQ};
+
+    % second layer
+    \draw (-7,-0.3) node[rectangle, fill=magenta!10, rotate=-90, minimum height=1.5cm] (A) {Extraction/Execution};
+    \draw (-2,0.4) node[rectangle, fill=magenta!5, minimum height=2.5cm, minimum width=5cm] {};
+    \draw (-2,-1.5) node[rectangle, fill=magenta!10, minimum width=5cm] (B) {Process/State Machines};
+    \draw (-4,1.3) node {LoE};
+    \draw (2,0) node[rectangle, fill=magenta!10, rotate=-90, minimum height=1.5cm, minimum width=3cm] (C) {Assumption};
+    \draw (4,0) node[rectangle, fill=magenta!10, rotate=-90, minimum height=1.5cm, minimum width=4.5cm] (D) {Safety Proofs};
+
+    % top layer
+    \draw (-2.6,1) node[rectangle, fill=magenta!10, minimum height=1cm, minimum width=1.5cm] (E) {Auth.};
+    \draw (-2.6,-0.2) node[rectangle, fill=magenta!10, minimum height=1cm,minimum width=1.5cm] (F) {Msg};
+    \draw (-0.6,0.4) node[rectangle, fill=magenta!10, align=center, minimum height=2.2cm] (G) {Event\\Orderings};
+
+    % lines
+    \draw[->] (B.west) -- (A);
+    \draw[->] (E) -- (G);
+    \draw[->] (F) -- (G);
+    \draw[->] (B.east) -- (C);
+    \draw[->] (G) -- (C);
+    \draw[->] (G.45) -- (D.-160);
+    \draw[->] (C) -- (D);
+    \draw[->] (B.east) -- (D.-20);
+
+    % parts
+    \draw[dashed] (-5.5,3) -- (-5.5,-3) node [left] {Runtime};
+    \draw[dashed] (1,3) -- (1,-3) node [left,xshift=-1.5cm] {Implementation}
+    node [right] {Proofing};
+    
+  \end{tikzpicture}
+  \caption{Overview of the Velisarios components.~\cite{rahli2018velisarios}}
+  \label{fig:velisarios}
+\end{figure}
 
 
 
