@@ -706,6 +706,36 @@ Figure~\ref{fig:velisarios} shows an overview of the components provided
 by Velisarios. All components are abstract and parametrized to enable
 reasoning and implementation of different protocols.~\cite{rahli2018velisarios}
 
+As one can see, the core of Velisarios is the implementation of the Logic of
+Events in terms of a message and authentication model which form
+the event orderings model.~\cite{rahli2018velisarios}
+
+\paragraph*{Messages}
+The messages are modeled as a type parameter \code{msg} of the overall model.
+Processes react to incomming messages and may produce outgoing messages.
+Basically, messages are directed which hold the destination along with
+the message and and optional delay that holds the message back.~\cite{rahli2018velisarios}
+
+\paragraph*{Destination}
+A destination or node in the network has a type \code{name} which
+identifies is in the network. The type belongs to the overall model.~\cite{rahli2018velisarios}
+
+\paragraph*{Authentication}
+Velisarios adds the abstract concept of keys for authenticated communication
+to the overall model. A message can be authenticated by some nodes key
+and the message can be checked for validity by some other node. The keys
+are distinguished into sending and recieving ones which are preshared.
+The model uses tokens to provide an abstraction for digital signatures.
+The tokens are created by the appropriate sending key along with the data.
+The recievers verifies the correctnes by checking that token with the recieving
+key.~\cite{rahli2018velisarios}
+
+This components form the event ordering component. It can be seen
+as an abstract and formal representation of a run of a distributed system.
+It is derived from the message sequence diagram used by most system designers.
+The event orderings are no concrete type and are only used by velisarios
+to prove certain properties of the distributed system.~\cite{rahli2018velisarios}
+
 % Rahli et al presented an implementation of the logic of event
 % in~\cite{rahli2018velisarios}. The implementation is written
 % for the COQ theorem prover in the internal specification language,
