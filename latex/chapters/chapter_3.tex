@@ -736,25 +736,49 @@ It is derived from the message sequence diagram used by most system designers.
 The event orderings are no concrete type and are only used by velisarios
 to prove certain properties of the distributed system.~\cite{rahli2018velisarios}
 
-% Rahli et al presented an implementation of the logic of event
-% in~\cite{rahli2018velisarios}. The implementation is written
-% for the COQ theorem prover in the internal specification language,
-% the calculus of construction. The framework supports to develop
-% \textit{byzantine fault-tolerant} protocols in the implementation
-% and mechnical proofing.~\cite{rahli2018velisarios}
+\paragraph{Computational Model}
+As shown below in the figure, Velisarios provides a process or state machine
+model as computational model for the logic of events. These state machines
+are directly executable and the \code{name} of a node maps to the nodes
+state machines. This enables the system to associate different state machines
+to different nodes which can run independently.
+The state machine is designed in a classical manner where
+it consists out of an initial state, a current state and an update function
+for state transitions as seen in Listing~\ref{lst:statemachines}.
 
-% The Logic of Events as presented in the last chapter is able to
-% handle inconsistent distributed networks. Distributed systsms which are
-% able to tolerate a specific amount of failed nodes or imperfect
-% information about the network state share the common property of
-% byzantine fault-tolerance. This is named after the \textit{Byzantine Generals
-% Problem} described by Leslie Lamport in~\cite{}.
+\begin{lstlisting}[style=coq,float,label=lst:statemachines,caption=State
+machine definition and update function.]
+Definition Update S I O := S -> I -> (option S * O).
+Record StateMachine S I O := 
+  MkSM {halted : bool; update : Update S I O; state : S}.
+Definition System (F : name -> Type) I O :=
+  forall (i : name), StateMachine (F i) I O.
+\end{lstlisting}
 
+\code{S} is the type of the state machine and \code{I,O} are the input
+and output types. The \code{halted} flag indicates if the particular
+state machine is running or not. If an event \code{e} is recieved by
+a state machine the local history of events is unrolled and
+\code{state\_sm\_before\_event} creates the current state until
+the new event. \code{state\_sm\_after\_event} updates the current
+state by processing the messages of that event. Both functions
+return \code{Some state} if event is processed and otherwise
+\code{None} if the state machines is halted or some error occoured.~\cite{rahli2018velisarios}
 
-% \begin{defi}
-%   A byzantine fault-tolerant state-machine replication (BFT-SMR) is
-%   a state of the art technique to harden distributed systems.
-% \end{defi}
+\paragraph{Extraction}
+To evaluate and run the implemented protocol Velisarios
+uses the COQ mechanics to extract OcCaml code. Most of
+the needed parameter are set as an extraction context beforehand
+or only with stubs which get relpaced by real implementations from
+OCaml. the abstract parts, like event orderings, are not
+instantiated and only used in COQ for proofing.~\cite{rahli2018velisarios}
+
+\paragraph{Evaluation}
+For the PBFT evaluation Rahli et al. build a small
+trusted runtime in OCaml which uses the async library
+\footnote{\url{https://opam.ocaml.org/packages/async/}}
+for sending and recieving within threads. This system
+iis adapted by this thesis to match the Raft protocol.
 
 
 %%% Local Variables:
