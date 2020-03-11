@@ -1,3 +1,960 @@
 %
-\section{Inhaltliche Bestandteile der Seminararbeit}
-\label{sec_inhalt}
+\section{Raft and Velisarios}
+\label{sec_4}
+
+The last chapter described the Raft protocol and shows
+only a brief overview of Velisarios. The overview was
+short because this chapter goes into more detail
+and it's easier to follow the real working of Velisarios
+with an concrete example. So, this chapter combines both
+technologies and presents an implementation of the Raft
+protocol with the Velisarios framework.
+
+This section will go into the details of implementing a protocol
+with Velisarios. It shows the whole process of adjusting the Raft
+protocol to fit into the Velisarios rational and the problems
+along the way. 
+
+The code is public available on
+Github\footnote{\url{https://github.com/santifa/masterarbeit/tree/master/raft}}.
+It contains Velisarios as a git submodule but due to the limitations how
+the COQ importing system works the necessary files from the current
+master branch are copied into the raft working directory. The files
+are reordered to have clear distinction between files belonging to
+the Velisarios core, useful definitions which are some sort of dependency
+and the protocol files.
+
+\subsection{Contextualisation}
+As seen before, Velisarios is an abstract framework to model
+a distributed system as a set of state machines which comminucate
+with messages. A state machine in the context of Velisarios is
+a process which runs the consensus protocol. The term process is used
+to refer to the Velisarios state machine while the term state
+machine refers to the abstract state machine in Raft. The state
+machine is kept abstract since its real manifestation doens't care
+by implementing Raft. Velisarios uses the term replica to refer
+to some sort of server or node.
+
+\begin{lstlisting}[style=coq,label=lst:abs,
+caption=Abstract typeclasses used by Velisarios.]
+Global Instance Raft_I_Msg : Msg := MkMsg RaftMsg.
+Global Instance Raft_I_get_msg_status : MsgStatus := MkMsgStatus Raftmsg2status.
+Global Instance Raft_I_Node : Node := MkNode RaftNode RaftnodeDeq.
+Global Instance Raft_I_Quorum : Quorum_context := MkQuorumContext...
+Global Instance TIME_I : Time.
+Global Instance Raft_I_context : RaftContext := MkRaftContext...
+\end{lstlisting}
+
+Since Velisarios is build as an abstraction it provides typeclasses
+for inserting real components for these abstract types. Listing~\ref{lst:abs}
+shows the binding for the Raft components to the Velisarios typeclasses.
+As one can see only basic definitions for a protocol are needed.
+The heavy lifting happens by implementing the context which
+gets passed at creation time of a node.
+
+% Velisarios is an abstract framework which models individual
+% state machines which communicate with messages over channels.
+% This abstraction enables the implementer to choose its own
+% types for the state machines and messages. But the types
+% are defined beforehand.
+
+\begin{lstlisting}[style=coq,label=lst:context,
+caption=Excerpt of the context definition of types and functions used within
+the protocol.]
+   (* the content type for the log *)
+   Content : Set;
+   (* get a textual representation from the content *)
+   content2string : Content -> string;
+   (* This is the state of the program to distribute. *)
+   RaftSM : Set;
+   (* the result type which gets issued by the state update function *)
+   RaftSM_result : Set;
+   (* the initial state of the state machine *)
+   RaftSM_initial_state : RaftSM;
+   (* the update function which produces a new state and a result. *)
+   RaftSM_update_state : RaftSM -> Content -> RaftSM * RaftSM_result
+\end{lstlisting}
+
+Listing~\ref{lst:context} shows the abstraction done beforehand. The
+implementation starts with an definition which parts are kept abstract
+until it gets realized with a concrete programm or state machine and
+a concrete log. The \code{Content} describes an abstract type for the log
+cells. By this definition a log can only have one sort of types for all cells.
+The concrete state machine is the \code{RaftSM} type. To update the state
+machine \code{RaftSM\_update\_state} is defined which takes the current
+state of the program and some log cell as input. It produces a next
+state and some sort of result (\code{RaftSM\_result}). Although the abstract
+types for replicas and clients are defined in this excerpt which are left out. 
+
+This is defined as dependent type record in COQ which enables to use the
+abstract definitions as their were implemented. 
+
+
+% COQ provides dependent types as \code{Class} with an explict constructor.
+% In listing~\ref{lst:context} the excerpt of context for the Raft protocol is presented.
+% The definition of replicas and clients are left out. It's important to note
+% that the defined types and functions are only abstract and can be instantiated
+% afterwards. This leads to the circumstances that parts of the protocol can 
+% be abstract too but used within the implementation as if they're already
+% implemented. \code{Content} refers to the type of the log in the Raft protocol
+% and \code{RaftSM} is the type of the state machine. An update via
+% \code{RaftSM\_update\_state} leads to a new state machine and some result of
+% type \code{RaftSM\_result} and depends on the type of the log and the type of
+% state machine itself.
+
+Velisarios uses an abstract definition of nodes which can run state machines.
+Therefore, one defines the different types inductively as in
+listing~\ref{lst:nodes}. Raft uses only one type of server nodes, the
+\code{replica} as the state transitions are handled by the process itself.
+The \code{client} is only mentioned for completness as the real implmenetation
+is done within OCaml. One has to proof that the choosen type has decidable
+equaltity. The last line bounds the definitions to the abstract node defined
+by Velisarios. Thus, the name of the nodes can be linked to the corresponding
+process. 
+
+\begin{lstlisting}[style=coq,label=lst:nodes,
+caption=The different kinds of raft nodes.]
+  Inductive RaftNode :=
+    | replica (n : Rep)
+    | client (n : Client).
+
+  Global Instance Raft_I_Node : Node := MkNode RaftNode RaftnodeDeq.
+\end{lstlisting}
+
+The linking is done by an bijective mapping between the node names which are
+ordered natural numbers and the provided type definition. This is used by
+Velisarios quorum theory to ensure that the majority of nodes agree
+un updating its process state on the same operation.~\cite{rahli2018velisarios}
+
+\begin{defi}
+  Give a set of nodes $N$ than a byzantine quorum is a subset $Q\subseteq N$ with the
+  property $f + 1\leq (2*|Q|)-(|N|)$. Every two choosen quorums should intersect,
+  such that the number of nodes are greater than a possible number of failed
+  nodes.
+\end{defi}
+
+
+% As mentioned in the last chapter, Velisarios uses names to identifies nodes
+% within the network. 
+% In listing~\ref{lst:nodes} are the kind of nodes defined. Only two nodes are
+% distinguished by the system whereby the real client implementation is done
+% in Ocaml. The function \code{replica2rep} takes a node and returns the unique
+% name of the node in the network which is analogous for clients. This is done
+% by matching over the different kinds of the type \code{RaftNode}. Although,
+% one has to show that the node type has an decidable equality before it
+% can be used by Velisarios as a real instance for the networks nodes.
+% The last line shows how the real definition of \code{RaftNode} is bound
+% as a type parameter to the abstract typeclass for nodes provided by Velisarios.
+
+% maybe state the quorum integration
+
+
+\subsection{Basic Definitions}
+After the last subsection, Velisarios knows about the node types and it's proven
+that the quorum theory holds. The abstract types for state machine and the log
+for the Raft protocol are already defined. This subsection defines the
+terminology used by Raft in the whole protocol.
+
+\paragraph{Terms and time}
+Raft divides time into abstract chunks. These terms spanning from the
+voting for a new leader til the possible failure of a leader.
+
+\begin{lstlisting}[style=coq,label=lst:terms,
+caption=The definition of terms and timer.]
+Inductive Term := term (n : nat).
+Inductive Timer := timer (id : nat).
+\end{lstlisting}
+
+The terms are modeled as monotonallicaly increasing natural numbers to
+distinguish between two terms. The current term is stored by every node
+participating in the network and is exchanged with every request to
+inform nodes which might run in older terms. Although, the term is used
+to to achive the leader completeness property.
+Raft uses a timeout mechanic to detect failed leaders or split
+votes. This is modeled in Velisarios as an internal message which
+indicates a timeout. Therefore, every node has an internal counter
+which stores the last send timer message. On arrival of such a message
+the node checks if the timer number matches with the internal one. If
+that's the case the node starts a state transition or drops the message
+otherwise.
+
+\paragraph{State transistions}
+Raft uses three different states for a node to model
+the different states of the network.
+
+\begin{lstlisting}[style=coq,label=lst:states,caption=The definition of the nodes states.]
+ Record LeaderState :=
+    Build_Leader_State
+      {
+        next_index : NextIndex;
+        match_index : MatchIndex;
+      }.
+
+  Record CandidateState :=
+    Build_Candidate_State { votes : nat; }.
+
+  Inductive NodeState :=
+  | follower
+  | candidate (c : CandidateState)
+  | leader (l : LeaderState).
+\end{lstlisting}
+
+As shown in listing~\ref{lst:states} a node can be in follower state which
+doesn't need to store additional informations. The follower state is 
+the initial state of a node when the network starts. A follower switches to the
+candidate state if no leader is present in the network which it detects
+using timeout messages. It stores the amount of votes for itself. 
+Since every candidate votes for itself the \code{votes} variable is initialized 
+with 1. If a candidate wins the election it transistions to the leader state. 
+
+The leader manages two internal lists of indeces. The \code{NextIndex} is the
+list of the next possible log index the leader can send to the node. 
+It is initialized to the leaders next log index. For instance, 
+if the leader recognizes that one node is behind with log replication then
+the leader decrements the \code{NextIndex} and tries to replicate the lower
+log index. The \code{MatchIndex} is a list that stores the highest known replicated
+log index for every node. This enables a leader to check if it can commit a
+log index which is replicated by the majority of the network.
+The full process states for a raft node are presented in the next section along
+with the updating functions.
+
+\paragraph{Log}
+One of the essential parts of the Raft protocol is the coherent log which gets
+replicated across the network of nodes. Raft uses the log for different aspects.
+It stores the replicated client requests as well as sessions or possible other
+things like end of a term. The log can be easaly extended by further messages
+which must be stored and replicated.
+
+In listing~\ref{lst:log} the definition of the log is presented. The
+\code{EntryType} enables to differentiate between protocol internals
+and the clients \code{Content}. At the moment, there are only session and
+end of term entries allowed beside the normal log content. Every log entry
+stores its creation term along with the message. For simplicity a log 
+is only a different notation for a list of entries.
+
+\begin{lstlisting}[style=coq,label=lst:log,caption=The definition of raft log.]
+  Inductive EntryType :=
+  | content (c : Content)
+  | session (s : Sessions)
+  | new_term.
+
+  Record Entry :=
+    MkEntry
+      {
+        entry_term : Term;
+        entry : EntryType;
+      }.
+  Notation Log := (list Entry).
+\end{lstlisting}
+
+The \code{new\_term} is slightly misleading because it marks the start of
+a new term in the log which can only be appended by a leader. Since a
+term starts with the voting round one or more voting rounds can happen
+and the next entry maybe 3 terms ahead of the last \code{new\_term} entry.
+Sessions are explained in the next paragraph.
+
+% To implement the Raft protocol various basic definitions should
+% be done. These definitions declare the semantics used in the later
+% protocol and ease the implementation.
+
+\paragraph{Linearizable semantics}
+Raft uses the linearizable semantic to prevent the network from
+processing the same request twice. The issue of processing client
+request in the correct order and only once applies to all
+concesus protocols and mostly handled the same way.
+The clients first message is a registeration on the network.
+This creates a session which is stored in the log and gets
+replicated across the network.
+
+\begin{lstlisting}[style=coq,label=lst:linearizable,
+caption=The definitions used to implement the linearizable semantics for raft.]
+  Inductive SessionId := session_id (n : nat).
+  Inductive RequestId := request_id (n : nat).
+  Notation Sessions := (list (SessionId * Client)).
+
+  Record Cache :=
+    Build_Cache
+      {
+        sid : SessionId;
+        rid : RequestId;
+        result : option RaftSM_result;
+      }.
+\end{lstlisting}
+
+The client generates request numbers that along with the session id identify
+new requests to handle. As shown in listing~\ref{lst:linearizable} sessions
+and requests are natural numbers which are incremented.  The sessions are kept as
+long as the network is alive and some function to unregister a client
+is not provided. The nodes are keeping an internal cache of processed
+requests for all clients. If a client request is detached to the network
+it gets stored in the cache with the result \code{None}. This means
+the request is dispatched and waiting to be completed. If the leader
+has a result for this request it stores it alongside the requests. 
+This prevents network from processing some request twice.
+This is not an ideal solution since it enforces more book-keeping on every nodes
+side. Although, the Raft protocol allows read-only messages for faster
+processing but these are not implemented in this version. 
+
+\paragraph{Messages}
+Velisarios uses messages that are directly send over a channel to communicate
+between nodes. A process reacts to incoming messages with handler methods that
+possibly update the process state and create outgoing messages. Velisarios
+distinguishes between three different message types. Input from clients
+and other nodes are set as external messages. If a replica sends a message
+to itself its declared as internal one and all messages belonging to the
+protocol are stated as ones. The implementation is shown in listing~\ref{lst:msgstate}.
+
+\begin{lstlisting}[style=coq,label=lst:msgstate,
+caption=Messages have different state informations which are handled by Velisarios.]
+  Inductive msg_status :=
+  | MSG_STATUS_PROTOCOL
+  | MSG_STATUS_INTERNAL
+  | MSG_STATUS_EXTERNAL.
+\end{lstlisting}
+
+Raft uses only a few messages for the core functionality. Extended functionality
+like log compaction or cluster membership changes introduce more messages for
+the communication. The overview of used messages is shown in listing~\ref{list:msgs}.
+
+\begin{lstlisting}[style=coq,label=lst:msgs,
+caption=Overview of the different messages needed for the core Raft.]
+ Inductive RaftMsg :=
+  | init_msg (offset: nat)
+  | register_msg (register : RegisterClient)
+  | register_response_msg (result : Result)
+  | request_msg (request : ClientRequest)
+  | response_msg (result : Result)
+  | append_entries_msg (entries : AppendEntries)
+  | append_entries_response_msg (result : Result)
+  | request_vote_msg (vote : RequestVote)
+  | request_vote_response_msg (result : Result)
+  | timer_msg (timer : Timer).
+\end{lstlisting}
+
+The listing is straight foreward. If the system boots up it gets
+an initial message which defines a timer offset for every node. 
+A client which wants to participate in the network sends a register
+message with its name to the possible leader. It gets a response
+which indicates if the registration was successfull and its session.
+If the registration fails because the node wasn't the leader it
+gets a hint to the current leader. 
+To send a request the client sends its name, session and some request id
+along with the command to the leader. Afterwards the leader issues an 
+\code{AppendEntries} message to the network. Every node responds to
+the call with either success or failure. For checks if some node
+is outdated every protocol message carries the term number. 
+If the system needs a new leader the followers transistions to
+candidate state and issues request vote messages to the rest of the
+network. Every node responds to this message with a successfull vote
+if the node doesn't voted for some other node nor itself.
+The timer message is used to simulate the internal timing of the nodes.
+
+In listing~\ref{lst:append} are the two different types of \code{AppendEntries}
+message shown. Raft uses the message either for a heartbeat mechanism or for
+the log replication. In Raft the leader issues heartbeats which are basically
+empty replicate messages to demonstrate that leader is still alive. The
+replication variation additionally carries the log entry and the session and
+request from the client. This is done to distinguish responses from the nodes
+to the correct client. 
+
+\begin{lstlisting}[style=coq,label=lst:append,
+caption=The two possible append entry calls in Raft.]
+Inductive AppendEntries :=
+ | heartbeat (term : Term) (leader : Rep) (last_log_index : nat)
+             (last_log_term : nat) (commit_index : nat)
+ | replicate (term : Term) (leader : Rep) (last_log_index : nat)
+             (last_log_term : Term) (commit_index : nat)
+             (entry : list Entry) (id : SessionId * RequestId).
+\end{lstlisting}
+
+The different types of result messages are combined into a single \code{Result}
+type. The listing~\ref{lst:result} shows the inductive type. For each
+message which could lead to a response a reslt value is added to the type.
+Since Raft uses only a few types of messages only four types are needed.
+The listing is straight forward. The first one is the result for a client
+registering at the network. It either succeds with a session or fails
+with a hint to the correct leader. The next one is the response to
+a voting request which indicates if the vote was granted by the requested
+node. The append entries result sends the name of the follower and the request and
+session id to the leader. This is done to indicate the overall replication state
+in the match and next index. The session and request id are usefull to
+recognize the correct client request and prevent double execution.
+
+\begin{lstlisting}[style=coq,label=lst:result,
+caption=The inductive result type for all response messages.]
+Inductive Result :=
+  | register_client_res (status: bool) (session_id : SessionId) (leader : option Rep).
+  | request_vote_res (term : Term) (vote_granted : bool)
+  | client_res (status : bool) (result : RaftSM_result)
+  | append_entries_res (term : Term) (success : bool) (node : Rep) (id : SessionId * RequestId)
+\end{lstlisting}
+
+These are the most basic definitions needed for the Raft protocol. The other
+definitions are left out because they're either straight foreward or the
+implementation details don't give a deeper understanding.
+
+\subsection{Raft middleware}
+This subsection shows the details of the core Raft implementation.
+After defining the abstract context and the terms used in Raft
+now the process states and transition or handler functions are
+described.
+
+\paragraph{State}
+Listing~\ref{lst:state} shows the definition of the Raft process
+state. Each Raft process needs to know the current term and for
+which node it voted at the beginning of the term. Also, it stores
+the current term leader and the log. The commit index indicates which
+log entry was last applied to the global state machine. This
+may be different to the log index this process has at last applied
+to its state machine. Each process stores its current \code{NodeState}
+which could change through transitioning into the next term.
+To fullfill the property that each node should have a different
+timeout a base timeout is set at network bootup.
+The \code{timer} indicates the last timer message number the node
+reacts to. And the \code{msg\_timer} is used to resend
+failed messages if the node is in leader mode.
+
+\begin{lstlisting}[style=coq,label=lst:state,
+caption=The dependent record definition of the Raft process state.]
+Record RaftState :=
+  Mk_State
+    {
+      current_term : Term;
+      voted_for : option name;
+      leader_id : option name;
+      log : Log;
+      commit_index : nat;
+      last_applied : nat;
+      sm : RaftSM;
+      node_state : NodeState;
+      timeout : nat;
+      timer : Timer;
+      msg_timer : Timer;
+    }. 
+\end{lstlisting}
+
+These are the most important values and others are left out
+for a better overview. Since COQ doesn't provide a short
+syntax for updating dependent type records a dependency is used
+which abuses the typeclass
+mechanics.\footnote{\url{https://github.com/tchajed/coq-record-update}}
+This leads to cleaner code for the process transistions.
+
+Only one process transistion is mentioned here because the others are
+only changing one value.
+The more complex one happens if a node changes it terms by advancing
+to the next one. The current term gets incremented and the current
+leader as well as the voting informations are resetted.
+Additionally it returns to the follower state.
+The code is shown in listing~\ref{lst:advance}.
+If the node transistions to the candidate because it
+recognizes a failed leader this is done in other definitions
+which uses this general one.
+
+\begin{lstlisting}[style=coq,label=lst:advance,
+caption=The process transition to advance to the next term.]
+Definition advance_term (s : RaftState) (t : Term) :RaftState :=
+  if (current_term s) <? t then
+    s <| current_term := t |> <| voted_for := None|>
+      <|leader_id := None |> <| node_state := follower |>
+  else s.
+\end{lstlisting}
+
+The \code{<| ... |>} syntax is the update notation provided by the
+record update mechanics. It works by converting a record to
+an applicative where every field is an identity function which
+can be replaced by an update function provided by the elements
+surrounded by \code{<| |>}.
+
+\paragraph{Node rules}
+The nodes need basic rules to work properly and apply the
+properties proposed by Raft. These rules are implemented alongside
+the update function either by a separate definition or inside
+of an update function.
+
+The most basic rule ist when to apply a new log entry.
+Raft defines that an log entry is applied when the commit index
+is higher than the last applied index. Listing~\ref{lst:apply} shows
+the implementation on how to apply a log index. 
+
+\begin{lstlisting}[style=coq,label=lst:apply,
+caption=How a log is applied to the local state machine.]
+Definition apply_to_sm (s : RaftState) : (RaftState * option RaftSM_result) :=
+  if (last_applied s) <? (commit_index s) then 
+   let s' := increment_last_applied s in 
+   let e := get_log_entry (log s') (last_applied s') in
+   match e with
+    | None => (s, None) 
+    | Some e' => 
+      match (entry e') with
+        | content e'' => 
+          let (sm, result) := RaftSM_update_state (sm s) e'' in
+          let s'' := update_sm s sm in
+          (s'', Some result)
+        | _ => (s, None) 
+      end
+   end
+  else (s, None). 
+\end{lstlisting}
+
+First it is checked if the commit index is higher and if so the last
+applied index is incremented. The corresponding log entry is recievied.
+If there is an entry and it's a content entry than apply it to the
+state machine and return the result and new state. 
+If the entry is not a content entry return the new
+state with the incremented last applied index or the old state otherwise.
+
+Since the log can have multiple types of entries which are replicated
+across the network the commit index may point to an entry which
+is used for internal processing and not the next content entry.
+Only one entry is applied at a time. Because this definition is run
+every time the nodes recieve append entry messages backlogs are kept up
+in idle times of the network.
+
+The transitioning between the node states follow the rules:
+\begin{itemize}
+  \item Return to follower if a message with a higher term is recieved.
+  \item Become a candidate if you're not a leader and you recieve a valid
+    timeout message.
+  \item Become leader if you're a candidate and you get the majority
+    of votes.
+\end{itemize}
+
+The transistions are shown in listing~\ref{lst:trans1}. There is a general
+function updating the node state. If a node transistions to a candidate
+it advances to the next term. By becoming the leader the last index of
+the log is retrieved to initialize the next index which is the next possible
+empty index of the leaders log. The match index (not shown here) is
+set to 0 and increases monotonallicaly when the leader learns the
+log length of its followers. 
+
+\begin{lstlisting}[style=coq,label=lst:trans1,
+caption=The definitions on how a node changes it node state.]
+Definition to_follower (s : RaftState) :=
+update_node_state s follower.
+
+Definition to_candidate (s : RaftState) :=
+let s' := increment_term s in
+update_node_state s' (candidate candidate_state0).
+
+Definition to_leader (s : RaftState) (slf : Rep) : RaftState :=
+let lli := get_last_log_index (log s) in
+let l := new_leader (lli + 1) slf in 
+update_node_state s (leader l).
+\end{lstlisting}
+
+The other rules are implemented along-side the update function since
+they're not general enough or there are exceptions from some general rule.
+
+\paragraph{Update functions}
+As mentioned in the last section the update functions are the core
+of Velisarios. For every message type an appropriate function is implemented
+which handles this type of message. It changes the process state and
+creates respond messages. To keep the functions more self-contained the
+message creation is mostly done by some corresponding \code{mk\_foo\_msg}
+function.
+
+One of the most crucial parts for a node is the timeout.
+Raft declares that a node has an internal timer to measure
+if the leader is byzantine or a election failed. 
+Since Velisarios and COQ has no support
+for timers in the process state another way is used to model this part.
+After initialization a node starts to send itself messages with a
+certain delay. It tracks the number of this timer message.
+If a message from the leader arrives it sends a new timer
+message with a higher number. Listing~\ref{lst:timer} shows
+the code to handle recieved timer messages. If the timer message
+number is not equal to the stored one the message is dropped.
+Otherwise, the node checks its own node state.
+If the node is the leader it restarts the timer and send heartbeats
+to the other nodes. The leader uses a shorter timeout than other nodes
+to keep itself established as the leader.
+If the node is some other node it reacts to the timer message by
+starting a new election. This advances the term and the node 
+transitions to candidate state.
+
+\begin{lstlisting}[style=coq,label=lst:timer,
+caption=The implementation of handling timer messages.]
+  Definition handle_timer_msg (slf : Rep) : Update RaftState Timer DirectedMsgs :=
+    fun state msg =>
+      if TimerDeq (timer state) msg then
+          match node_state state with
+          | leader l =>
+            let (s, timer) := mk_leader_timer state slf in
+            (Some s, [mk_heartbeat_msg s slf; timer])
+          | _ =>
+            let (s, msg) := start_election state slf in
+            let (s', timer) := mk_timer s slf in
+            (Some s', [msg; timer])
+          end
+      else (Some state, []).
+\end{lstlisting}
+
+After startup or if a leader becomes byzantine one of the nodes timer messages
+is recieved by that node and the node starts an election.
+Listing~\ref{lst:vote} shows the update function for an election.
+To start an election the node transistions to candidate state, votes for
+itself and send request vote messages to all other nodes in the network.
+
+A node recieving a vote request it restarts its internal timer. This prevents
+all nodes from becoming candidates. Afterwards, the request is evaluated by the
+following rules.
+\begin{itemize}
+  \item Ignore old terms
+  \item Return to follower mode if the vote term is greater
+  \item Check if the candidates log is at least up-date with the nodes log
+\end{itemize}
+
+If these checks succed than the node grants the vote if it already voted
+for the candidate or it has not yet voted. Otherwise, the request is
+rejected.  
+
+\begin{lstlisting}[style=coq,label=lst:vote,
+caption=The definitions on how a node changes it node state.]
+  Definition handle_request_vote (slf : Rep) : Update RaftState RequestVote DirectedMsgs :=
+    fun state msg =>
+      let (s, timer) := mk_timer state slf in
+      match msg with
+      | request_vote t candi lli llt =>
+        if TermLt t (current_term state) then
+          (Some state, [mk_vote_response_msg (current_term state) false candi])
+        else
+          let s' := equal_term_or_follower s t in 
+          if andb (if leader_id s' then false else true)
+                  (check_entry_term (log s') lli llt ) then
+            match voted_for s' with
+            | None =>
+              let s'' := update_voted_for s' (Some (replica candi)) in
+              (Some s'', [mk_vote_response_msg (current_term state) true candi; timer])
+            | Some (replica c) =>
+              let valid := if rep_deq c candi then true else false in
+              (Some s', [mk_vote_response_msg (current_term state) valid candi; timer])
+            | _ => (Some s', [mk_vote_response_msg (current_term state) false candi])
+            end
+          else (Some s, [mk_vote_response_msg (current_term state) false candi; timer])
+      end.
+\end{lstlisting}
+
+The candidate recieves the responses from it vote request and restarts its
+timer. It checks if the vote was granted or if not its own term is outdated.
+If the vote was granted it add this vote to the others and checks if has a
+majority. The node wins if it hast at least more than 50 percent of
+the possible votes. The \code{try\_to\_become} in listing~\ref{lst:rvote}
+leader function calculates this, transistions the node to leader state and
+issues heartbeat messages if so or leaving the state as is.
+
+\begin{lstlisting}[style=coq,label=lst:rvote,
+caption=The definitions on how a node changes it node state.]
+  Definition handle_response_vote (slf : Rep) : Update RaftState Result DirectedMsgs :=
+    fun state msg =>
+      match msg with
+      | request_vote_res t g =>
+        if g then 
+          let s := add_vote state in
+          let (s', msgs) := try_to_become_leader s slf in
+          if is_leader s' then
+                 let (s'', timer) := mk_leader_timer s' slf in
+                 (Some s'', msgs ++ [timer])
+          else
+            let (s'', timer) := mk_timer s' slf in
+            (Some s'', msgs ++ [timer])
+        else
+          let s := equal_term_or_follower state t in
+          (Some s, [])
+      | _ => 
+        (Some state, [])
+      end.
+\end{lstlisting}
+
+After a certain amount of election rounds a leader arises from the
+network. Now the system is ready to serve client registrations and requests.
+
+A client has to register at the network in order to send requests to it.
+It sends a \code{RegisterClient} message to some node with its
+name as indication. If the node is not the leader it returns
+false, the default session and a hint to the current leader.
+If there is no current leader it returns none indicating that
+the network is busy with a new election.
+
+\begin{lstlisting}[style=coq,label=lst:register,
+caption=The definitions on how a node changes it node state.]
+  Definition handle_register (slf : Rep) : Update RaftState RegisterClient DirectedMsgs :=
+    fun state msg =>
+        match msg with
+        | register_client c =>
+          match (node_state state) with
+          | leader _ =>
+            let (s, id) := mk_session state c in
+            let result := register_client_res true id (Some slf) in
+            let broadcast := mk_broadcast_session_msg slf s in
+            (Some s, mk_register_response_msg c result ++ broadcast)
+          | _ =>
+            let result := register_client_res false session_id0 (leader_id state) in
+            (Some state, mk_register_response_msg c result)
+         end
+       end.
+\end{lstlisting}
+
+If the node is the leader it creates a new session for this client and
+returns true, the session id for that client and also a hint to itself.
+The leader appends the session to the log and starts replicating it
+over the network.
+
+After the client is registered at the network and knows the current leader
+it can send requests messages. Therfore, it sends a \code{ClientRequest}
+containing the its session id, a request id and the command to replicate
+to the leader. If the node is not the leader it returns false and a hint
+to the current leader. A candidate returns false without a hint to
+the current leader. The leader checks if the request was already processed
+and returns the result if it was cached. If the request is a new one the
+leader appends it to its own log and starts sending append entry messages
+to all other nodes in the network. The update function is shown in listing~\ref{lst:request}.
+
+\begin{lstlisting}[style=coq,label=lst:request,
+caption=The definitions on how a node changes it node state.]
+  Definition handle_request (slf : Rep) : Update RaftState ClientRequest DirectedMsgs :=
+    fun state r =>
+      match node_state state with
+      | candidate _ => (Some state, [])
+      | follower =>
+        let msg := mk_forward_msg state (request_msg r) in
+        (Some state, msg)
+      | leader _ =>
+        match r with
+        | client_request c si ri cmd =>
+          if valid_session (sessions state) si then
+            match in_cache (cache state) si ri with
+            | Some res =>
+              let msg := cached_request res c in
+              (Some state, msg)
+            | None =>
+              let (s, entry) := add2log state cmd in
+              let dmsgs := mk_append_entries_msg slf s entry (si, ri) in
+              let s' := incr_leaders_next_index s in
+              (Some s', dmsgs)
+            end
+          else (Some state, [])
+        end
+      end.
+\end{lstlisting}
+
+To replicate the log over the complete network the leader uses
+append entries messages. A node recieving such a messages checks its
+state and the message type. The node only reacts if it's not the leader node.
+If the message is a heartbeat one the node maybe updates its term and
+state and resets the timer. 
+If the message is a replcate one the node maybe updates its term, state
+and the leader. Then it applies the following rules.
+
+\begin{itemize}
+  \item Return false if message term < node term
+  \item return false if there is no matching previous log entry
+  \item If the previous log entry is in conflict with the leaders one
+    delete it and all follwing enries.
+  \item Append any new entries
+  \item if the commit index of the leader is greater than of the node
+    set commit index to $min(leader commit index, index of last new entry)$
+\end{itemize}
+
+The rules are enforcing the log replication safety along with the
+rules for leader election. If the logs don't match they're
+are build from the last matching point. The process can be modeled
+in multiple ways. In this thesis only the simple step-wise approach is
+used. The leader incrementally tracks back to the last matching index
+and then builds the new log from there. The update function for
+handling append entries message is shown listing~\ref{lst:replicate}.
+
+
+\begin{lstlisting}[style=coq,label=lst:replicate,
+caption=The definitions on how a node changes it node state.]
+  Definition handle_append_entries (slf : Rep) : Update RaftState AppendEntries DirectedMsgs :=
+    fun state msg =>
+      match node_state state, msg with
+      | leader _, _ => (Some state, [])
+      | _, heartbeat t l lli llt ci =>
+        let s := update_term_and_leader state t l in
+        let (s', timer) := mk_timer s slf in
+        (Some s', [timer])
+
+      | _, replicate t l lli llt ci entries id =>
+         let s := update_term_and_leader state t l in
+        if (TermLt t (current_term state)) then
+          let result := append_entries_res (current_term state) false slf id in
+          (Some state, [MkDMsg (append_entries_response_msg result) [replica l] 10])
+        else
+          if (negb (check_entry_term (log state) lli llt )) then
+            let result := append_entries_res (current_term state) false slf id in
+            (Some state, [MkDMsg (append_entries_response_msg result) [replica l] 20])
+          else
+            let new_log := append_entries2log entries lli t state in
+            let s := (update_log state new_log) in
+            let s' := handle_log_entry s ci in
+            let result := append_entries_res (current_term s') true slf id in
+            (Some s', [MkDMsg (append_entries_response_msg result) [replica l] 0])
+      end.
+\end{lstlisting}
+
+The leader collects and handles the result messages for an every append entries
+message. Additionally, the leader tracks send states for append entries calls.
+If a node fails to answer in a certain amount of time the leader retries
+the message until a result message is recieved.
+The leader increases the next andd match index for the node if the result is
+success. Afterwards, it checks if the log entry is replicated over a majority
+of the network nodes and maybe applies the log entry to the state machine.
+If this is the case it sends a result message to the client or waits for
+other anwsers otherwise.
+If the answer result if false the leader checks if its term is outdated and
+takes the appropriate action.
+
+\begin{lstlisting}[style=coq,label=lst:rreplicate,
+caption=The definitions on how a node changes it node state.]
+  Definition handle_append_entries_result (slf : Rep) : Update RaftState Result DirectedMsgs :=
+    fun state msg =>
+      match node_state state, msg with
+      | leader l, append_entries_res t true node (si, ri) =>
+        let ni := increase_next_index (next_index l) node in
+        let l' := update_leader_state ni (match_index l) in
+        let s := update_node_state state (leader l') in
+        if is_replicated s then
+          let s' := increment_commit_index s in
+          let (s'', result) := apply_to_sm s' in
+          match result with
+          | None => (Some s, [])
+          | Some r =>
+            let res := client_res true r in
+            let client_msg := mk_client_response_msg res  in
+            (Some s'', client_msg)
+          end
+        else (Some s, [])
+      | leader l, append_entries_res t false node id =>
+        if TermLt (current_term state) t then
+          let s := equal_term_or_follower state t in
+          (Some s, [])
+        else
+          (Some state, [])
+      | _, _ => (Some state, [])
+      end.
+\end{lstlisting}
+
+The other update functions are not essential to the Raft protocol
+and can be viewed in the repository. The last step to implement the
+Raft protocol is to provide a general update function
+which assign an update function to every message which could
+be recieved. Afterwards, the initial state and the general
+update function are provided to Velisarios as how to construct
+a Raft process as shown in listing~\ref{lst:update}.
+
+\begin{lstlisting}[style=coq,label=lst:update,
+caption=The definitions on how a node changes it node state.]
+
+  Definition replica_update (slf : Rep) : MUpdate RaftState :=
+    fun state m =>
+      match m with
+      | init_msg d => handle_init_msg slf state d
+      | register_msg d => handle_register slf state d
+      | register_result_msg d => handle_register_result slf state d
+      | broadcast_sessions_msg d => handle_sessions_broadcast slf state d
+      | request_msg d => handle_request slf state d
+      | response_msg d => handle_response slf state d
+      | append_entries_msg d => handle_append_entries slf state d
+      | append_entries_result_msg d => handle_append_entries_result slf state d
+      | request_vote_msg d => handle_request_vote slf state d
+      | response_vote_msg d => handle_response_vote slf state d
+      | forward_msg msg => handle_forward_msg slf state msg
+      | timer_msg d => handle_timer_msg slf state d
+      | debug_msg d => handle_debug_msg slf state d
+      end.
+
+  Definition RaftReplicaSM (slf : Rep) : MStateMachine _ :=
+    mkSM
+      (replica_update slf)
+      (state0).
+\end{lstlisting}
+
+\subsection{Using Raft from OCaml}
+The last subsection shows how to implement the rules
+from Raft in the logic and semantics of Velisarios.
+This only provides an abstract implementation of
+Raft. The abstract parts defined in the contextualisation
+are left for the realization. This is done partial
+in COQ and OCaml. In COQ one has to provide a real
+defintion for the state machine and the update function
+of this state machine. Additionally, the types for
+a log entry and a transistion result are defined.
+
+\begin{lstlisting}[style=coq,label=lst:example,
+caption=The definitions on how a node changes it node state.]
+  Definition smState : Set := nat.
+  Definition result : Set := nat.
+  Definition content : Set := nat.
+
+  Definition update_sm (s : smState) (c : content) :=
+    let s' := s + c in
+    (s', s').
+
+Definition local_replica :=
+  @RaftReplicaSM (@Raft_I_context).
+
+Extraction "RaftReplicaEx.ml" state2string lrun_sm RaftdummySM local_replica (* leader_replica *) DirectedMsgs2string name2string.
+\end{lstlisting}
+
+Listing~\ref{lst:example} shows an excerpt of this definition.
+The types are used to create a context for the realization.
+The last definition is the main function used from OCaml to
+create new replicas.
+The extraction line tells COQ that it should create a file
+\code{RaftReplicaEx.ml} and extract all following definitions
+and the dependencies needed to run these into this file. 
+Alongside this file, COQ produces a corresponding \code{*.mli}
+file which is an OCaml interface file and abstracts the
+konkrete code away from the caller.
+
+To use the extracted code a bunch of glue code is needed.
+The simulator\footnote{\url{https://github.com/santifa/masterarbeit/tree/master/raft/simulator}}.
+serves as glue code for the protocols.
+The simulator is an abstraction written in OCaml to ease
+real-world implementations using the protocol middlewares
+written with Velisarios.  
+For instance, it provides logging facilities, 
+the possibility to generate RSA keys which are used the original
+PBFT protocol and the simulator abstraction for
+running the implementations. The last one provides
+a convient handling for the replicas and provides
+a mechanic to program the behavior of a client and
+the processing of requests by replicas.
+
+Since the abstraction takes care of the heavy lifting
+the programmer only needs to provide the conversion of
+messages to strings, how replicas are created and if they
+need some sort of initial messages. The major parts left
+are the behavior of the client and how the replicas process
+messages from the input queue.
+
+These can be easily adopted from the examples of the
+other protocols. Also, a more concrete version of
+the simulator is provided which can be used for
+specific test cases, since it uses a general message
+processing and only the client, replica creation and
+message to string conversion are left to the programmer.
+
+\vspace{2em}
+
+This chapter demonstrated how the Raft protocol can be
+easily implemented with Velisarios. The abstraction
+enforced by Velisarios and COQ lead to a clean and
+easy to follow code base with a clean semantic which
+is quite near the original description of Raft.
+It started with describing the abstraction needed
+for the state machine which is run by Raft and
+the basic terms by simple algebraic types and
+definitions. Afterwards, the definitions bound
+to Velisarios were presented. The main part
+covered the update functions and the process
+state for the Raft middleware. 
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../master"
+%%% End:

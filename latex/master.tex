@@ -51,7 +51,56 @@ citecolor = black] {hyperref}
 
 % define coq style
 \lstdefinestyle{coq}{
-  backgroundcolor=\color{backcolour},   
+  morekeywords={Section, Module, End, Require, Import, Export,
+    Variable, Variables, Parameter, Parameters, Axiom, Hypothesis,
+    Hypotheses, Notation, Local, Tactic, Reserved, Scope, Open, Close,
+    Bind, Delimit, Definition, Let, Ltac, Fixpoint, CoFixpoint, Add,
+    Morphism, Relation, Implicit, Arguments, Unset, Contextual,
+    Strict, Prenex, Implicits, Inductive, CoInductive, Record,
+    Structure, Canonical, Coercion, Context, Class, Global, Instance,
+    Program, Infix, Theorem, Lemma, Corollary, Proposition, Fact,
+    Remark, Example, Proof, Goal, Save, Qed, Defined, Hint, Resolve,
+    Rewrite, View, Search, Show, Print, Printing, All, Eval, Check,
+    Projections, inside, outside, Def,
+    forall, exists, exists2, fun, fix, cofix, struct,
+    match, with, end, as, in, return, let, if, is, then, else, for, of,
+    nosimpl, when,
+    Type, Prop, Set, true, false, option,
+    pose, set, move, case, elim, apply, clear, hnf,
+    intro, intros, generalize, rename, pattern, after, destruct,
+    induction, using, refine, inversion, injection, rewrite, congr,
+    unlock, compute, ring, field, fourier, replace, fold, unfold,
+    change, cutrewrite, simpl, have, suff, wlog, suffices, without,
+    loss, nat_norm, assert, cut, trivial, revert, bool_congr, nat_congr,
+    symmetry, transitivity, auto, split, left, right, autorewrite,
+    by, done, exact, reflexivity, tauto, romega, omega,
+    assumption, solve, contradiction, discriminate,
+    do, last, first, try, idtac, repeat},
+  morecomment=[s]{(*}{*)},
+  morestring=[b]",
+  morestring=[d],
+  literate=
+  {\\forall}{{\color{dkgreen}{$\forall\;$}}}1
+  {\\exists}{{$\exists\;$}}1
+  {<-}{{$\leftarrow\;$}}1
+  {=>}{{$\Rightarrow\;$}}1
+  {==}{{\code{==}\;}}1
+  {==>}{{\code{==>}\;}}1
+  % {:>}{{\code{:>}\;}}1
+  {->}{{$\rightarrow\;$}}1
+  {<->}{{$\leftrightarrow\;$}}1
+  {<==}{{$\leq\;$}}1
+  {\#}{{$^\star$}}1 
+  {\\o}{{$\circ\;$}}1 
+  {\@}{{$\cdot$}}1 
+  {\/\\}{{$\wedge\;$}}1
+  {\\\/}{{$\vee\;$}}1
+  {++}{{\code{++}}}1
+  {~}{{\ }}1
+  {\@\@}{{$@$}}1
+  {\\mapsto}{{$\mapsto\;$}}1
+  {\\hline}{{\rule{\linewidth}{0.5pt}}}1,
+  backgroundcolor=\color{backcolour}, 
   commentstyle=\color{codegreen},
   keywordstyle=\color{magenta},
   numberstyle=\tiny\color{codegray},
@@ -143,12 +192,12 @@ citecolor = black] {hyperref}
 \begin{appendix}
 \input{abkz.tex}
 
-\addcontentsline{toc}{section}{C~\,List of figures}
+\addcontentsline{toc}{section}{C~\,List of Figures}
 %\addcontentsline{toc}{section}{~~~~Abbildungsverzeichnis} % Zeile für das Inhaltsverzeichnis
 \listoffigures
 
-\newpage
-\addcontentsline{toc}{section}{D~\,List of tables}
+%\newpage
+\addcontentsline{toc}{section}{D~\,List of Tables}
 %\addcontentsline{toc}{section}{~~~~Tabellenverzeichnis} % Zeile für das Inhaltsverzeichnis
 \listoftables
 \end{appendix}
@@ -172,11 +221,11 @@ citecolor = black] {hyperref}
 \input{chapters/chapter_6.tex}
 
 \newpage
-\begin{appendix}
-\setcounter{section}{4}
-\renewcommand{\thesection}{\Alph{section}}
-\input{chapters/appendix.tex}
-\end{appendix}
+% \begin{appendix}
+% \setcounter{section}{4}
+% \renewcommand{\thesection}{\Alph{section}}
+% \input{chapters/appendix.tex}
+% \end{appendix}
 
 %Hier kommt das Literaturverzeichnis
 \newpage

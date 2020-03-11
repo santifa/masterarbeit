@@ -1,11 +1,11 @@
 %
-\section{Practical foundations}
+\section{Practical Foundations}
 \label{sec_3}
 
 After the formal and logical foundations this chapter introduces
 the practical aspects of building and using such a logic to build
 reliable distributed systems is presented. This section covers Raft,
-a state of the art protocol to build distributed systems.
+a bleeding edge protocol to build distributed systems.
 Afterwards, a way to additionally harden such systems by using
 the \textit{proofs-as-programs} approach is described.
 This includes a short explenation of \textit{COQ} as well as
@@ -15,7 +15,7 @@ consensus protocol.
 \subsection{Consensus Algorithms}
 As mentioned in the introduction, distributed systems are useful to harden
 critical infrastructures. A critical infrastructure is one where failures
-of single components could lead to a desaster. So the informations and
+of single components could lead to a disaster. So the informations and
 actions of single components shall be distributed and replicated to multiple
 components holding the same state. The distributed system manages a
 global state which is replicated over multiple members of the system and
@@ -27,9 +27,9 @@ the definition of failure is slightly different.~\cite{rahli2018velisarios}
 \end{defi}
 
 This means that a failure could happen at any time and the distributed
-system has no relaible way to detect that a member failed or is malfunctioning.
-Furthermore, a member could distribute false informations across the network
-and the system has to react reliable consistent to a certain limit a failures.~\cite{lamport1982byzantine}
+system has no reliable way to detect that a member failed or is malfunctioning.
+Furthermore, a member could distribute false information across the network
+and the system has to react reliably consistent to a certain limit of failures.~\cite{lamport1982byzantine}
 
 \begin{defi}
   A typical byzantine fault-tolerant system can tolerate $n=3f+1$ failures
@@ -113,7 +113,7 @@ The request is forwarded to all server consensus modules within the network (2).
 Also the request is added to the server log. The request is seen as a command to
 the server state machine and gets applied if the majority of the network
 recieved the new command (3). Afterwards, the client recieves the result (4).
-All server logs contain the same commands in the same order. So the servers
+All server logs contain the same commands in the same order, so the servers
 state machines process the commands in the same order and produce the same output.~\cite{ongaro2014search}
 
 The major parts of the consensus algorithm are to ensure that the logs are
@@ -122,7 +122,7 @@ handle the replication across the network and keep the network alive if
 some server fails. So a consensus algorithm ensures the following properties:~\cite{ongaro2014search}
 
 \begin{itemize}
-\item Ensure safty under all non-Byzantine conditions.
+\item Ensure safty under all non-byzantine conditions.
 \item Ensure availability as long as the majority of servers is
   functional and can communicate.
 \item Consistency doesn't depend on timing.
@@ -139,21 +139,19 @@ Paxos protocols suffer from two problems. Besides they ensure the
 properties and provide a efficent protocol, the protocols are
 difficult to understand. The descriptions are ``notoriously
 opaque''~\cite{ongaro2014search} and are mostly focused on a
-subset of the real world protocol. The other problem is that the
-most descriptions are not implementation ready and a huge effort
+subset of the real world protocol. The other problem is that
+most descriptions are not implementation ready and great effort
 is needed to complete the missing parts of the protocol.
-So, real implementation reflect the paxos protocol only at
+So, real world implementations reflect the paxos protocol only in
 the beginning. To tackle these problems Ongaro et al made
 the effort to design a new consensus protocol without the
 Paxos history. This new protocol RAFT was designed with
 understandability in mind. This means, that the implementers
 effort needs to be minimized and the description and pseudo-code
 needs to be as close to the real world as possible. Also,
-the properties mentioned before needs to be taken into account.
+the properties mentioned before need to be taken into account.
 The resulting protocol shall be efficient and safe under
 typical conditions and operations.~\cite{ongaro2014search}
-
-
 
 \subsubsection*{The RAFT protocol}
 The algorithm is designed to manage a replicated log
@@ -161,7 +159,7 @@ across a distributed network. The protocol uses a leader-based
 approach where one distinguished leader takes the full responsibility
 for log replication and client handling. The other nodes are
 only serving as replicas without own intentions. This approach
-leads to a three main components which can be viewed quite separated.~\cite{ongaro2014search}
+leads to three main components which can be viewed seperately.~\cite{ongaro2014search}
 
 \begin{itemize}
 \item Leader election: Elect a new leader if the existing leader fails.
@@ -181,8 +179,8 @@ their belongings.~\cite{ongaro2014search}
 \item Leader Append-Only: New entries are only appended to the log and
   a leader never overwrites or deletes entries from it's log.
 \item Log Matching: If an entry is contained in two logs with the same
-  term and index, these logs are identical up til the entries index.
-\item Leader Completness: If an entry is committed in some term, then the
+  term and index, these logs are identical up until the entries index.
+\item Leader Completeness: If an entry is committed in some term, then the
   entry is present in all leader logs in all higher terms.
 \item State Machine Safety: If an log entry with some index is applied to
   the internal state machine, then no other server ever applies a
@@ -202,10 +200,10 @@ serve as the logical clock of the protocol.~\cite{ongaro2014search}
 
 This can be seen in figure~\ref{fig:terms}. The first term starts with an
 election phase followed by a normal operation phase. The leader fails and
-the term ends. The next terms starts with an election phase which results in no
+the term ends. The next term starts with an election phase which results in no
 new leader and the next term is started.
 Terms are numbered by consecutive integers and servers may observe term
-transitions at different times. Each server stores it current term number
+transitions at different times. Each server stores its current term number
 and exchanges it at every communication to detect failed leaders or outdated
 data.~\cite{ongaro2014search}
 
@@ -247,7 +245,7 @@ A server can either be a \textit{leader}, a \textit{follower} or a
 \textit{candidate}. Figure~\ref{fig:serverstates} shows the state
 and the transition between them. Only one leader is allowed in normal operation
 and all other servers are passive followers which obey the leaders commands.
-The followers aren't issueing requests on their own (except message forwardng to
+The followers aren't issuing requests on their own (except message forwardng to
 the current leader) and only respond to requests from the leader and candidates.
 The leader handles all client communication and manages log replication across
 the followers. The candidate state is only entered if the leader fails and
@@ -275,7 +273,7 @@ a new leader needs to be elected.~\cite{ongaro2014search}
 \end{figure}
 
 \paragraph{Leader election}
-As stated in the figure~\ref{fig:serverstates} raft uses timeouts to handle
+As stated in the figure~\ref{fig:serverstates} Raft uses timeouts to handle
 leadership and election. Thus, every server has an internal timer with a
 random time (mostly between 150 and 300ms) which gets resetted with
 every message from a leader. Besides normal messages the leader uses
@@ -297,17 +295,17 @@ election. The election runs as follows:~\cite{ongaro2014search}
   \end{enumerate}
 \end{enumerate}
 
-Since this maybe happens in parallel on many servers more details
-need to take into account when determing the possible outcomes.
+Since this may happen in parallel on many servers more details
+need to be taken into account when determening the possible outcomes.
 
 (a) A candidate wins the election when it recieves the majority of
 votes in the cluster. Each server votes for one candidate on a
-\textit{first-comes-first-served} basis. The majority voting ensures
-the only one leader safety property. The winner imediatly starts
+\textit{first-come-first-serve} basis. The majority voting ensures
+the only one leader safety property. The winner immediately starts
 by sending heartbeat messages to all other servers to implement itself
 as new leader and stop the election phase.~\cite{ongaro2014consensus}\\
-(b) A candidat may recieve messages from a possible new leader.
-The new leader is accepted if it's term is at least as large as
+(b) A candidate may recieve messages from a possible new leader.
+The new leader is accepted if its term is at least as large as
 the candidates one. The candidate accepts the new leader and turns
 into follower state. Otherwise, the leader is rejected and the election
 goes on.~\cite{ongaro2014consensus}\\
@@ -340,7 +338,7 @@ future terms. Also, the entry is eventually applied by all state machines
 in the cluster. The leader tracks the highest known log index and includes
 it in future request such that followers know which entries can be
 safely applied to their state machine. Previous entries which are
-not already applied are also applied in log order.~\cite{ongaro2014consensus}
+not already applied are then applied in log order.~\cite{ongaro2014consensus}
 
 \begin{figure}[ht]
   \centering
@@ -398,7 +396,7 @@ not already applied are also applied in log order.~\cite{ongaro2014consensus}
     \node at (4.4,8.5) {8};
     
   \end{tikzpicture}
-  \caption{An example of logs and it's entries accross a cluster.~\cite{ongaro2014consensus}}
+  \caption{An example of logs and its entries accross a cluster.~\cite{ongaro2014consensus}}
   \label{fig:logs}
 \end{figure}
 
@@ -421,8 +419,8 @@ entries and after distribution all other logs are coherent to the leaders
 one. From this follows the first property. The second one follows
 from the way an entry is replicated in the network. The leader
 inlcudes the previous entry term and index in the message. The follower only
-applies the entry if it finds the given privious term and index in its
-own log. The consitency check preserves identical logs across the
+applies the entry if it finds the given previous term and index in its
+own log. The consistency check preserves identical logs across the
 network as long as no leader fails.~\cite{ongaro2014search}
 
 If a leader crashes the log can became inconsistent through incomplete
@@ -445,8 +443,8 @@ These mechnics doesn't ensure the safety under all circumstances.
 For example, if a leader is elected which has a shorter log
 then the leader before the new leader maybe removes already
 committed entries from the network. This would break the
-Leader Completness property mentioned earlier. So, Raft
-uses additional mechnics to ensure the correctness of
+Leader Completeness property mentioned earlier. So, Raft
+uses additional mechanics to ensure the correctness of
 the safety properties.~\cite{ongaro2014search}
 
 \subparagraph{Election restriction}
@@ -460,8 +458,8 @@ enough to recieve that vote.~\cite{ongaro2014search}
 
 \begin{defi}
   Given two logs, the one is more up-to-date which has
-  either the later term as last log entry or if the terms
-  are equal the highest log index. Otherwise, both logs
+  either the later term as last log entry or, if the terms
+  are equal, the highest log index. Otherwise, both logs
   can be considered as equal.
 \end{defi}
 
@@ -474,8 +472,8 @@ checking if they are the majority. If a new entry is committed
 to the majority of servers the leader applies the Log Matching
 property to restore log consistency across the network.
 Also, the log entries keep their term number and the
-leader doesn't overrides the term number as with other
-approaches. Thus uncommitted log entries are only
+leader doesn't override the term number as with other
+approaches. Thus, uncommitted log entries are only
 committed indirectly by newer commits.~\cite{ongaro2014search}
 
 \subparagraph{Follower and candidate failures}
@@ -485,8 +483,8 @@ just resends all messages indefinitly until it gets
 an expected result.~\cite{ongaro2014search}
 
 \subparagraph{Client handling}
-On startup clients choose a random server for
-requests if the server is not the leader it rejects
+On startup, clients choose a random server for
+requests. If the server is not the leader it rejects
 the request with additional informations about the current leader.
 Otherwise, the network can implement internal forwarding of client
 requests to the current leader. If the leader is unavailable the
@@ -494,7 +492,7 @@ requests time out.~\cite{ongaro2014consensus}
 
 Raft supports linearizable semantics for clients. Each request
 appears to be executed once and instantaneously. This is implemented
-by assigning a unique id to every requests. The network
+by assigning a unique id to every request. The network
 caches every requests along with the corresponding reponse preventing
 it from re-executing old requests.~\cite{ongaro2014consensus}
 
@@ -523,16 +521,6 @@ background or metalanguage as described in the proofs-as-programs
 sections.~\cite{the_coq_development_team_2019_2554024,
   paulinmohring:hal-01094195} This subsection gives only a brief overview
 for a more comprehensive introduction use the reference documentation\footnote{\url{https://coq.inria.fr/refman/index.html}}.
-
-% The Calculus of Construction is an axiom-free typed polymorphic language which can
-% represent inductive definitions. It is the underlying language for the
-% Calculus of Inductive Construction. It is a pure and riched typed $\lambda$
-% lambda-calculus which can describe terms and types.~\cite{paulinmohring:hal-01094195}
-% The term includes the normal lambda operations, like binding, abstraction
-% and application. The typing supports for instance  abstractions with
-% dependent products and typing of types. These typing allows to ``sort''
-% (a special COQ constant) types in universes and apply to them differently
-% depending on the certain universe of objects.~\cite{paulinmohring:hal-01094195}
 
 The Calculus of Construction is an axiom-free typed polymorphic language.
 The language of COQ allows to define mathematical facts by
@@ -565,7 +553,7 @@ basic kernel in a safe manner.~\cite{paulin2011introduction}
 \end{defi}
 
 \begin{defi}
-  Types are building an infinite well-founded hierarchy.
+  Types are forming an infinite well-founded hierarchy.
   The type of types is called sort and the main sorts are:
   \begin{itemize}
   \item $Prop$ as the type of logical propositions.
@@ -599,42 +587,42 @@ to match multiple patterns at once or by nesting patterns which
 is also called \textit{generalized
   pattern-matching}.~\cite{paulin2011introduction}
 
-The last important syntactically point mentioned here is the \textit{fixpoint definition}
-which allows to build recursive functions. To keep the logic sound, COQ uses
+The last important syntactical point mentioned here is the \textit{fixpoint definition}
+which allows to make recursive functions. To keep the logic sound, COQ uses
 structural recursion instead of general recursion. This means that
 such a definitions uses an inductive type as formal argument.
 Thus, on a recursive call the compiler can check that the next
 term is structurally smaller then the previous one.~\cite{paulin2011introduction}
 
 \paragraph{Extraction}
-To use the logical and functional programs in the real-world in conjunction
-with other non-proofen or type-checked languages, COQ offers
+To use the logical and functional programs in the real world in conjunction
+with other non-proven or type-checked languages, COQ offers
 the possibillity to extract formal code from Calculus of Inductive Construction.
-The COQ objects can be extracted into either Haskell or OCaml code and
-some objects also can be exchanged by efficient ones from the target
+COQ objects can be extracted into either Haskell or OCaml code and
+some objects can also be exchanged by efficient ones from the target
 language. This thesis extracts the code as OCaml library which can be
 embedded in a command-line interface or simulation or evaluation
 code for the Raft protocol.~\cite{the_coq_development_team_2019_2554024}
 
-This is only a small overview of the possibillities COQ offers. Since,
-this thesis has no focus on building proofs this part was skipped and
+This is only a small overview of the possibillities COQ offers. Since
+this thesis has no focus on building proofs, this part was skipped and
 only the basic elements for building functional programs are shown to
-basically understand the Velisarios framework. Other constructs
+understand the Velisarios framework in a basic way. Other constructs
 are explained as they appear in the thesis.
 
 
 \subsection{Velisarios}
-This chapter showed the Raft protocols and the difficulties of
+This chapter shows the Raft protocols and the difficulties of
 implementing distributed systems. The Logic of Events from the former
 chapter shows a formal approach to handle this difficulties in
-a consistnt theorie. It can tolerate byzantine-failures and
+a consistent theory. It can tolerate byzantine failures and
 imperfect informations about the network. Rahli et al. presented
 an implementation of the Logic of Events first in the NUPRL
 theorem prover named EventML~\cite{rahli2017eventml}. Later
-the system was reimplmented in COQ as Velisarios~\cite{rahli2018velisarios}.
+the system was reimplemented in COQ as Velisarios~\cite{rahli2018velisarios}.
 It aims to be a generic and extensible formal verification framework
-for developing and systematically proofing distributed networks.~\cite{rahli2018velisarios}
-
+for developing and systematically proving distributed networks.~\cite{rahli2018velisarios}
+%%
 Schematically all byzantine fault-tolerant (BFT) protocols share the same
 higher logic of distributing, gathering and voting on knowledge
 provided to the system. Velisarios is a knowledge theory which

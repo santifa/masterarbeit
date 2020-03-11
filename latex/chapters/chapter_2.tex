@@ -1,450 +1,9 @@
-\section{Formal foundations - Logic of Events}
+\section{Formal Foundations - Logic of Events}
 \label{sec_logic}
-
-% %% einleitung %%
-% In diesem Kapitel wird die Eventlogik~\cite{bickford2003logic} nach Bickford und
-% Constable vorgestellt. Dazu werden vorher die benötigten grundlegenden Logiken
-% und Theorien eingeführt. Zuerst wird kurz die Aussagenlogik erklärt und die
-% darauf aufbauende Prädikatenlogik, welche grundlegend sind um ein Verständnis
-% für die späteren Formeln zu liefern. Danach wird auf die intuitionistische
-% Interpretationsweise und konstruktive Logik eingegangen. Als weitere Grundlagen
-% werden ein Einführung in die Typentheorie und Automatentheorie gegeben, soweit
-% dass für das weitere Verständnis der Eventlogik notwendig ist.
-
-% \subsection{Grundlegende Logiken}
-% Die Mathematische Logik ist eine mathematische Theorie in der andere
-% mathematische Modell mit Hilfe "`naiver Logik"' formalisiert werden können.
-% Die mathematische Logik bietet damit eine Metasprache zur Untersuchung anderer
-% mathematischer Modelle.~\cite{heinemann2013logik}
-
-% \paragraph{Aussagenlogik}
-% Sie ist die älteste Logik und benutzt aus Grundelement Aussagen (Atome,
-% Literale) zur Formalisierung. Aussagen sind können entweder \textbf{wahr}
-% oder \textbf{falsch} sein. \textbf{Terme} sind aussagenlogische Formeln
-% bei der einzelne Aussagen über \textbf{Junktoren} verbunden sind.~\cite{heinemann2013logik}
-
-% \begin{defi}
-%   Sei $\Sigma_A := \{V,(,),\neg,\vee,\wedge,\Rightarrow,\Leftrightarrow,\bot,\top\}$ das Alphabet der Aussagenlogik, wobei $\top$ für
-% wahr, $\bot$ für falsch, $\neg$ für die Negation, $\vee$ für die Disjunktion, $\wedge$ für die
-% Konjunktion , $\Rightarrow$ für die Implikation und $\Leftrightarrow$ für die Äquivalenz steht.
-% \begin{itemize}
-% \item $V:=\{p_0,p_1,..\}$  ist die Menge der Variablen oder Symbole
-% \item $T\subseteq W(\Sigma)$  ist die Menge der Terme die über $\Sigma$ gebildet werden können
-% \end{itemize}
-% \end{defi}
-
-% \begin{defi}
-%   Ein Term ist definiert als
-%   \begin{itemize}
-%   \item $V\subseteq T$
-%   \item $\{\top,\bot\}\subseteq T$
-%   \item $\{\neg\alpha,(\alpha\vee\beta),(\alpha\wedge\beta),(\alpha\Rightarrow\beta),(\alpha\Leftrightarrow\beta)\}\subseteq T$, falls $\alpha,\beta\in T$
-%   \end{itemize}
-% \end{defi}
-
-% Als Beispiel kann der Satz "`Wenn X keine Zahl ist, dann kommt danach ein
-% Buchstabe."' in die Formel
-% \[
-%   \neg x_{Z} \Rightarrow x_{B}
-% \]
-% übersetzt werden.
-
-% Terme können ausgewertet werden und ihnen Wahrheitswerte zugeordnet werden.
-% Dazu werden Interpretationen für die vorkommenden Variablen angegeben.
-
-% \begin{defi}
-%   Die Interpretation ist eine mögliche Belegung für einen Term $t$ und
-%   wird als $I:L(t)\rightarrow \{wahr,falsch\} \Leftrightarrow t^I$ geschrieben.
-%   Eine Interpretation die eine Formel $t^I$ wahr werden lässt, \textbf{erfüllt}
-%   diese Formel.
-% \end{defi}
-
-% Eine besondere Art eines Terms ist die \texttt{Tautologie} bei der jegliche
-% Interpretion wahr wird. Eine Tautologie ist eine allgemeingültige Ausage.
-
-% \begin{defi}
-%   Axiome sind Terme einer Logik, die ohne Angabe von Rechtfertigungen als wahr angenommen
-%   werden. Axiome werden zumeist als semantische Tautologien gewählt, wobei sie
-%   syntaktisch gesehen formale Terme ohne besondere Bedeutung sind.
-% \end{defi}
-
-% Aus den Tautologien und Axiomen einer Logik können weitere Terme abgeleitet
-% werden. Zur Ableitung weiterer gültiger Terme aus einer Logik werden
-% Schlussregeln oder Inferenzregel benutzt. Ein System aus Inferenzregeln zum
-% Schließen über Tautologien und möglicherweise Axiomen einer Logik wird Kalkül genannt.
-
-% \begin{defi}
-%   Sei $\Gamma$ eine endliche Menge von Termen einer Logik und $C$ ein Term der Logik.
-%   Dann ist $C$ aus $\Gamma$ ableitbar, wenn es eine Folge von Inferenzregeln
-%   $r_0,...,r_n$ und Termen $C_0,...,C_n$ gibt, so dass $C_n = C$ und
-%   $\Gamma_0\vdash_{r_0}C_0 ... \Gamma_n\vdash_{r_n}C_n$ wobei $\Gamma_i$ die Menge aller Axiome, Terme
-%   aus $\Gamma$ und bisher abgeleiteten Terme enthält.
-% \end{defi}
-
-% \subsection{Prädikatenlogik}
-% Die Prädikatenlogik stellt eine Erweiterung der Aussagenlogik dar.
-% Bei der Aussagenlogik werden atomare Aussagen oder Literale mit konkreten
-% Wahrheitswerten belegt. In der Aussagenlogik können nicht alle Aussagen
-% mit Wahrheitswerten belegt werden, da manche Belegungen von der inneren
-% Struktur der Aussage abhängen. Zum Beispiel der Satz "`x ist eine Primzahl"'
-% hängt von einer konkreten Belegung $x$ ab und ist in der Aussagenlogik kein
-% valides Literal. Diese Abhängigkeit wird durch Prädikate ausgedrückt.~\cite{heinemann2013logik}
-
-% \begin{defi}
-%   Das Alphabet der Prädikatenlogik ist $\Sigma_P := \{\exists,\forall,F,V,P\} \cup \Sigma_A$, wobei
-%   $\exists$ als \texttt{es existiert} und $\forall$ als \texttt{für alle gilt} gelesen wird.
-%   $V$ ist die Menge der Variablen, $P$ ist die Menge der Prädikate und $F$ ist die Menge der
-%   Funktionen in der Prädikatenlogik.
-% \end{defi}
-
-% \begin{defi}
-%   Ein \textbf{Prädikat} der Stelligkeit \textbf{n} ordnet einem Variablentupel
-%   $(x_1,...,x_n)$ der Mengen $M_1,...,M_n$ Wahrheitswerte zu, daraus folgt
-%   $P(x_1,...,x_n) \rightarrow \{wahr, falsch\}$ wobei $x_i\in M_i$ für $i\in \{1,...,n\}$.
-% \end{defi}
-% Ein Prädikat, dass ein Tupel erfüllt, ordnet dem Tupel den Wahrheitswert wahr zu.
-
-% \begin{defi}
-%   Sei $\mathbb{F}=\Cup^{\infty}_{i=0}\mathbb{F}^i$ für jedes $0\le i$ ein Alphabet von
-%   i-stelligen Funktionssymbolen und $\mathbb{V}$ ein Alphabet von Variablen,
-%   dann sind Terme der Prädikatenlogik definiert als:
-%   \begin{itemize}
-%   \item $x\in\mathbb{V}$ ist ein Term
-%   \item $f\in\mathbb{F}^0$ ist ein 0-stelliges Funktionssymbole und eine Term der
-%     eine Konstante ist
-%   \item $t_1,...,t_n$ sind Terme und $f\in\mathbb{F}^n$ ein n-stelliges
-%     Funktionssymbol, dann ist $f(t_1,...,t_n)$ ein Term
-%   \end{itemize}
-% \end{defi}~\cite{kreitz1994automatisierte}
-
-% Zur Darstellung von konkreten Sprachen müssen Bezeichner aus der Menge aller
-% Bezeichner aussortiert werden. Damit wird eine konkrete Sprache mit einem Typ
-% versehen.
-% \begin{defi}
-%   Ein Typ $T$ ist eine Paar $(I,J)$ mit $I\subseteq P$ und $J\subseteq F$.
-% \end{defi}~\cite{heinemann2013logik}
-
-% Damit ist es möglich die Formeln der Prädikatenlogik zu definieren.
-
-% \begin{defi}
-%   Sei $\mathbb{P}^i$ mit $0\le i$ ein i-stelliges Prädikatenalphabet,
-%   $\mathbb{P}=\Cup^{\infty}_{i=0}\mathbb{P}^i$ und $\mathbb{T}$ ein Alphabet von Typen,
-%   dann ist eine Formel der Prädikatenlogik definiert als:
-%   \begin{itemize}
-%   \item $P\in\mathbb{P}^0$ ist ein 0-stelliges Prädikatensymbol und damit P eine
-%     atomare Formel oder Aussagenvariable
-%   \item $t_1$ und $t_2$ sind Terme, dann ist $t_1 = t_2$ eine atomare Formel,
-%     die gewöhnliche Gleichheit ausdrückt.
-%   \item $t_1,...,t_n$ mit $n\geq1$ sind Terme und $P\in\mathbb{P}^n$ ein n-stelliges
-%     Prädikatensymbol, dann ist $P(t_1,...,t_n)$ eine atomare Formel
-%   \item $A,B$ sind Formel, $x\in\mathbb{V}$ eine Variable und $T\in\mathbb{T}$ ein
-%     Typenbezeichner, dann sind $\neg A$, $A\vee B$, $A\wedge B$, $A\Rightarrow B$, $\forall x:T.A$, $\exists
-%     x:T.A$ und $(A)$ Formeln
-%   \end{itemize}
-% \end{defi}~\cite{kreitz1994automatisierte}
-
-% Eine Interpretation für eine prädikatenlogische Formel ist lediglich eine
-% Erweiterung der aussagenlogischen Interpretation, um die Belegungen von
-% n-stelligen Prädikat- und Funktionssymbolen.~\cite{heinemann2013logik}
-
-% \paragraph{Bindung}
-% Zur besseren Lesbarkeit werden Klammer für die Bindungsstärke von Junktoren
-% zumeist weggelassen. Dadurch ergibt sich die implizite Bindungsreihenfolge:
-% $\neg,\wedge,\vee,\Rightarrow,\exists,\forall$.~\cite{kreitz1994automatisierte}
-
-% Die Prädikatenlogik stellt das Grundgerüst, auf dessen Basis die später
-% vorgestellte Eventlogik steht. Sie ermöglicht die Formalisierung von natürlichen
-% Aussagen und Theorien, sowie die Überprüfung derer Gültigkeit.
-
-% \subsection{intuitionistische Logik}
-% Bisher wurden die Logik mit ihrer klassischen Interpretation vorgestellt.
-% Dabei wird angenommen das eine Aussage entweder wahr oder falsch ist.
-% Anders ausgedrückt kann ein mathematische Objekt entweder existieren oder
-% nicht. Beweise auf Grundlage dieser Interpretationsansicht erfordern keine
-% konstruktive Herleitung, wie ein solches Objekt zu modellieren ist.
-% Das Gesetz vom ausgesschlossenen Dritten $A\vee\neg A$, die doppelte Negation $\neg\neg A\Rightarrow
-% A$, Wiederspruchsbeweise und "`ex falso sequitur quodlibet"' gehören zu den
-% problematischen Beweisansätzen, die keine intrinsische Rechtfertigung
-% benötigen.~\cite{sep-logic-intuitionistic}
-
-% Brouwer hat 1908 festegestellt, dass $A\vee\neg A$ angewendet auf unendliche
-% abzählbare Mengen zu Problemen führt. Ein Beispiel dafür ist die Goldbach
-% Vermutung, die annimmt, dass jede Zahl $> 2$ als Summe zweier Primzahlen
-% geschrieben werden kann. Diese Aussage ist bis heute unbewiesen. Die klassische
-% Logik umschifft solche Probleme in dem sie annimmt, dass weder die Aussage, noch
-% ihr Gegenteil gleichzeitig falsch sein kann, ohne eine konstruktive
-% Rechtfertigung dafür zu liefern. Dabei ist es für den geneeigten Leser
-% einsichtig, dass keine einfache Funktion, nach der Church-Turing These,
-% gefunden werden kann, die in absehbarer Zeit eine Lösung oder Beweis der
-% Aussage liefert.~\cite{sep-logic-intuitionistic, sep-mathematics-constructive}
-
-% Der Intuitionismus und die konstruktive Mathematik lehnen diese Art der
-% Beweisführung und die Allgemeingültigkeit der vorher erwähnten Gesetze ab.
-% Dabei werden verschiedene logische Operationen anders interpretiert.
-% Zum Beispiel wird von der Disjunktion $A\vee B$ verlangt, dass sie angeben kann
-% welcher Teil beweisbar ist und einen entsprechenden Beweis (Evidenz)
-% dafür liefert.~\cite{kreitz1994automatisierte}
-
-% \begin{defi}
-%   Die intuitionistische Interpretation der Prädikatenlogik setzt sich aus
-%   Evidenzen zusammen die in den Teilaussagen gefordert sind.
-%   \begin{itemize}
-%   \item Jedes Literal $q$ besitzt eine Evidenz $e$
-%   \item Um $P\vee Q$ zu beweisen, ist entweder die Evidenz für $P$ oder $Q$
-%     notwendig
-%   \item Um $P\wedge Q$ zu beweisen, ist die Evidenz von $P$ und $Q$ notwendig
-%   \item Um $P\Rightarrow Q$ zu beweisen, muss ein Algorithmus angegeben werden, der jede
-%     Evidenz für $P$ in eine Evidenz für $Q$ umwandelt
-%   \item Um $\neg P$ zu beweisen, muss gezeigt werden, dass es keinen Beweis gibt
-%   \item Um $\exists x:T.P(x)$ zu beweisen, muss ein Objekt vom Typ $T$ konstruiert
-%     und gezeigt werden, dass $P$ hält.
-%   \item Um $\forall x\in T.P(x)$ muss gezeigt werden, dass jedes Objekt $x$ den Typ $T$
-%     hat und darunter $P$ beweisbar ist.
-%   \end{itemize}
-% \end{defi}~\cite{sep-mathematics-constructive}
-
-% Die intuitionistische Logik ermöglicht damit Kalküle zu entwickeln auf
-% deren Grundlage beweisbare logische Schlüsse erzeu
-% gt werden können.
-% Damit kann sie als eine höhere Programmiersprache angesehen werden.
-% Beweise die konstruiert werden können mit Hilfe der Curry-Howard Isomorphie
-% in Typsysteme überführt werden und ausprogrammiert werden.~\cite{constable1970constructive}
-
-% \subsection{Martin-Löf Typentheorie}
-% Verschiedene Kalküle wurden für die Prädikatenlogik entwickelt.
-% In dieser Arbeit wird nur auf die Typentheorie von Per Martin Löf eingegangen,
-% da sie die Grundlage für den interaktiven Theorembeweiser
-% NuPRL\footnote{\url{http://www.nuprl.org/Intro/intro.html}} ist. In NuPRL ist
-% die später vorgestellte Eventlogik formalisiert und bewiesen worden.
-
-%% eventlogik %%
-% \subsection{Eventlogik}
-
-% Mark Bickford und Richard L. Constable haben in verschiedenen
-% Papern~\cite{bickford2003logic, bickford2005causal, bickford2009component} eine Logik zur Beschreibung
-% von Ereignissen in verteilten Systemen vorgestellt. Die Eventlogik ist so
-% aufgebaut, dass eine breite Menge von Systemen beschrieben werden kann, auch
-% außerhalb des eigentlichen Anwendungsgebietes des verteilten Rechnes
-% (Distributed Computing).  Die Logik ist auf der
-% intuitionistischen Logik aufgebaut und folgt dem ``correct-by-construction''
-% Ansatz. Bei diesem Ansatz werden aus Beweisen für Formeln korrekte Implementierungen für
-% diese gewonnen.~\cite{bates1985proofs}
-
-% Dafür wird eine abstrakte Spezifikationssprache eingeführt welche durch
-% ein Berechenbarkeitsmodell repräsentiert wird.
-% Schlussfolgerungen in diesem Modell werden durch Inferenzregeln dargestellt und
-% ermöglichen es, wenn eine Spezifikation erfüllbar ist, ein ausführbares
-% verteiltes System aus dem Modell zu extrahieren.~\cite{bickford2005causal}
-
-% \paragraph{typentheoretische Vorbetrachtung}
-% Um der Eventlogik eine mathematische Struktur zu geben, werden ihre
-% Elemente mit diskreten Typen beschrieben, d.h. dass ihre die Gleichheit
-% entscheidbar ist und sie voneinander disjunkt sind.
-
-% \begin{defi}
-%   $\mathbb{D}$ ist der Typ der alle diskreten Typen enthält $T\in\mathbb{D}$ mit $\{T:Type|\forall x,y : T.x = x\ in\ T \vee\neg (x = y\ in\
-%   T)\}$.
-% \end{defi}
-
-% \subsubsection{Events}
-% Events bilden die Grundbausteine der Eventlogik.
-% Sie stellen Aktionen dar die in Raum und Zeit passieren und
-% werden ohne Zeitdauer definiert.
-% Die Zeitdauer eines Events würde sich auf die physische Zeit der
-% Umsetzung beziehen und wurde der zur Vereinfachung
-% wegabstrahiert.~\cite{bickford2005causal}
-
-
-% \begin{defi}
-%   Ein Event $e$ ist die atomare Einheit und kausal geordnet, d.h.
-%   $e< e'$ wenn $e$ zeitlich vor $e''$ passiert ist.
-% \end{defi}
-
-% \begin{defi}
-%   Events $e\in E$ sind in einem Eventraum strukturiert. Dieser besteht
-%   aus einzelnen $loci$ oder Entitäten an denen Events passieren.
-% \end{defi}
-
-% Der Eventraum ist dynamisch aufgebaut, so dass über die Zeit neue Entitäten
-% hinzugefügt oder entfernt werden können. Damit die Entitäten im Raum
-% unterschieden werden können besitzen sie beobachtbare Eigenschaften, wie zum
-% Beispiel Koordinaten oder eine ID. Zur theoretischen Betrachtung reicht es aus,
-% wenn Entitäten durch einen diskreten Typen und eine ID unterschieden werden können.~\cite{bickford2005causal}
-
-% \begin{defi}
-%   Jede Entität ist mit jeder anderen Entität über mindestens
-%   einen Kommunikationsweg ($link$) verbunden.
-% \end{defi}
-
-% Für die $links$ wird das nicht-byzantinische Fehlermodell angenommen,
-% wobei die Verbindungen unzuverlässig sind, aber die Nachrichten nicht
-% verfälschen. Ein Event kann zur Kommunikation Nachrichten über einen
-% $link$ versenden.
-
-
-% Da Events an Entitäten gebunden sind, können sie kausal strukturiert werden.
-% Damit können Events folgendermaßen formalisiert werden.
-% \begin{gather*}
-%   \textbf{E:}\mathbb{D}\notag\\
-%   \textbf{Loc:}\mathbb{D}\\
-%   \textbf{pred?:} E\rightarrow (E+Loc)\\
-%   \textbf{sender?:} E\rightarrow (E+Unit)
-% \end{gather*}
-
-% E ist ein Event und Loc eine Entität. Die Funktion $pred?$ gibt entweder das
-% vorherige Event an der Entität zurück oder die Entität, wenn es das erste Event
-% war. Die Funktion $sender?$ gibt des Event $e'$ zurück, dass das Event $e$
-% ausgelöst hat oder den leeren Typ.~\cite{bickford2005causal}
-
-% Mit diesen Grundannahmen können die Funktionen $first?$, die bestimmt ob
-% ein Event das Erste ist, dass bei einer Entität passiert und $recv?$,
-% dass bestimmt ob ein Event ein Empfangsevent ist, definiert werden.
-
-% \begin{gather*}
-%   \textbf{first?:}E\rightarrow (E\rightarrow (E+Loc))\rightarrow B\\
-%   first?(e,pred?) = if\ is\_left(pred?(e))\ then\ true\ else\ false\\
-%   \textbf{recv?:}E\rightarrow (E\rightarrow (E+Unit))\rightarrow B\\
-%   recv?(e,sender?) = if\ is\_left(sender?(e))\ then\ true\ else\ false\\
-% \end{gather*}
-
-% Mit Hilfe dieser Funktionen lässt sich die Eingangserwähnte kausale Ordnung auf Events
-% $e < e'$ definieren als:
-% \[
-%   pred!(e,e') == (\neg first(e')\Rightarrow e = pred?(e')) \vee e = sender(e')
-% \]
-% $pred!$ bildet eine transitive Hülle und stellt damit eine wohlgeordnete
-% entscheidbare Ordnung der Form $e < e'$ dar. Als letztes fehlen noch
-% drei Grundaxiome für den geordneten Eventraum.~\cite{bickford2005causal}
-
-% \begin{axiom}
-%   Wenn ein Event $e$ ein Signal sendet, dann gibt es ein Event $e'$, so dass für
-%   jedes Event $e''$ gilt, $e'' = e'$ oder $e'' < e'$.\\
-%   \[
-%     \forall e:E \exists e':E. \forall e'':E . (recv?(e'') \& sender?(e'')=e)\Rightarrow (e' = e' \vee e'' < e)
-%   \]
-% \end{axiom}
-
-% \begin{axiom}
-%   Die Funktion $pred?$ ist injektiv.
-%   \[
-%     \forall e,e':E.loc(e) = loc(e')\Rightarrow pred?(e) = pred?(e')\Rightarrow e=e'
-%   \]
-% \end{axiom}
-
-% \begin{axiom}
-%   Die Funktion $pred!$ bildet eine starke wohlfundierte Ordnung.
-%   \[
-%     \exists f:E\rightarrow \mathbb{N}.\forall e,e':E.pred!(e,e')\rightarrow f(e)<f(e')
-%   \]
-% \end{axiom}
-
-% \begin{defi}
-%   Die folgenden Notationen werden als Abkürzung verwendet, um Events die an einem
-%   Ort stattfinden zu quantifizieren.
-%   \[
-%     \forall e@i.P == \forall e:E.(loc(e) = i\Rightarrow P)
-%   \]
-%   \[
-%     \exists e@i.P == \exists e:E.(loc(e) = i\Rightarrow P)
-%   \]
-% \end{defi}
-
-% Abbildung~\ref{fig:sequence} zeigt ein einfaches Beispiel über einen Eventraum,
-% der sich mit der bisherigen Theorie spezifizieren lässt. Dort wird eine 1:1
-% Kommunikation zwischen zwei Entitäten dargestellt. Jede Nachricht von S wird mit
-% einer Antwort von R quitiert, bevor eine neue Nachricht von S bei R eintrifft.
-% Diese Modell kann forlgendermaßen formalisiert werden:~\cite{bickford2005causal}
-
-% \begin{gather*}
-%   \forall s@S.\exists r'@R.s=sender?(r')\\
-%   \exists r@S.(s<r\&\exists s''@R.(r'\leq s''\& sender?(r) == s''))\\
-% %%  \forall x@S.s<x<r\Rightarrow x wird nicht an R gesendet\\
-%   \forall x@S.s<x<r\Rightarrow \neg\exists x'@R.(x=sender?(x'))
-% \end{gather*}
-
-% Als nächstes werden Events erweitert um Werte und unterschieden nach
-% $internen$ und $externen$ Events. Bei einem $externes$ Event sendet ein Sender
-% einer Nachricht über einen $link$ zu einem Empfänger. $Interne$ Events können
-% ebenfalls Werte übergeben und können durch $guards$ limitiert werden.~\cite{bickford2005causal}
-
-% \begin{defi}
-%   Der Typ eines Events ist:
-%   \[
-%     kind == (Act+Top)
-%   \]
-%   \[
-%     kind: E\rightarrow (Act+Top)
-%   \]
-%   Dabei ist Act ein diskreter Typ um unterschiedle interne Events, zu
-%   unterscheiden und Top der Wert eines externen Events.
-% \end{defi}
-
-% Eine Darstellungsform von Interaktionen und Eventräumen sind Sequenzdiagramme
-% mit Nachrichten, wie in Abb.~\ref{fig:sequence} dargestellt.
-% % EValues vllt vertiefen, funktionalität beschreiben?
-
-% \begin{defi}
-%   Eine Entität kann einen Zustand haben der durch eine endliche Folge
-%   von Änderungen dargestellt werden kann. $s'=f(s,v)$, wobei
-%   $v'$ der Folgezustand und $v$ der Wert eines Events ist.
-% \end{defi}
-
-% Die Eventlogik nach Bickford und Constable baut auf der intuitionistischen Logik
-% auf. Sie verfolgt den ``correct-by-construction'' Ansatz, nach dem ein
-% funktionales Programm aus einem konstruktiven Beweis extrahiert werden kann.
-% Die Beweise haben die Grundform $\forall x:A.\exists : B.spec(x,y)$. Der konstruktive Beweis
-% liefert einen Extraktterm, der eine Realisierung des Beweises darstellt.
-% Da die Eventlogik die konstruktive Typentheorie benutzt sind alle
-% beweisbaren logischen Aussagen auch programmierbar, in dem Sinne, dass sie einen
-% Extraktterm besitzen der die Spezifikation erfüllt.~\cite{bickford2003logic}
-
-% nachrichtenautomat
-% Grundlage für die Eventlogik ist ein Nachrichtenautomat. Dieser ist ein
-% nichtdeterministischer Automat der auf Nachrichten operiert.
-% Er hat die drei Basisoperationen ``senden'', ``empfangen'' und ``interne
-% Zustandsänderung''.~\cite{bickford2003logic}
-
-% \begin{defi}
-%   Ein Event $e=(a+m)$ ist ein Typ $A+M$ der entweder eine interne Aktion $A$ enthält
-%   oder eine empfangene Nachrichten $M$.
-% \end{defi}
-
-% \begin{defi}
-%   Ein Nachrichtenautomat ist ein abhängiger Datentyp mit der Struktur:
-%   $\{St, Act, Msg: Type, init: St$
-%     $f:(Act+Msg)\rightarrow St\rightarrow St$
-%     $send:(Act+Msg)\rightarrow St\rightarrow MsgList\}$
-% \end{defi}
-
-% % verteilte Nachrichtenautomaten
-% Um verteilte Systeme darstellen zu können wird mehr als ein Nachrichtenautomat
-% benötigt, da ein Nachrichtenautomatenohne Interaktionen ein normaler
-% nichtdeterministischer Automat ist. Ein verteiltes System $V$ ist eine Menge von
-% Nachrichtenautomaten die in einem Netzwerk miteinander verknüpft sind.
-% Das Netzwerk ist fair, d.h. jede gesendete Nachricht wird auch unverändert
-% empfangen.~\cite{bickford2003logic}
-
-% \begin{defi}
-%   Ein verteiltes System $V$ ist ein Tupel $V=(M,L)$ wobei $m_i\in M$ mit $i\in
-%   \mathbb{N}$ die Menge der teilnehmenden Nachritenautomaten ist. $L$ beschreibt
-%   ein Kante in einem gerichteten Graphen und besteht aus dem Tupel $L=(s,d,m_i,m_j,Q)$
-%   mit $i,j\in \mathbb{N} und i!= j.Q$ ist eine Nachrichtenqueue.
-% \end{defi}
-
-% TODO
-% Aussagenlogik +
-% Prädikatenlogik 1. Ordnung +
-% intuitionistische Logik +
-% Martin Löf Typentheorie
-% Automatentheorie NEA?
-% Eventlogik +?
-% RAFT Zensusprotokoll
-
-
 
 This chapter introduces the logical and programmatic foundations needed for this
 thesis. To achive this, it is split into two parts. The first part introduces
-the reader with the Logic of Events which is the theoretical foundation for the
+the reader to the Logic of Events which is the theoretical foundation for the
 Velisarios framework. The second part provides a practical introduction to
 the basics of COQ and programming with Velisarios.
 
@@ -452,8 +11,8 @@ the basics of COQ and programming with Velisarios.
 
 The Logic of Events was introduced by Bickford and
 Constable~\cite{bickford2003logic} to describe parallel systems which
-consists out of nodes and events happening between them. To follow
-the explenation a brief overview about propositional logic, predicativ logic,
+consists of nodes and events happening between them. To follow
+the explanation a brief overview about propositional logic, predicativ logic,
 constructive logic and type theorie is presented. It is assumed that the reader
 is already familiar with the basic logical systems.
 
@@ -484,20 +43,20 @@ the atoms are assigned to thruth values which is called the \textit{interpretati
 
 \begin{defi}
   More formal, an interpreation is a sample assigned for a term $t$ with
-  $I:L(t)\rightarrow \{true,false\} \leftrightarrow t^I$. Interpretation which suffices the term
+  $I:L(t)\rightarrow \{true,false\} \leftrightarrow t^I$. Interpretation which satisfies the term
   $t^I$ are called a \textit{model}.
 \end{defi}
 
-The most defined formal systems using terms which are taken as truth without
+Most defined formal systems are using terms which are taken as truth without
 proof or justification. These terms are called \textit{axioms}. These are syntactically
-without meaning but semantically always the truth.~\cite{tuschik1994mathematische}
+without meaning but semantically always true.~\cite{tuschik1994mathematische}
 
 To gather new knowledge out of axioms, terms and atoms a way to conclude
 new terms is needed. This can be done by adding \textit{inference rules} to
 the system. These rules derive new terms oder conclusions out of a given
 set of propositions. Such a formal system is called \textit{logical calculus}.~\cite{tuschik1994mathematische}
 
-\paragraph{Predicate logic}
+\paragraph{Predicate Logic}
 The predicate logic is an extension of the propositional logic.
 For instance, the statement ``x is a prime number'' can't be described
 in propositional logic since the thruth value depends on the structure of $x$.
@@ -531,9 +90,9 @@ structure and their relations it is useful to define such structures.~\cite{hein
 \end{defi}
 
 The interpretation is similar to propositional logic execept it is
-extended with $n$-artity predicate- and functionsymbols.~\cite{heinemann2013logik}
+extended with $n$-artity predicate- and function symbols.~\cite{heinemann2013logik}
 
-\paragraph{Intuitionistic logic}
+\paragraph{Intuitionistic Logic}
 The propositional and predicate logic are presented with the classical
 interpretation. The classical interpretation assumes that every statement
 is either $true$ or $false$ or more elaborated a mathematical object either
@@ -546,22 +105,22 @@ of that type or prove that it ``exists''.~\cite{sep-logic-intuitionistic, kreitz
 
 This problem was found by Brouwer in 1908. He observed that $A \vee \neg A$
 applied on infinite sets lead to problems. An example is the Goldbach
-conjencture which assumes that every number $> 2$ can be expressed out of
-two prime numbers. The classical logic uses a wider interpretation
+conjecture which assumes that every number $> 2$ can be expressed as the
+sum of two prime numbers. The classical logic uses a wider interpretation
 the law of excluded middle to get around this problem. It assumes
 that one of the cases must be true and none of them is not an option.
 As a side-effect such an interpretation rejects to be generally
-appliable to mathematical computational models.~\cite{sep-logic-intuitionistic, sep-mathematics-constructive}
+applicable to mathematical computational models.~\cite{sep-logic-intuitionistic, sep-mathematics-constructive}
 
 The \textit{intuitionism} is a mathematical direction of thinking which
 rejects the line of argument and universality of the law of excluded middle
 and other laws of that type. For this reason, the intuitionism demands
 that mathematical statements are seen as constructive statements.
-For instance, the exists quantifiers $\exists x.A$ is re-interpeted in a way
+For instance, the exists quantifier $\exists x.A$ is re-interpreted in a way
 that a real object can be given and is not only a theoretical one.
-Logical connective are also re-intepreted that they give a way
+Logical connective are also re-interpreted that they give a way
 of constructing a proof with real objects and at every time one can
-say which way the proof uses. One can see from the \textit{evidence}
+know which way the proof uses. One can see from the \textit{evidence}
 of some proof with the disjunction $A\vee B$ which part of the disjunction
 leads to a correct proof.~\cite{kreitz1994automatisierte}
 
@@ -571,11 +130,11 @@ leads to a correct proof.~\cite{kreitz1994automatisierte}
     Symbols &  Description\\\hline
     $q$ & Every literal $q$ has some evidence $e$.\\
     $P\vee Q$ & The proof demands either an evidence for $P$ or $Q$ and mark it.\\
-    $P\wedge Q$ & The proof demands an evidence for booth $P$ and $Q$.\\
+    $P\wedge Q$ & The proof demands an evidence for both $P$ and $Q$.\\
     $P\Rightarrow Q$ & The proof demands an effective algorithm which\\
            & converts every proof for $P$ into one for $Q$.\\
     $\neg P$ & To proof the abscence one must show that there is no proof for it.\\
-    $\exists x:T.P(x)$ & The proof needs an constructed object of type $T$ which holds for $P$.\\
+    $\exists x:T.P(x)$ & The proof needs a constructed object of type $T$ which holds for $P$.\\
     $\forall x:T.P(x)$ & The proofs demands that for every object $x$ out of the type $T$\\
                  &  $P$ there is an effective algorithm which computes a proof.
   \end{tabular}
@@ -583,28 +142,28 @@ leads to a correct proof.~\cite{kreitz1994automatisierte}
   \label{tab:intsymbols}
 \end{table}
 
-the table~\ref{tab:intsymbols} show the intuitionistic interpretation for the logical
+Table~\ref{tab:intsymbols} shows the intuitionistic interpretation for the logical
 symbols in typed predicate logic. As an application example, proofs about
-programs can only be done \textit{constructive} since a proof of contradiction
+programs can only be done \textit{constructivly} since a proof of contradiction
 says nothing about how to construct such a program or if the program
 fulfills some property.~\cite{kreitz1994automatisierte}
 Therefore, within the rest of this theses logical
 statements uses the intuitionistic logical interpretation.
 
-\paragraph{proofs-as-program}
+\paragraph{proofs-as-programs}
 Taken the intuitionistic interpretation into computer science then for
 mathematical questions the result is a piece of code which can be
 executed. This means, that for some typed piece of code the same
-rules apply as well as for the intuitionistic logic. There are
+rules apply as well as for the intuitionistic logic. They're
 fundamentally the same concept in different areas.
-For instance, an elementary programming problem consists out of
+For instance, an elementary programming problem consists of
 some specification or formula in a logical theory and as a solution
 some computational function satisfying the formula. At least, the
-proof is the explenation or link between the specification and the
+proof is the explanation or link between the specification and the
 solution.~\cite{bates1985proofs}
 This paradigm is called \textit{proofs-as-programs} and the foundation
 for modern theoretical work where programs are written by proofing their
-specification with the help of some theorem prover. The extracted runnable
+specification with the help of some theorem prover. The extracted executable
 functional program is called a~\textit{realizer} for the proof.
 
 \begin{table}[h]
@@ -623,7 +182,7 @@ functional program is called a~\textit{realizer} for the proof.
   \label{tab:proofsasprogs}
 \end{table}
 
-Table~\ref{tab:proofsasprogs} show the Curry-Howard isomorphism between
+Table~\ref{tab:proofsasprogs} shows the Curry-Howard isomorphism between
 logical proposition and types used to describe function behavior.
 
 As an example consider the statement
@@ -639,27 +198,27 @@ and can be simulated or run on a real system.~\cite{bickford2009component}
 Such functions are also called \textit{correct-by-construction}.
 
 Over the last decades new constructive methods are developed which
-extend the proofs-as-programm paradigma by applying it to distributed
+extend the proofs-as-programs paradigm by applying it to distributed
 systems. Such programs are not pure functional which means they have
 side-effects, an internal state, multiple agents in a system which
-communicate via messages and so forth. Extracting programms
+communicate via messages and so forth. Extracting programs
 are much harder since the specification is inherently tied to
-the logical structure of distributed systems. these logical
+the logical structure of distributed systems. These logical
 structures are called \textit{event structures} and one of these
 is the \textit{logic of events}.~\cite{bickford2009component}
 
 
-\subsection{Logic of events}
+\subsection{Logic of Events}
 The following section presents the logical language \textit{logic of events},
 presented by Mark Bickford and Richard L. Constable in different
 papers~\cite{bickford2003logic, bickford2005causal, bickford2009component}.
 
 The logic of events is an approach to find an adequate logic for distributed
 systems. It should bear the power of explaining and providing the
-technical needs for a constructive logic. The logic build on an
+technical needs for a constructive logic. The logic builds on an
 abstract high level without the binding to a specific computational
-oder executional model. This provides the room for the creative building
-of distributed system and their verification. Therefore, the realization
+oder executional model. This provides room for the creative building
+of distributed systems and their verification. Therefore, the realization
 is excluded because it needs a deep understanding of systems programming.
 These can be implemented and verified on another level an provided for
 the logic of events as realizer or extractor.~\cite{bickford2005causal}
@@ -681,11 +240,11 @@ in space and time which are considered to be instantaneous.
 
 The event structure is determined by events happening at discrete and separate
 points which are called \textit{entities} or \textit{loci}. Actions or events
-are located at these loci and the set of loci can change over time.
+are located at these locus and the set of loci can change over time.
 Each loci can have different properties which are identified by some
 \textit{key} and have some type $T$. These are properties are
 \textit{observables} and their value can be measured somehow.
-The list of observalbes at some loci is called its \textit{state}.
+The list of observables at some locus is called its \textit{state}.
 The interaction which happens between the entities relays on
 \textit{communication channels} which allows the entities to send
 \textit{messages} (actions) to each other. The channel structure
@@ -733,9 +292,9 @@ are all linked together. Each of the four nodes ($A..D$) can have some internal
 and maybe observable state and messages are send over the communication channels
 to the other entities of the network. 
 
-The underlaying computational model for the entities or nodes is the
+The underlying computational model for the entities or nodes is the
 message automata. This follows the assumption that ``the universe is run by
-computation''~\cite{bickford2005causal} and the everything can be modelled
+computation''~\cite{bickford2005causal} and everything can be modelled
 by functionally updating the state and the message queues on the communication
 channels of some entity. The proposed update function is $s':=f(s,v)$ where
 the next state $s'$ follows from the current state $s$ and some internal or
@@ -810,10 +369,10 @@ events are linearly ordered at each location and a recieve only happens
 after a corresponding send.~\cite{bickford2005causal}
 
 From that assumptions we define the finite list of events before a given event as
-\[before(e):=\ if\ first(e)\ then\ []\ else\ pred?(e)\ append\ before((pred?(e)))\] 
+\[before(e):=\ if\ first(e)\ then\ [\,]\ else\ pred?(e)\ append\ before((pred?(e)))\] 
 and likewise the finite tree of all events causally before e as
 \begin{align*}
-  prior(e):= & if\ first(e)\ then\ []\ else\\
+  prior(e):= & if\ first(e)\ then\ [\,]\ else\\
              & if\ recv?(e)\ then\ <e,prior(sender?(e)),prior(pred?(e))>\\
              & else\ <e,prior(pred?(e))>
 \end{align*}
@@ -855,7 +414,7 @@ between internal events a discrete type called Act is used.~\cite{bickford2005ca
     processes A and B.}
 \end{figure}
 
-The figure~\ref{fig:sequence} shows a simple event structure between two
+Figure~\ref{fig:sequence} shows a simple event structure between two
 processes. The process $A$ sends a natural number to process $B$ which adds
 one to the value and retuns the result.
 
@@ -863,7 +422,7 @@ To model the fact that an event $e$ can depend on a previous event $e'$ at
 some location the notion of state and three relations are introduced.~\cite{bickford2005causal}
 
 \begin{defi}
-  $Identifiers$ $Id:\mathbb{D}$ are the discrte type of names of state variables where each
+  $Identifiers$ $Id:\mathbb{D}$ are the discrete type of names of state variables where each
   holds a value with some specific type $T:x:Id\rightarrow i:Loc\rightarrow Type$.
 \end{defi}
 
@@ -899,7 +458,7 @@ following definition.~\cite{bickford2005causal}
   exactly $n$ changes unit $x$ and including the event $e$.
 \end{defi}
 
-The communiction between locations is modeled as a link or communication
+The communiction between locations is modelled as a link or communication
 channel as mentioned earlier. To abstract away specific topologies the structure
 is imagened as directed graph between the nodes or locations.~\cite{bickford2005causal}
 
@@ -910,7 +469,7 @@ is imagened as directed graph between the nodes or locations.~\cite{bickford2005
   or reciever of a message.
 \end{defi}
 
-A link can send multiple messages $m$ of $Type\ T$ over a link.
+A sender can send multiple messages $m$ of $Type\ T$ over a link.
 In order to distinguish between the messages a discrete type $Tag$
 is added to the messages on the link and processed in first-in-first-out order.~\cite{bickford2005causal}
 
@@ -946,16 +505,16 @@ is needed to reason about realtime properties and changes over time.~\cite{bickf
 \end{axiom}
 
 \paragraph{Computing Model}
-The prevouis points introduced the conceptual primitives needed to describe
+The previous points introduced the conceptual primitives needed to describe
 concurrently and asynchronously interacting processes.
-Now a a computing model as abstract realizer for the specification language is needed.
+Now a computing model as an abstract realizer for the specification language is needed.
 The event structure could be realized with multiple possible approaches but
 for distributed systems the \textit{message automata} based on the IO automata
-and active objects. The message automata is a nondeterministic state machine.
+and active objects. The message automaton is a nondeterministic state machine.
 Each machine operates by sending and reacting to messages as well as
 executing internal state transistions.
 the computation is considered to be fair in terms that every send message is
-recieved.~\cite{bickford2003logic}
+received.~\cite{bickford2003logic}
 
 
 \begin{defi}
@@ -968,7 +527,7 @@ recieved.~\cite{bickford2003logic}
   \end{align*}  
 \end{defi}
 
-A messsage automate consists out of the discrete type of state variables
+A message automaton consists out of the discrete type of state variables
 $St$. Furthermore, it is parametrized by the type of internal actions $Act$ 
 and recieved messages $Msg$. The $update$ function returns a new state
 depending on the current state and event happening. Resulting message are
@@ -979,12 +538,12 @@ nodes. Meaning, that the each location or node is a stream of alternating states
 and actions $(s_0,q_0,a_0),(s_1,q_1,a_1),....$ and the message queues as links.~\cite{bickford2003logic}
 
 \begin{defi}
-  Let $a_i$ an internal action, then is the next state
+  Let $a_i$ be an internal action, then is the next state
   $s_{i+1}=update(a_i)(s_i)$ the new messag queue $q_{i+1}=enq(send(a_i)(s_i)q_i)$.
 \end{defi}
 
 \begin{defi}
-  Let $a_i$ an recieved message then is the next state
+  Let $a_i$ be a recieved message then is the next state
   $s_{i+1}=update(a_i)(s_i)$ and the new message queue
   $q_{i+1}=enq(send(a_i)(s_i)deq?(a_i,q_{i+1}))$ where $deq?$ takes
   a recieved message from the queue. 
@@ -993,7 +552,7 @@ and actions $(s_0,q_0,a_0),(s_1,q_1,a_1),....$ and the message queues as links.~
 To model possible computations of the distributed system the computation
 is split into discrete progression steps index by the natural numbers $0,1,...$.
 A \textit{world} is a trace of some execution of a distributed system because
-at every location $i$ at eveery time $t$ there is some state $s(i,t)$ and action
+at every location $i$ at every time $t$ there is some state $s(i,t)$ and action
 $a(i,t)$ and a possible empty list of messages $m(i,t)$.
 
 
