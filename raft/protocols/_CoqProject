@@ -1,4 +1,5 @@
 -R ../coq-tools Tools
+-R ../coq-record-update RecordUpdate
 -R ../velisarios Velisarios
 -R ../protocols Protocols
 -R ../simulator Simulator

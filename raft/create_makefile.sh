@@ -102,5 +102,5 @@ for i in "${!aa[@]}"; do
     fi
 
     echo "" >> Makefile
-    echo "	coqc -R coq-tools Tools -R velisarios Velisarios -R protocols Protocols -R simulator Simulator ${i}.v" >> Makefile
+    echo "	coqc -R coq-tools Tools -R coq-record-update RecordUpdate -R velisarios Velisarios -R protocols Protocols -R simulator Simulator ${i}.v" >> Makefile
 done
