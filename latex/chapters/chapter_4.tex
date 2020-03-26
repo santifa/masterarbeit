@@ -61,17 +61,11 @@ gets passed at creation time of a node.
 \begin{lstlisting}[style=coq,label=lst:context,
 caption=Excerpt of the context definition of types and functions used within
 the protocol.]
-   (* the content type for the log *)
    Content : Set;
-   (* get a textual representation from the content *)
    content2string : Content -> string;
-   (* This is the state of the program to distribute. *)
    RaftSM : Set;
-   (* the result type which gets issued by the state update function *)
    RaftSM_result : Set;
-   (* the initial state of the state machine *)
    RaftSM_initial_state : RaftSM;
-   (* the update function which produces a new state and a result. *)
    RaftSM_update_state : RaftSM -> Content -> RaftSM * RaftSM_result
 \end{lstlisting}
 

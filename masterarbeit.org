@@ -259,7 +259,7 @@ eventml /home/ratzeputz/Entwicklung/repos/masterarbeit/code/pingpong.el -lib eve
 
 Verbinde mit localhost:5906 mit pw nuprlvnc
 
-* TODO Zeitplan [1/8] [12%]
+* TODO Zeitplan [1/7] [14%]
 
 Insgesamt stehen 6 Monate zur Verfügung
 in insgesamt 26 Einheiten/KW aufgeteilt.
@@ -284,7 +284,7 @@ Begin: <2018-10-15 Mo>  42 KW
    - Beschreibung EventMl Sprache
    - Einbung einfacher Beispiele
 
-** TODO Untersuchung Transformations <2018-12-31 Mo>--<2019-01-31 Do> (4E)
+** Untersuchung Transformations <2018-12-31 Mo>--<2019-01-31 Do> (4E)
    - Transformation von EventML -> Lisp
    - Einbindung von Nuprl in EventML Transformationsprozess/Programmierung
    - Transformation von Lisp -> Bytecode

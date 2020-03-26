@@ -10,28 +10,31 @@ Velisarios and the Logic of Events as a fundamental
 basis for distributed consensus protocols. The Raft
 thesis describes the protocol quite detailed and
 straight foreward which makes the implementation
-goes along with the description. Also, many existing
+goes along with the description. Only some details
+are left to the programmer to decide on how to implement
+these parts and their interoperation. Also, many existing
 implementations\footnote{\url{https://raft.github.io/}}
 help to correctly interpret some not very clear points.
-The diffcult by implementing something with COQ is that
+The diffculty with implementing something in COQ is that
 it requires programmers from other languages or unfamiliar
-with the functional concepts to rethink many parts which
-are based on mutation in other languages. Also, the
+with the functional concepts to rethink many parts
+as other common languages are mostly based on an imperative
+paradigm. Also, the
 restriction to algebraic types and deterministic recursive
 functions is not forseen by the description of Raft.
 But these led to a more predictable and less error-prone
 code so that mostly only logical failures are left as
 bugs in the code. As shown with this thesis Velisarios
 is a perfect fit for implementing distributed protocols
-and using them in the real world. But Velisarios is
-addressed to programmers already familiar with the
+and using them in the real world. But one has to note that
+Velisarios is addressed to programmers already familiar with the
 concepts of \texttt{proofs-as-programs} and functional
-programming in COQ. The basic aspects are described
-in the paper but the understanding about how the
+programming in COQ and the tooling is far from perfect.
+The basic aspects are described in the paper but the understanding about how the
 parts fit together in code are left to the example
 implementation of PBFT. In conclusion, this thesis
 may serve as an additional reference point for
-further approaches and implmementions from non-theoretical
+further approaches and implementions from non-theoretical
 computer scientist.
 
 \subsection{Outlook}
@@ -63,6 +66,8 @@ correctly by hand-woven code in non-functional
 languages. So, these approaches maybe a common
 standard in the future to handle complex systems
 and make the life of programmers easier.
+
+
 
 %%% Local Variables:
 %%% mode: latex
