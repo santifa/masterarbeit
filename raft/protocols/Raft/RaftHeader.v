@@ -30,6 +30,12 @@ Section RaftHeader.
     | Some _ => true
     end.
 
+  Definition flat_option {A : Type} (a : option (option A)) : option A :=
+    match a with
+    | None => None
+    | Some a => a
+    end.
+
   (** Redeclare the abstract definitions. **)
   Context { raft_context : RaftContext }.
 
@@ -230,8 +236,8 @@ Section RaftHeader.
   Definition candidate_state0 : CandidateState := MkCandidateState 1.
 
   (** A new vote recieved **)
-  Definition increment_votes (s : CandidateState) : CandidateState :=
-    MkCandidateState (S (votes s)).
+  (* Definition increment_votes (s : CandidateState) : CandidateState := *)
+  (*   MkCandidateState (S (votes s)). *)
 
   (*! Node State !*)
   (** The node state indicates which role the server has. **)
@@ -239,6 +245,33 @@ Section RaftHeader.
   | follower
   | candidate (c : CandidateState)
   | leader (l : LeaderState).
+
+  (** Add a new vote **)
+  Definition increment_votes (s : NodeState) : NodeState :=
+    match s with
+    | candidate c => candidate (MkCandidateState (S (votes c)))
+    | _ => s
+    end.
+
+  (** Get the amount of recieved votes **)
+  Definition get_votes (s : NodeState) : nat :=
+    match s with
+    | candidate c => (votes c)
+    | _ => 0
+    end.
+
+  (** Determine if some node has the majority of votes already. **)
+  Definition majority_votes (s : NodeState) : bool :=
+    let votes := get_votes s in (* get all recieved votes *)
+    let half := Nat.div2 num_replicas in (* minimum of >50% needed *)
+    if (Nat.ltb half votes) then true else false.
+
+  (** check if the node is leader **)
+  Definition is_leader (s : NodeState) : bool :=
+    match s with
+    | leader _ => true
+    | _ => false
+    end.
 
   (*! Client and linearizable semantics !*)
   (** The client needs to register at the network which creates a session id for
@@ -265,33 +298,8 @@ Section RaftHeader.
     destruct (deq_nat n n0); prove_dec.
   Defined.
 
-  (** the initial session id **)
+  (** the initial session id is used by the leaders, so start with the next one for clients. **)
   Definition session_id0 := session_id 0.
-
-
-  (** A session is a tuple of some proposed id, the corresponding client. **)
-  Definition Sessions := list (SessionId * Client).
-
-  (** Two sessions are equal if the have the same session id. **)
-  Definition ses_deq (s : (SessionId * Client)) (id : SessionId) :=
-    let (s', _) := s in if SessionIdDeq s' id then true else false.
-
-  (** Return the last known session id or the first. **)
-  Fixpoint last_session_id (s : Sessions) : SessionId :=
-    last (map (fun x => fst x) s) session_id0.
-
-  (** Register some client and append the session to the end.  **)
-  Definition new_session (s : Sessions) (c : Client) : (Sessions * SessionId) :=
-    let id := next_session_id (last_session_id s) in
-    ((List.app s [(id, c)]), id).
-
-  (** Return true if we have a registered client session. **)
-  Fixpoint valid_session (s : Sessions) (id : SessionId) : bool :=
-    existsb (fun x => ses_deq x id) s.
-
-  (** Return the session client if some **)
-  Fixpoint get_session_client (s : Sessions) (id : SessionId) : option Client :=
-    option_map snd (find (fun x => if ses_deq x id then true else false) s).
 
   (** A client send requests with some request id which increases monotonically. **)
   Inductive RequestId := request_id (n : nat).
@@ -313,13 +321,50 @@ Section RaftHeader.
   (** the initial request id **)
   Definition request_id0 := request_id 0.
 
+  (** A session is a tuple of some proposed id, the corresponding client. **)
+  Definition Sessions := list (SessionId * Client * RequestId).
+
+  (** Two sessions are equal if the have the same session id. **)
+  Definition ses_deq (s : (SessionId * Client * RequestId)) (id : SessionId) : bool :=
+    let (s', _) := fst s in if SessionIdDeq s' id then true else false.
+
+  (** Return the last known session id or the first usable for a client. **)
+  Fixpoint last_session_id (s : Sessions) : SessionId :=
+    last (map (fun x => fst (fst x)) s) (next_session_id (session_id0)).
+
+  (** Register some client and append the session to the end.  **)
+  Definition new_session (s : Sessions) (c : Client) : (Sessions * SessionId) :=
+    let id := next_session_id (last_session_id s) in
+    ((List.app s [(id, c, request_id0)]), id).
+
+  (** Return true if we have a registered client session. **)
+  Definition valid_session (s : Sessions) (id : SessionId) : bool :=
+    existsb (fun x => ses_deq x id) s.
+
+  (** Return the session client if some **)
+  Definition get_session_client (s : Sessions) (id : SessionId) : option Client :=
+    option_map (compose snd fst) (find (fun x => if ses_deq x id then true else false) s).
+
+  (** Update the sessions request id by replacing the matching session **)
+  Fixpoint update_request_id (s : Sessions) (id : SessionId) (ri : RequestId) : Sessions :=
+    match s with
+    | [] => []
+    | x :: ss => if ses_deq x id then
+                 (fst (fst x), (snd (fst x)), ri) :: ss
+               else update_request_id ss id ri
+    end.
+
+  (** Check if the request id is greater than the last request id and the session id is valid **)
+  Definition valid_request (s : Sessions) (id : SessionId) (ri : RequestId) : bool :=
+    existsb (fun x => andb (ses_deq x id) ((snd x) <? ri)) s.
+
   (*! Cache !*)
   (** Raft uses caching to prevent clients and the network from executing the
    ** same request twice and enter an illegal state. The leader creates a cache
    ** entry without result for every request. If the request is executed by the
-   ** network the cache is updated. The leader distributes every new cached request
-   ** to all nodes using the log replication facility like for the sessions and the
-   ** normal log entries. **)
+   ** network the cache is updated. Every node has its own caching within the log.
+   ** It uses the replication requests and adds new replications requests to its
+   ** cache and the result if the entry is flagged as commited. **)
   Record CacheEntry :=
     MkCacheEntry
       {
@@ -339,16 +384,21 @@ Section RaftHeader.
     if SessionIdDeq (sid c) si then if RequestIdDeq (rid c) ri then true else false else false.
 
   (** Returns the cache element if some is found. **)
-  Fixpoint get_cached (c : Cache) (sid : SessionId) (ri : RequestId) : option CacheEntry :=
+  Definition get_cached (c : Cache) (sid : SessionId) (ri : RequestId) : option CacheEntry :=
     find (fun x => correct_entry x sid ri) c.
 
   Definition add_result2cache_entry (c : CacheEntry) (r : RaftSM_result) : CacheEntry :=
     MkCacheEntry (sid c) (rid c) (Some r).
 
   (** Add a result to a cache entry if the result finally processed by the sm. **)
-  Fixpoint add_result2cache (c : Cache) (si : SessionId)
+  Definition add_result2cache (c : Cache) (si : SessionId)
            (ri : RequestId) (r: RaftSM_result) : Cache :=
     map (fun x => if correct_entry x si ri then add_result2cache_entry x r else x) c.
+
+  (** Get the cached result if some. **)
+  Definition get_cached_result (c : Cache) (sid : SessionId) (ri : RequestId) :
+    option RaftSM_result :=
+    flat_option (option_map (fun x => (result x)) (get_cached c sid ri)).
 
   (*! Log !*)
   (** The log is the most important part because it stores all contents which
@@ -359,7 +409,7 @@ Section RaftHeader.
    **   entries are also identical
    ** NOTE: "log" is used for the nodes, "Entry" for messages. For simplicity a message
    ** can only send one entry. **)
- 
+
   (** The types of entries for the log. **)
   Inductive EntryType :=
   (* The normal log content from a client request *)
@@ -406,6 +456,9 @@ Section RaftHeader.
   (** Return the nth entry iff found. **)
   Definition get_log_entry (l : Log) (i : nat) : option Entry := List.nth_error l i.
 
+  Definition get_last_entry (l : Log) (t : Term) : Entry :=
+    last l (new_term_entry t).
+
   (** Check if the log entry a position i has term t **)
   Fixpoint check_entry_term (l : Log) (i : nat) (t : Term) : bool :=
     match i, l with
@@ -440,6 +493,7 @@ Section RaftHeader.
     match (entry e) with
     | cache _ => true
     | _ => false
+
     end.
 
   Definition is_content_entry (e : Entry) : bool :=
@@ -453,6 +507,14 @@ Section RaftHeader.
     let entry := option_map entry (List.find is_session_entry (rev l)) in
     match entry with
     | Some (session s) => s
+    | _ => []
+    end.
+
+  (** Find and return the last cache entry or the empty list. **)
+  Definition last_cache (l : Log) : Cache :=
+    let entry := option_map entry (List.find is_cache_entry (rev l)) in
+    match entry with
+    | Some (cache c) => c
     | _ => []
     end.
 
@@ -472,7 +534,7 @@ Section RaftHeader.
   | client_request (client : Client) (session_id : SessionId)
                    (request_id : RequestId) (command : Content)
    (** The leader sends the client the response if the request was executed. **)
- | client_response (status : bool) (result : RaftSM_result) (leader : option Rep).
+  | client_response (status : bool) (result : option RaftSM_result) (leader : option Rep).
 
   (** The append entries messages are the core of raft. It is used as heartbeat maintaining
    ** leadership in idle times and for the replication itself. To get the caching and
@@ -484,7 +546,7 @@ Section RaftHeader.
   | replicate (term : Term) (leader : Rep) (last_log_index : nat) (last_log_term : Term)
               (commit_index : nat) (entry : list Entry) (id : SessionId * RequestId)
   (** The follower responses to the leader if the issued requests succeds **)
-   | response (term : Term) (success : bool) (node : Rep) (id : SessionId * RequestId).
+  | response (term : Term) (success : bool) (node : Rep) (id : SessionId * RequestId).
 
   (** A vote is issued during the leader election. The candidate provides
    ** itself, the current term and the index of the last stored log and
@@ -564,5 +626,72 @@ Section RaftHeader.
 
   (** Bind the real message states to the abstract definition. **)
   Global Instance Raft_I_get_msg_status : MsgStatus := MkMsgStatus Raftmsg2status.
+
+  (*! Message creation !*)
+  (** Create a new timer message **)
+  Definition mk_timer_msg (t : Timer) (n : Rep) (timeout : nat) : DirectedMsg :=
+    MkDMsg (timer_msg t) [replica n] timeout.
+
+  (** The leader has a fixed timeot of 50ms to trigger the next heartbeat.
+   ** This is done to maintain leadership since the heartbeat also need a timer. **)
+  Definition mk_leader_timer_msg (t : Timer) (n : Rep) : DirectedMsg :=
+    mk_timer_msg t n 50.
+
+  (** NOTE: Use a timer msg to track which msg should be resend. **)
+  Definition mk_msg_timer_msg (t : Timer) (n : Rep) : DirectedMsg :=
+    mk_timer_msg t n 100.
+
+  (** Create a new registration regquest message -- Client **)
+  Definition mk_register_msg (c : Client) (n : Rep) : DirectedMsg :=
+    MkDMsg (register_msg (request_register_client c)) [replica n] 0.
+
+  (** Create a new registration reponse to some client **)
+  Definition mk_register_response_msg (c : Client) (s : SessionId)
+             (g : bool) (l : option Rep) : DirectedMsg :=
+    MkDMsg (register_response_msg (response_register_client g s l)) [client c] 0.
+
+  (** Create the initial message to bootstrap the system. -- Bootstrap **)
+  Definition mk_init_msg (timeout : nat) : DirectedMsg :=
+    MkDMsg (init_msg timeout) (map replica reps) 0.
+
+  (** Create a new vote request. **)
+  Definition mk_request_vote_msg (n : Rep) : (Term -> nat -> Term -> nat -> DirectedMsg) :=
+    fun t lli llt ci =>
+      let vote := request_vote t n lli llt in
+      MkDMsg (request_vote_msg vote) (other_names n) 0.
+
+  (** Create a new reponse to a vote request. **)
+  Definition mk_request_vote_response_msg (t : Term) (g : bool) (n : Rep) : DirectedMsg :=
+    MkDMsg (request_vote_response_msg (response_vote t g)) [replica n] 0.
+
+    (** Create a new heartbeat message. **)
+  Definition mk_heartbeat_msg (n : Rep) : (Term -> nat -> Term -> nat -> DirectedMsg) :=
+    fun t lli llt ci =>
+      let beat := heartbeat t n lli llt ci in
+      MkDMsg (append_entries_msg beat) (other_names n) 0.
+
+  (** Create a replication message to all other nodes. **)
+  Definition mk_append_entries_msg (n : Rep) (e : Entry) (id : SessionId * RequestId) :
+    (Term -> nat -> Term -> nat -> DirectedMsg) :=
+    fun t lli llt ci =>
+      let msg := replicate t n lli llt ci [e] id in
+      MkDMsg (append_entries_msg msg) (other_names n) 0.
+
+  (** Create a reponse message to an append entries message. **)
+  Definition mk_append_entries_response_msg (t : Term) (g : bool) (id : SessionId * RequestId)
+             (n : Rep) (l : Rep) : DirectedMsg :=
+    let r := response t g n id in
+    MkDMsg (append_entries_response_msg r) [replica l] 0.
+
+  (** Create a request message for a client. -- Client **)
+  Definition mk_client_request (c : Client) (si : SessionId) (ri : RequestId)
+             (e : Content) (n : Rep) : DirectedMsg :=
+    let r := client_request c si ri e in
+    MkDMsg (request_msg r) [replica n] 0.
+
+  (** Create a reponse for some client request. **)
+  Definition mk_client_response (g : bool) (r : option RaftSM_result)
+             (l : option Rep) (c : Client) : DirectedMsg :=
+    MkDMsg (response_msg (client_response g r l)) [client c] 0.
 
 End RaftHeader.

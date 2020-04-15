@@ -9,7 +9,7 @@ OCB_FLAGS = -tag bin_annot -tag thread -use-ocamlfind -Is pb,raft,pbft,lib -pack
 OCB = ocamlbuild $(OCB_FLAGS)
 
 # coq flags
-COQ_PATH = -R ../coq-tools Tools -R ../velisarios Velisarios -R ../protocols Protocols -R . Simulator
+COQ_PATH = -R ../coq-tools Tools -R ../coq-record-update RecordUpdate -R ../velisarios Velisarios -R ../protocols Protocols -R . Simulator
 
 LIB = $(lib/%.ml)
 
@@ -19,7 +19,7 @@ general: RsaKey.native
 
 pbft: general pbft-ext PbftReplica.native PbftClient.native RsaKey.native PbftSimul.native
 
-raft: general raft-ext general raft-tests raft-demonstrations
+raft: general raft-ext general # raft-tests raft-demonstrations
 
 raft-tests: RaftTest.native RaftTestInit.native RaftTestElection.native
 
@@ -63,8 +63,11 @@ RaftReplica.native:
 RaftSimul.native: raft/RaftSimul.ml
 	$(OCB) RaftSimul.native
 
-RaftTest.native: raft/RaftTest.ml
-	$(OCB) RaftTest.native
+RaftTestcases.native: raft/RaftTestcases.ml
+	$(OCB) RaftTestcases.native
+
+# RaftTest.native: raft/RaftTest.ml
+# 	$(OCB) RaftTest.native
 
 RaftTestInit.native: raft/RaftTestInit.ml
 	$(OCB) RaftTestInit.native

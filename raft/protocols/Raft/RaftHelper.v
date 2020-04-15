@@ -1,16 +1,21 @@
-(*!
- * This file defines general helper functions which are used
- * throughout the code.
- !*)
+(*! This file is part of the raft implementation with velisarios. !*)
 
+(** These definitions are small helper function used for the realization. **)
 Require Export  Strings.String.
 
 Section RaftHelper.
 
+  Definition option2bool {A : Type} (s : option A) : bool :=
+    match s with
+    | None => false
+    | Some _ => true
+    end.
+
   (** concat a list of string to one string. **)
-  Fixpoint str_concat (l : list String.string) :=
+  Fixpoint str_concat (l : list String.string) : String.string :=
     match l with
-    | _ => ""
+    | [] => ""
+    | s :: ss => String.append s (str_concat ss)
     end.
 
   (** auxilary function which converts a list of some type to its representation. **)
