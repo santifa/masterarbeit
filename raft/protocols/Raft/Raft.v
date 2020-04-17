@@ -234,6 +234,25 @@ Section Raft.
       end
     else (s, None).
 
+  (** Add new entries to the log and fix logs which have an entry at position (lli + 1)
+   ** with a different term then llt by removing all entries from this one till the end. **)
+  Definition fix_log (s : RaftState) (e : list Entry) (lli : nat) (llt : Term) : RaftState :=
+    match get_log_entry (log s) (lli + 1) with
+    (* We have no entry at position llit + 1, so we can just add the new entries. *)
+    | None => update_log s (add2log (log s) e)
+    | Some e' => (* test if we have an conflicting entry or maybe the same *)
+      let x := match e with
+               | [] => new_term_entry term0
+               | x' :: _ => x'
+               end in
+      if TermDeq (entry_term e') (entry_term x) then
+        (* the entries are equal so do nothing *)
+        s
+      else (* the entries conflict so remove the log tail from this entry on *)
+        let l := take_from_log (lli + 1) (log s) in
+        update_log s (add2log l e)
+    end.
+
   (*! Sessions !*)
   (** Create a new session and update the log **)
   Definition mk_session (s : RaftState) (c : Client) : RaftState * SessionId :=
@@ -267,6 +286,14 @@ Section Raft.
     (* bump the next index of all nodes *)
     let s'' := incr_next_index_all s in
     (s'', ae_msg).
+
+  (** Create a new response to the leader if one exists or nothing otherwise. **)
+  Definition mk_append_response (s : RaftState) (slf : Rep) (g : bool) : DirectedMsgs :=
+    match leader_id s with
+    | None => []
+    | Some l =>
+      [mk_append_entries_response_msg (current_term s) g (session_id0, request_id0) slf l]
+    end.
 
   (*! The message handling - Update function !*)
   (** Velisarios uses update functions which changes the state and produces outgoing
@@ -307,10 +334,6 @@ Section Raft.
             let entry := new_sessions_entry (current_term s) (last_session (log s)) in
             (* Take the entry and create the replication messages. *)
             let (s', ae_msg) := mk_replication s slf entry (session_id0, request_id0) in
-            (* let ae_pf := mk_append_entries_msg slf entry (id, request_id0) in *)
-            (* let ae_msg := mk_msg ae_pf s in *)
-            (* (* The leader can bump the next indexes for all nodes. *) *)
-            (* let s' := incr_next_index_all s in *)
             (Some s', [result_msg, ae_msg])
           | _ => (* point to the real leader *)
             (* if leader_id says none the network has no current leader *)
@@ -326,7 +349,7 @@ Section Raft.
    ** A normal node uses around 300ms and the leader node 50ms as a delay.
    ** The leader maintains its authority by sending heartbeat messages in idle times.
    ** A normal node detects failed leaders when no more message are arrevied by the leader. **)
-  Definition handle_timer_msg (slf : Rep) : Update RaftState Timer DirectedMsgs :=
+  Definition handle_timer (slf : Rep) : Update RaftState Timer DirectedMsgs :=
     fun state msg =>
       (* the internal timer has ended and no new message arrived in between *)
       if TimerDeq (timer state) msg then
@@ -415,10 +438,6 @@ Section Raft.
             let entry := new_term_entry (term t) in
             (* Give dummy session to the leader and ignore it in he caching *)
             let (s''', ae_msg) := mk_replication s slf entry (session_id0, request_id0) in
-            (* let ae_pf := mk_append_entries_msg slf entry (session_id0, request_id0) in *)
-            (* let ae_msg := mk_msg ae_pf s'' in *)
-            (* let s''' := incr_next_index_all s in *)
-            (* First send the heartbeat, than the timers and at last the replication *)
             (Some s''', msgs ++ [timer_msg, ae_msg])
          else
            (* Not enough votes restart election timer *)
@@ -464,7 +483,7 @@ Section Raft.
               let entry := new_content_entry (current_term state) cmd in
               let (s, ae_msg) := mk_replication state slf entry (sid, rid) in
               (* add the entry to the internal cache *)
-              let s' := update_cache s (add2cache (cache s) sid rid) in
+              let s' := update_cache s (add2cache (cache s) sid rid (last_log_index (log s))) in
               (* replicate the request *)
               (Some s', [ae_msg])
             else (* The request is old so check the cache even if the session is invalid *)
@@ -476,259 +495,117 @@ Section Raft.
       | _ => (Some state, []) (* ignore response messages *)
       end.
 
-  (*! Log replication !*)
-  (** 1. If a node gets a request and it is not the leader it forwards the request.
-   ** 2. If the node is the leader
-   ** 2.1 It stores the request in its internal log
-   ** 2.2 It sends append entries messages to all its followers
-   ** 3. A follower applies the entries to it's internal log if the index is free or a wrong entry is present.
-   ** 3.1 It ignores the entries if the index is present and the terms are matching
-   ** 4. The follower updates the commit_index and commits log entries to the commited_log
-   ** 5. The follower repsonds to the leader with it's result and the current term
-   ** 6. If the leader gets a majority of successfull repsonses from the followers
-   **    it commits the log entry to the commited_log. **)
-  (* TODO: resend append entry calls indefinitely if followers does not answer
-   * TODO: apply log entry as committed if majority of followers succeds
-   * TODO: leader send response to client
-   * TODO: deal with log inconsistency -> the leader needs to detect the last valid log. *)
 
-  (** Check if a client request is valid and enter it into the cache.
-   ** TODO: Adding the request beforehand is maybe inappropriate **)
-  (* Definition valid_request (state : RaftState) (si : SessionId) (ri : RequestId) : option RaftSM_result := *)
-  (*   if valid_session (sessions state) si then *)
-  (*     processed_request (cache state) si ri *)
-  (*   else None. *)
-
-  (** Check if we already have a result and answer with the result or answer with false **)
-  (* Definition cached_request (c : Cache) (cl : Client) := *)
-  (*   match (result c) with *)
-  (*   | None => [] (* TODO: at the moment return nothing if we have no cached result *) *)
-  (*   | Some res => *)
-  (*     let response := client_response true res in *)
-  (*     [MkDMsg (response_msg response) [client cl] 0] *)
-  (*   end. *)
-
-  (** Create a new log entry and update the state **)
-  Definition add2log (s : RaftState) (cmd : Content) : (RaftState * Log):=
-    let entry := [new_entry (term (current_term s)) cmd] in
-    let s' := update_log s (append2log (log s) entry) in
-    (s', entry).
-
-  (** L - Handle client input to the system. **)
-  (** Forward the message if the request reaches the wrong node.
-   ** As leader generate the entries from the request and apply the entries to the
-   ** internal log. Afterwards send AppendEntries messages to the followers.
-   ** A follower gets an request if last_log_index >= next_index for a follower **)
-  (* Definition handle_request (slf : Rep) : Update RaftState ClientRequest DirectedMsgs := *)
-  (*   fun state r => *)
-  (*     match node_state state with *)
-  (*     | candidate _ => (Some state, []) (* a candidate ignores requests from clients *) *)
-  (*     | follower => (* Some follower that forwards *) *)
-  (*       let msg := mk_forward_msg state (request_msg r) in *)
-  (*       (Some state, msg) *)
-  (*     | leader _ => (* the leader handles client requests *) *)
-  (*       match r with (* destructre the message *) *)
-  (*       | client_request c si ri cmd => *)
-  (*         if valid_session (sessions state) si then *)
-  (*           match in_cache (cache state) si ri with *)
-  (*           | Some res => (* the request was already handled, return the cached result *) *)
-  (*             let msg := cached_request res c in *)
-  (*             (* let response := client_res true res in *) *)
-  (*             (* let msg := [MkDMsg (response_msg response) [client c] 0] in *) *)
-  (*             (Some state, msg) *)
-  (*           | None => (* we have new request *) *)
-  (*             (* simply append the message to the leaders log *) *)
-  (*             let (s, entry) := add2log state cmd in *)
-  (*             (* let id := (si, ri) in *) *)
-  (*             (* let entry := [new_entry (term (current_term state)) cmd] in *) *)
-  (*             (* let s := update_log state (append2log (log state) entry) in *) *)
-  (*             (* create the replication messages for all nodes *) *)
-  (*             let dmsgs := mk_append_entries_msg slf s entry (si, ri) in *)
-  (*             let s' := incr_leaders_next_index s in *)
-  (*             (Some s', dmsgs) *)
-  (*           end *)
-  (*         else (Some state, []) (* ignore messages with no valid session *) *)
-  (*       end *)
-  (*     end. *)
-
-  (** 1. If the next used log index is equal to the internal log index
-   ** 1.1 check if the terms of the entries are matching and
-   ** 1.1.1 if the terms are equal do nothing
-   ** 1.1.2 if the terms are unequal take only the last_log_index and append the new entries
-   ** 2. If the next used log index is free append the entries **)
-  Definition append_entries2log (entries : list Entry) (lli : nat) (t : Term) (s : RaftState) :=
-    let log := log s in
-    let last_index := get_last_log_index log in
-    if ((lli + 1) ==  last_index) then
-      (* an entry exists, now check if terms are matching *)
-      let last_term := get_last_log_term log in
-      if (TermDeq t last_term) then
-        (* the terms are matching, we assume the entry is already there *)
-        log
-      else (* delete the requested index and all entries which follow this one *)
-        let log' := take_from_log (lli + 1) log in
-        append2log log' entries
-    else append2log log entries.
-
-    Definition update_term_and_leader (s : RaftState) (t : Term) (l : Rep) :=
-      let s' := equal_term_or_follower s t in
-      update_current_leader s' l.
-
-    Definition handle_log_entry (s : RaftState) (ci : nat) :=
-      let (s', _) := apply_to_sm s in
-      update_commit_index s' ci.
-
-  (** Check if the majority of servers replicated the log. **)
-  Definition is_replicated (s : RaftState) : bool :=
-    let lli := get_last_log_index (log s) in
-    match (get_leader s) with
-    | None => false (* not a leader node *)
-    | Some l =>
-      let replicated := num_replicated (next_index l) lli 0 in
-      let limit := Nat.div2 num_replicas in (* the minimum needed are >50% *)
-      if (Nat.ltb limit replicated) then (* we have a majority *)
-        true
-      else false
-    end.
-
-  (** F - Handle append entries messages which are used as heartbeat and log replication. **)
-  (** As a leader ignore the message.
-   ** As a follower
-   ** 1. Check if the message is a heartbeat or replication
-   ** 2. Ignore heartbeats at the moment
-   ** 3. Check if the entries could be applied to the internal log
-   ** 3.1 Ignore the request if the current term doesn't match or the entry is already there (index + term)
-   ** 3.2 Apply the entries to the internal log by removing false entries and response with success and the current term **)
+  (*! Handle the replication process !*)
+  (** This is the whole raft core update process. The leader handles response messages
+   ** from followers. Followers react to heartbeat and replicate messages from the leader.
+   ** Candidates convert to followers if a heartbeat with at least the same term is recieved.
+   **
+   ** 1. Heartbeats are used to maintain leadership in the network. In the original paper
+   ** heartbeats are empty append entry calls but this is modeled different here by using
+   ** a specific type. A reciever checks the term and the last log index and term.
+   ** If there is something to commit the node applies it to the raft state machine.
+   **
+   ** 2. Replication messages are triggered by the leader to update the log of its followers.
+   ** A follower checks the senders term and last log index and term and maybe correct its log.
+   ** It creates a cache entry for the replication request and updates its log.
+   ** If there is something to apply to the raft state machine, apply and update the cache.
+   **
+   ** 3. Response
+   **
+   ** NOTE: The process enforces that a new leader first sends a heartbeat since only followers
+   ** racts to replication messages.
+   ** NOTE: Even if the message can contain lists of entries and most functions handles lists
+   ** of new log entries some are only build to apply the new head. So only send messages with
+   ** one entry at a time to ensure correctness. **)
   Definition handle_append_entries (slf : Rep) : Update RaftState AppendEntries DirectedMsgs :=
     fun state msg =>
-      match node_state state, msg with
-      (* the replication succeded *)
-      | leader l, response t true node (si, ri) =>
-        let ni := increase_next_index (next_index l) node in
-        let l' := update_leader_state ni (match_index l) in
-        let s := update_node_state state (leader l') in
-        if is_replicated s then
-          let s' := increment_commit_index s in
-          let (s'', result) := apply_to_sm s' in
-          match result with
-          | None => (Some s, []) (* something failed by applying the sm *)
-          | Some r =>
-            let res := client_response true r (leader_id s'') in
-            let sessions := find_last_session (log s'') in
-            match sessions with
-            | None => (Some state, []) (* no session found, bad *)
-            | Some sessions' =>
-              let client := get_session_client sessions' si in
-              match client with
-              | None => (Some state, []) (* No session client; bad *)
-              | Some c =>
-                let client_msg := mk_client_response_msg  (* FIXME *) c res  in
-                (Some s'', client_msg)
-              end
-            end
-          end
-        else (Some s, []) (* the majority is still missing the current log entry *)
-
-      (* the replication failed, check the term *)
-      | leader l, response t false node id =>
-        if TermLt (current_term state) t then
-          (* the leader has an outdated term, so return to follower *)
+      match msg, node_state state with
+      | heartbeat t l lli llt ci, _ =>
+      (* heartbeats are handled by all nodes including the leader which may be no longer one. *)
+        if t <? (current_term state) then
+          (* the senders term is lower, so only respond with false.  *)
+          let response := mk_append_response state slf false in
+          (Some state, response)
+        else (* the senders term is equal or greater *)
+          (* convert the node or update the term if neccessary *)
           let s := equal_term_or_follower state t in
-          (Some s, [])
-        else
-          (Some state, [])
+          if check_entry_term (log state) lli (term llt) then
+            (* the log has an entry at index lli with term llt *)
+            (* update the leader *)
+            let s' := update_leader_id state l in
+            (* apply to the raft state machine if there are new commits and update the cache *)
+            let (s'', result) := apply_to_sm (update_commit_index s' ci) in
+            let s''' := update_cache s'' (result2cache (cache s'') (last_applied s'') result) in
+            (* Respond with success to the leader *)
+            let response := mk_append_response state slf true in
+            (Some s''', response)
+          else (* the logs doesn't match, so only respond with false *)
+            let response := mk_append_response state slf false in
+            (Some state, response)
 
-      (* a leader ignores append entries messages which are not responses *)
-      | leader _ , _ => (Some state, [])
-      (* adhere to the beat and update yourself *)
-      | _, heartbeat t l lli llt ci =>
-        let s := update_term_and_leader state t l in
-        let (s', timer) := mk_timer s slf in
-        (Some s', [timer]) (* we recieved a heartbeat and restart our internal interval *)
+      | replicate t l lli llt ci e id, follower =>
+        (* replication messages are only handled by followers *)
+        if t <? (current_term state) then
+          (* the senders term is lower deny the replication request  *)
+          let response := mk_append_response state slf false in
+          (Some state, response)
+        else (* the senders term is equal or greater *)
+          (* convert the node or update the term if neccessary *)
+          let s := equal_term_or_follower state t in
+          if check_entry_term (log state) lli (term llt) then
+            (* add the recieved entries to the log and possible fix the log. *)
+            let s' := fix_log s e lli llt in
+            (* add the new entry to the cache with the next index for recognition *)
+            let c := add2cache (cache s') (fst id) (snd id) (last_log_index (log s')) in
+            let s'' := update_cache s c in
+            (* check for new commits and apply them to the raft state machine *)
+            let (s''', result) := apply_to_sm (update_commit_index s'' ci) in
+            let st := update_cache s''' (result2cache (cache s''') (last_applied s''') result) in
+            (* Respond with success to the leader *)
+            let response := mk_append_response st slf true in
+            (Some st, response)
+          else (* the logs doesn't match, so only respond with false *)
+            let response := mk_append_response state slf false in
+            (Some state, response)
 
-      (* replicate and update yourself *)
-      | _, replicate t l lli llt ci entries id =>
-        let s := update_term_and_leader state t l in
-        if (TermLt t (current_term state)) then
-          (* reply false if the replication term is lower than the current term *)
-          let result := response (current_term state) false slf id in
-          (Some state, [MkDMsg (append_entries_response_msg result) [replica l] 10])
+      | response t g n id, leader l =>
+        (* Only leaders react to replication response messages *)
+        if g then (* the replication was successfull on the node n *)
+          (* increase the index of the highest log entry known to be replicated on that node *)
+          let mi := increase_match_index (match_index l) n in
+          let s := update_node_state state (leader (update_leader_state (next_index l) mi)) in
+          (* check if the majority has already replicated that entry *)
+          if majority_replicated mi (get_match_index mi n) then
+            (* increment the commit index and apply the newly commited entry
+             * to the raft state machien *)
+            let (s', result) := apply_to_sm (inc_commit_index s) in
+            let s'' := update_cache s' (result2cache (cache s') (last_applied s') result) in
+            let c := get_session_client (last_session (log s'')) (fst id) in
+            match c with
+              (* no client associated, ignore result *)
+            | None => (Some state, [])
+            | Some c' =>
+              (* Return the result to the client *)
+              let response := mk_client_response true result (leader_id s'') c' in
+              (Some s'', [response])
+            end
+          else (* not replicated to a majority, so do nothing *)
+            (Some s, [])
         else
-          if (negb (check_entry_term (log state) lli llt )) then
-            (* reply false if the last log index or term does not match *)
-            let result := response (current_term state) false slf id in
-            (Some state, [MkDMsg (append_entries_response_msg result) [replica l] 20])
-          else
-            (* handle the replication request *)
-            let new_log := append_entries2log entries lli t state in
-            let s := (update_log state new_log) in
-            (* handle the replication cases *)
-            let s' := handle_log_entry s ci in
-            let result := response (current_term s') true slf id in
-            (Some s', [MkDMsg (append_entries_response_msg result) [replica l] 0])
-      | _, _ => (Some state, [])
+          (* Something failed, TODO: handle possible failure cases, such at
+           * outdated term, log mismatch etc. *)
+        (Some state, [])
+
+      | _, _ => (Some state, []) (* otherwise ignore the replication request at the moment *)
       end.
 
-  (** L - Handle results messages from followers. **)
-  (* Definition handle_append_entries_result (slf : Rep) : Update RaftState Result DirectedMsgs := *)
-  (*   fun state msg => *)
-  (*     match node_state state, msg with *)
-  (*     | leader l, append_entries_res t true node (si, ri) => *)
-  (*       (* the follower updated its log and the leader updates the next index. *) *)
-  (*       let ni := increase_next_index (next_index l) node in *)
-  (*       let l' := update_leader_state ni (match_index l) in *)
-  (*       let s := update_node_state state (leader l') in *)
-  (*       if is_replicated s then *)
-  (*         let s' := increment_commit_index s in *)
-  (*         let (s'', result) := apply_to_sm s' in *)
-  (*         match result with *)
-  (*         | None => (Some s, []) (* something failed by applying the sm *) *)
-  (*         | Some r => *)
-  (*           let res := client_res true r in *)
-  (*           let client_msg := mk_client_response_msg  (* FIXME *) res  in *)
-  (*           (Some s'', client_msg) *)
-  (*         end *)
-  (*       else (Some s, []) (* the majority is still missing the current log entry *) *)
-  (*     | leader l, append_entries_res t false node id => *)
-  (*       if TermLt (current_term state) t then *)
-  (*         (* the leader has an outdated term, so return to follower *) *)
-  (*         let s := equal_term_or_follower state t in *)
-  (*         (Some s, []) *)
-  (*       else *)
-  (*         (Some state, []) *)
-  (*     | _, _ => (Some state, []) *)
-  (*     end. *)
-  (*       (*          match msg with *) *)
-  (*     (*   | append_entries_res t true node => *) *)
-  (*     (*     (* the follower updated its log and the leader updates the next index. *) *) *)
-  (*     (*     let ni := increase_next_index (next_index l) node in *) *)
-  (*     (*     let l' := update_leader_state ni (match_index l) in *) *)
-  (*     (*     let s := update_node_state state (leader l') in *) *)
-  (*     (*     if is_replicated s then *) *)
-  (*     (*       (Some s, []) *) *)
-  (*     (*     else (Some s, []) (* the majority is still missing the current log entry *) *) *)
-  (*     (*   | append_entries_res t false node => (* the replication doesn't work *) *) *)
-  (*     (*     if TermLt (current_term state) t then *) *)
-  (*     (*     (* the leader has an outdated term, so return to follower *) *) *)
-  (*     (*       let s := equal_term_or_follower state t in *) *)
-  (*     (*       (Some s, []) *) *)
-  (*     (*     else *) *)
-  (*     (*       (Some state, []) *) *)
-  (*     (*   | _ => (Some state, []) (* we got the wrong result message *) *) *)
-  (*     (*   end *) *)
-  (*     (* | _ => (Some state, []) (* the results are for the leader *) *) *)
-  (*     (* end. *) *)
-
-  (* (*! maybe useless !*) *)
-  (* (** Cl - A client handles the response for the register message of the client - nothing atm **) *)
+  (*! maybe useless client handlers !*)
   (* Definition handle_register_result (slf : Rep) : Update RaftState Result DirectedMsgs := *)
   (*   fun state _ => (Some state, []). *)
 
   (* (** Cl -  The client handles the response from a node - currently nothing **) *)
   (* Definition handle_response (slf : Rep) : Update RaftState Result DirectedMsgs := *)
-  (*   fun state _ => (Some state, []). *)
-
-  (* Definition handle_debug_msg (slf : Rep) : Update RaftState string DirectedMsgs := *)
   (*   fun state _ => (Some state, []). *)
 
   (** The main update function which calls the appropriate handler function
@@ -750,51 +627,9 @@ Section Raft.
       | timer_msg d => handle_timer slf state d
       (* Handle client requests *)
       | request_msg d => handle_request slf state d
-      (* | register_response_msg d => handle_register_result slf state d *)
-      (* | broadcast_sessions_msg d => handle_sessions_broadcast slf state d *)
-      (* | request_msg d => handle_vote slf state d *)
-      (* | response_msg d => handle_vote slf state d *)
-      (* | append_entries_result_msg d => handle_append_entries_result slf state d *)
-      (* | forward_msg msg => handle_forward_msg slf state msg *)
-      (* | debug_msg d => handle_debug_msg slf state d *)
+      (* Ignore messages which are directed to the client *)
       | _ => (Some state, [])
       end.
-
-
-  (*! Define fake states for testing !*)
- (* Definition initial_faked_leader_state : RaftState := *)
- (*    Build_State *)
- (*      term0 (* zero at first boot *) *)
- (*      [] (* *) *)
- (*      None (* voted for no one. *) *)
- (*      [] (* no log entries stored *) *)
- (*      0 (* no commit done *) *)
- (*      0 (* nothing applied to state machine *) *)
- (*      5 (* some way of defining an offset is needed *) *)
- (*      RaftSM_initial_state (* defined within the raft context *) *)
- (*      follower (* at default no one is leader *) *)
- (*      (Some (nat2rep 0)) (* set leader to 0 *) *)
- (*      timer0. *)
-
-
-  (** An initial leader state which should only used for testing. **)
- (* Definition initial_leader_state : RaftState := *)
- (*   let reps := List.map nat2rep [1, 2, 3] in *)
- (*    let leader' := after_election_leader 0 reps in *)
- (*    Build_State *)
- (*      term0 (* zero at first boot *) *)
- (*      [] *)
- (*      None (* voted for no one. *) *)
- (*      [] (* no log entries stored *) *)
- (*      0 (* no commit done *) *)
- (*      0 (* nothing applied to state machine *) *)
- (*      5 (* some way of defining an offset is needed *) *)
- (*      RaftSM_initial_state (* defined within the raft context *) *)
- (*      (leader leader') (* define as leader with 3 followers *) *)
- (*      (Some (nat2rep 0)) (* set leader to 0 for testing *) *)
- (*      (* [1, 2, 3] (* set follower nodes *). *) *)
- (*      timer0. *)
-
 
   (*! System definitions !*)
   (* match node names with state machines *)
@@ -809,32 +644,6 @@ Section Raft.
     mkSM
       (replica_update slf)
       (state0).
-
-  (** This is a special purpose state, which initiates a leader.
-   ** Providing an initial leader is not inteded by the raft protocol.
-   ** This state assumes that the network has 3 followers. **)
-  (* Definition dummy_leader_state : RaftState := *)
-  (*   Mk_State *)
-  (*     term0 *)
-  (*     None *)
-  (*     (Some (nat2rep 0)) *)
-  (*     [] *)
-  (*     0 *)
-  (*     0 *)
-  (*     RaftSM_initial_state *)
-  (*     (leader (new_leader 0 (List.map nat2rep [1, 2, 3]))) *)
-  (*     [] *)
-  (*     [] *)
-  (*     150 *)
-  (*     timer0 *)
-  (*     timer0. *)
-
-  (* This binding should only used for testing. *)
-  (* Definition RaftLeaderSM (slf : Rep) : MStateMachine _ (* let the compiler guess ? *) := *)
-  (*   mkSM *)
-  (*     (replica_update slf) *)
-  (*     (dummy_leader_state). *)
-
 
   Definition Raftsys : MUSystem Raftnstate :=
     fun name =>

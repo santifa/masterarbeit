@@ -176,7 +176,11 @@ Section RaftHeader.
   (** These calls are just wrappers around the next index functions. **)
   Definition match_index0 (slf : Rep) : MatchIndex := next_index0 slf 0.
   Definition increase_match_index (l : MatchIndex) (rep : Rep) := increase_next_index l rep.
-  Definition get_match_index (l : MatchIndex) (rep : Rep) := get_next_index l rep.
+  Definition get_match_index (l : MatchIndex) (rep : Rep) :=
+    match get_next_index l rep with
+    | None => 0 (* return zero if no matching node is found *)
+    | Some i => i (* return the match index found *)
+    end.
 
   (** Run over the next index list and find the number of matching nodes. **)
   Fixpoint num_replicated (mi : MatchIndex) (i : nat) (num : nat) : nat :=
@@ -364,20 +368,23 @@ Section RaftHeader.
    ** entry without result for every request. If the request is executed by the
    ** network the cache is updated. Every node has its own caching within the log.
    ** It uses the replication requests and adds new replications requests to its
-   ** cache and the result if the entry is flagged as commited. **)
+   ** cache and the result if the entry is flagged as commited. To enable nodes
+   ** to add results to the cache if they applied some log entry the index of
+   ** the entry is added to the cache entry. The index shall be unique as in the log. **)
   Record CacheEntry :=
     MkCacheEntry
       {
         sid : SessionId;
         rid : RequestId;
+        ind : nat;
         result : option RaftSM_result;
       }.
 
   Definition Cache := list CacheEntry.
 
   (** Add a request to the cache. Duplicates should be checked beforehand.  **)
-  Definition add2cache (c : Cache) (sid : SessionId) (rid : RequestId) : Cache :=
-    (MkCacheEntry sid rid None) :: c.
+  Definition add2cache (c : Cache) (sid : SessionId) (rid : RequestId) (i : nat) : Cache :=
+    (MkCacheEntry sid rid i None) :: c.
 
   (** A small helper which decides if the cache entry matches session and request id **)
   Definition correct_entry (c : CacheEntry) (si : SessionId) (ri : RequestId) : bool :=
@@ -388,12 +395,19 @@ Section RaftHeader.
     find (fun x => correct_entry x sid ri) c.
 
   Definition add_result2cache_entry (c : CacheEntry) (r : RaftSM_result) : CacheEntry :=
-    MkCacheEntry (sid c) (rid c) (Some r).
+    MkCacheEntry (sid c) (rid c) (ind c) (Some r).
 
-  (** Add a result to a cache entry if the result finally processed by the sm. **)
-  Definition add_result2cache (c : Cache) (si : SessionId)
-           (ri : RequestId) (r: RaftSM_result) : Cache :=
-    map (fun x => if correct_entry x si ri then add_result2cache_entry x r else x) c.
+  (** Add a result to a cache entry if the result finally processed by the sm.
+   ** The matching is done by using the log index as reminder. **)
+  Definition add_result2cache (c : Cache) (i : nat) (r: RaftSM_result) : Cache :=
+    map (fun x => if Nat.eqb (ind x) i then add_result2cache_entry x r else x) c.
+
+  (** Add a result to the cache if there is some result. **)
+  Definition result2cache (c : Cache) (i : nat) (r : option RaftSM_result) : Cache :=
+    match r with
+    | None => c
+    | Some r' => add_result2cache c i r'
+    end.
 
   (** Get the cached result if some. **)
   Definition get_cached_result (c : Cache) (sid : SessionId) (ri : RequestId) :
@@ -691,7 +705,7 @@ Section RaftHeader.
 
   (** Create a reponse for some client request. **)
   Definition mk_client_response (g : bool) (r : option RaftSM_result)
-             (l : option Rep) (c : Client) : DirectedMsg :=
+             (l : option Rep) (c : option Client) : DirectedMsg :=
     MkDMsg (response_msg (client_response g r l)) [client c] 0.
 
 End RaftHeader.
