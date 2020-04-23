@@ -8,99 +8,99 @@ A distributed system is one in which the failure of a computer you didn't even
 know existed can render your own computer unusable. - Leslie Lamport
 \end{quote}
 
-Since the beginning of the last century the pace of societies development increases
-at an ever excelerating raid due to the advent of modern technology and computer
-systems after the second world war. Computer systems started out as singular
-monstrous machines operated by a hand-full of designated scientists on
-their own. In the late 60s the Arpanet tried to connect all these individual
-machines by building computational networks of mainframes. Since then,
-modern computer systems changed. They're becoming cheaper and more powerful
+Since the beginning of the last century, the pace of society's development increases
+at an ever-accelerating rate due to the advent of modern technology and computer
+systems after the second world war. The Computer started as singular
+monstrous machines operated by a handful of designated scientists on
+their own. In the late 60s, the Arpanet tried to connect all these individual
+machines by building a network of mainframes. Since then,
+modern computers changed. They are becoming cheaper and more powerful
 by introducing multicore CPUs and a whole lot of other technologies.
-Modern desktop computer systems beats an old mainframe in computational power,
-space and pricing by orders of magnitude. Also, pluggable small computers
-find their way into the market offering low costs and a near desktop like experience.
-The networks between computers increased either way in performance and
+A modern desktop computer beat an old mainframe in computational power,
+space, and pricing by orders of magnitude. Also, the pluggable small computer
+finds its way into the market offering low costs and experience near-desktop
+computers. The network between computer increased either way in performance and
 networking.
 
 These two developments (networking and performance) make it inevitable
-to build modern systems out of multiple large and not so large computer
-systems connected by high-speed networks. Since these networks are fast
-enough there is no need for the computer system to be at the same geographical
-position. Computers connected by such a network are called distributed systems
-which scale from a handfull of systems to thousands of computing devices. 
-Andrew S. Tanenbaum and Maarten van Steen described such a systems as:
+to build modern computational systems out of multiple large and not so large computers
+connected by high-speed networks. Since these networks are fast
+enough there is no need for the computer to be in the same geographical
+position. Computers connected by such a network is a called distributed system
+which scales from a handful of computers to thousands of computing devices. 
+Andrew S. Tanenbaum and Maarten van Steen described such a system as:
 
 \begin{quote}
   A distributed system is a collection of autonomous computing elements
   that appears to its users as a single coherent system.~\cite{tanenbaum2017distributed}
 \end{quote}
 
-From this weak specification follows that a distributed system is not a fixed
+This weak specification allows that a distributed system is not a fixed
 number of computing devices but a highly dynamic system where computers can
-join, leave or fail and the topology and the network connections can change.
-Each system is able to behave independently from all other systems in limited
+join, leave or fail, and the topology and the network connections can change.
+Each computing device can behave independently from all other ones in limited
 ways and at every moment a user interacts with this system as if it were one.
 
 These two main aspects imply the need for abstracting common components
-of a distributed system in a transparent way. Distributed systems should be
+of a distributed system transparently. Distributed systems should be
 geographically diverse, speed up computations through the amount of nodes,
-handle ressource sharing within the network and be fault-tolerant in limited
+handle resource sharing within the network and be fault-tolerant in limited
 ways.
 
 But why build such complex systems which scale from a single computer
-to thousands of nodes? There is a wide range of applications which are used in
-everyday life ranging from data intensive to computational intensive
+to thousands of nodes? There is a wide range of applications that are used in
+everyday life ranging from data-intensive to computationally intensive
 applications. For example, modern weather forecasting uses multiple complex
 models to describe and compute the possible weather for the following days.
 Banking software should run reliably across all bank branches, ATMs and
 online banking systems. Industry plants use geographically dispersed
 controllers and sensors to collect data and regulate the plant.
-The SETI project utilized millions of computer systems to search for
-extra-terrestrial life. Also, CERN integrates computer system from
-all over the world to analyse the data produced by the accelerator and
-collider to answer fundamental questions in science.~\cite{ghosh2014distributed}
-These are just a few examples and can be easily extendend by numerous
+The SETI@HOME or Folding@Home project utilizes millions of computing devices to search for
+extra-terrestrial life or performing molecular dynamics simulation.
+Also, CERN integrates computer from all over the world to analyze the data
+produced by the accelerator and collider to answer fundamental questions in science.~\cite{ghosh2014distributed}
+These are just a few examples and can be easily extended by numerous
 more applications.
 
 The state of the art technique to build such complex systems that can
 tolerate arbitrary faults is to use byzantine fault-tolerant state-machine
-replication. With this technique every service can be modelled as a
-set of services which replicate the whole systems state across all
+replication. With this technique every service can be modeled as a
+set of services that replicate the whole system state across all
 nodes. Faulty replicas are masked behind a set of healthy replicas
-which are operating in consensus.~\cite{rahli2018velisarios}
+that are operating in consensus.~\cite{rahli2018velisarios}
 
 Most consensus protocols to build distributed systems are derived from
 the original Paxos protocol from Leslie Lamport~\cite{lamport2001paxos}
-which tend to be quite complex and only informally
+which tends to be quite complex and only informally
 described.~\cite{ongaro2014search}
-As competitor RAFT was introduced which follows an approach to be
-easy to understand and therefore easier to implement.
+As competitor Raft was introduced which follows an approach to be
+easy to understand and therefore easier to implement.~\cite{ongaro2014consensus}
 
-Yet building such systems is a tedious and error prone process and
-as mentioned by~\cite{dragoi2015need} most of these systems are only
+Yet building distributed systems is a tedious and error-prone process and
+as mentioned by~\cite{dragoi2015need} most of these are only
 described in pseudo-code or formal but without executable code.
 Due to the heavy parallel thinking required to build distributed
 systems and the mostly informal reasoning makes the process quite
-complex, expensive and time-consuming.
+complex, expensive, and time-consuming.
 
 To tackle these problems and provide guarantees for the correctness and
 security of the code one should use the highest standards known to mankind
 today. That is, that one should prove the correctness of the formal specification and
-through checking and refining the specification by a machine which produces
-executable code, a correct and safe distributed system is modelled.~\cite{rahli2018velisarios}
+by checking and refining the specification by a machine that produces
+executable code, a correct and safe distributed system is modeled.~\cite{rahli2018velisarios}
 
-Vincent Rahli et al. build a framework for the COQ theorem-prover
-to model these complex systems which provides formal knowledge about distributed
+Vincent Rahli et al. built a framework for the Coq theorem-prover
+to model these complex systems which provide formal knowledge about distributed
 systems. Using this framework this master thesis tries to implement
-the basic RAFT consensus algorithm and compares it to the PBFT implementation
-done by Vincent Rahli et al.~\cite{rahli2018velisarios}
-Not part of the thesis are the proves for correctness.
+the basic Raft consensus algorithm and compares it to the PBFT implementation
+done by Vincent Rahli et al.~\cite{rahli2018velisarios}.
+The proofs for correctness are not part of this thesis.
 
-This thesis is divided as follows. The first chapter explains the
-mathematical foundation and the Velisarios framework. The second chapter
-explains the RAFt protocol and compares it to the ones derived from Paxos.
-Afterwards, the implementation is presented and explained. The fourth chapter
-evaluates the implementation and the last one gives a short summary and a
+This thesis is divided as follows. The second chapter explains the
+mathematical foundation and the Velisarios framework. The third chapter
+explains the Raft protocol and compares it to the ones derived from Paxos.
+The implementation is presented and explained in the fourth chapter. The fifth chapter
+evaluates the implementation and the last one gives a summary and a
 brief outlook.
 
 

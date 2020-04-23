@@ -2,26 +2,26 @@
 \label{sec_logic}
 
 This chapter introduces the logical and programmatic foundations needed for this
-thesis. To achive this, it is split into two parts. The first part introduces
+thesis. To achieve this, it is split into two parts. The first part introduces
 the reader to the Logic of Events which is the theoretical foundation for the
 Velisarios framework. The second part provides a practical introduction to
-the basics of COQ and programming with Velisarios.
+the basics of Coq and programming with Velisarios.
 
 \subsection{Logic}
 
 The Logic of Events was introduced by Bickford and
-Constable~\cite{bickford2003logic} to describe parallel systems which
-consists of nodes and events happening between them. To follow
-the explanation a brief overview about propositional logic, predicativ logic,
-constructive logic and type theorie is presented. It is assumed that the reader
+Constable~\cite{bickford2003logic} to describe distributed systems,
+consist of nodes and events happening between them. To follow
+the explanation a brief overview of propositional logic, predicative logic,
+constructive logic, and type theory is presented. It is assumed that the reader
 is already familiar with the basic logical systems.
 
 \paragraph{Propositional Logic}
 The oldest known logic uses atoms or a set of primitive symbols and logical
-connective or a set of operator symbols to formalize
+connectives or a set of operator symbols to formalize
 terms or propositions about the world. Statements in classical logic can be either
-\textbf{true} or \textbf{false}. The table~\ref{tab:proplogic} provides
-a short description for the logical connectives and their meaning.~\cite{heinemann2013logik}
+\textbf{true} or \textbf{false}. Table~\ref{tab:proplogic} provides
+a short description of the logical connectives and their meaning.~\cite{heinemann2013logik}
 
 \begin{table}[h]
   \centering
@@ -29,7 +29,7 @@ a short description for the logical connectives and their meaning.~\cite{heinema
     Symbols & Example & Description\\\hline
     $A,B,C,...$ & $P, Q$ & Atoms used in propositions.\\
     $\neg$ & $\neg P$ & Negation of some atom or proposition.\\
-    $\vee$ & $P \vee Q$ & The disjuction of two propositions.\\
+    $\vee$ & $P \vee Q$ & The disjunction of two propositions.\\
     $\wedge$ & $P \wedge Q$ & The conjunction of two propositions.\\
     $\Rightarrow$ & $P \Rightarrow Q$ & The implication of two propositions.\\
     $\Leftrightarrow$ & $P \Leftrightarrow Q$ & The equivalence composed of two propositions.\\
@@ -38,28 +38,28 @@ a short description for the logical connectives and their meaning.~\cite{heinema
   \label{tab:proplogic}
 \end{table}
 
-To make sense out these defined terms these need to be evaluated. To do so,
-the atoms are assigned to thruth values which is called the \textit{interpretation}.~\cite{tuschik1994mathematische}
+To make sense of these defined terms these need to be evaluated. To do so,
+the atoms are assigned to truth values, which is called the \textit{interpretation}.~\cite{tuschik1994mathematische}
 
 \begin{defi}
-  More formal, an interpreation is a sample assigned for a term $t$ with
-  $I:L(t)\rightarrow \{true,false\} \leftrightarrow t^I$. Interpretation which satisfies the term
-  $t^I$ are called a \textit{model}.
+  An interpretation is a set of truth values assigned for a term $t$ with
+  $I:L(t)\rightarrow \{true,false\} \leftrightarrow t^I$. An interpretation that satisfies the term
+  $t^I$ is called a \textit{model}.
 \end{defi}
 
-Most defined formal systems are using terms which are taken as truth without
+Most defined formal systems are using terms that are considered as ground truth without
 proof or justification. These terms are called \textit{axioms}. These are syntactically
 without meaning but semantically always true.~\cite{tuschik1994mathematische}
 
-To gather new knowledge out of axioms, terms and atoms a way to conclude
+To gather new knowledge from axioms, terms, and atoms a way to conclude
 new terms is needed. This can be done by adding \textit{inference rules} to
-the system. These rules derive new terms oder conclusions out of a given
+the system. These rules derive new terms or conclusions from a given
 set of propositions. Such a formal system is called \textit{logical calculus}.~\cite{tuschik1994mathematische}
 
 \paragraph{Predicate Logic}
 The predicate logic is an extension of the propositional logic.
 For instance, the statement ``x is a prime number'' can't be described
-in propositional logic since the thruth value depends on the structure of $x$.
+in propositional logic since the truth value depends on the structure of $x$.
 The predicate logic adds \textit{quantifiers} and \textit{predicates} to the
 system to describe atoms with variable structures.~\cite{heinemann2013logik}
 
@@ -81,9 +81,9 @@ system to describe atoms with variable structures.~\cite{heinemann2013logik}
   \label{tab:predlogic}
 \end{table}
 
-The table\,\ref{tab:predlogic} presents the extension made by the predicate logic.
+Table~\ref{tab:predlogic} presents the extension made by the predicate logic.
 Since the predicate logic is mathematically used to describe objects,
-structure and their relations it is useful to define such structures.~\cite{heinemann2013logik}
+structure, and their relations it is useful to define such structures.~\cite{heinemann2013logik}
 
 \begin{defi}
   The type $T$ is a pair of $(I,J)$ where $I\subseteq P$ and $J\subseteq F$.
@@ -91,36 +91,36 @@ structure and their relations it is useful to define such structures.~\cite{hein
   structure.
 \end{defi}
 
-The interpretation is similar to propositional logic execept it is
-extended with $n$-artity predicate- and function symbols.~\cite{heinemann2013logik}
+The interpretation is similar to propositional logic except it is
+extended with $n$-arity predicate- and function symbols.~\cite{heinemann2013logik}
 
 \paragraph{Intuitionistic Logic}
 The propositional and predicate logic are presented with the classical
 interpretation. The classical interpretation assumes that every statement
 is either $true$ or $false$ or more elaborated a mathematical object either
-exists or not. Therfore, proofs with classical interpretation don't care
+exists or not. Therefore, proofs with classical interpretation don't care
 about how such an object is constructed. For example the law of double
-negation eliminitation  $\neg\neg A\Rightarrow A$ or the Aristotelian law of excluded
+negation elimination  $\neg\neg A\Rightarrow A$ or the Aristotelian law of excluded
 middle $A \vee \neg A$, are such problematic laws. These laws don't provide
 intrinsic justification, in the way that they don't construct an object
 of that type or prove that it ``exists''.~\cite{sep-logic-intuitionistic, kreitz1994automatisierte}
 
 This problem was found by Brouwer in 1908. He observed that $A \vee \neg A$
-applied on infinite sets lead to problems. An example is the Goldbach
+applied to infinite sets lead to problems. An example is the Goldbach
 conjecture which assumes that every number $> 2$ can be expressed as the
 sum of two prime numbers. The classical logic uses a wider interpretation
-the law of excluded middle to get around this problem. It assumes
+of the law of excluded middle to get around this problem. It assumes
 that one of the cases must be true and none of them is not an option.
 As a side-effect such an interpretation rejects to be generally
 applicable to mathematical computational models.~\cite{sep-logic-intuitionistic, sep-mathematics-constructive}
 
-The \textit{intuitionism} is a mathematical direction of thinking which
+\textit{Intuitionism} is a mathematical direction of thinking which
 rejects the line of argument and universality of the law of excluded middle
 and other laws of that type. For this reason, the intuitionism demands
 that mathematical statements are seen as constructive statements.
 For instance, the exists quantifier $\exists x.A$ is re-interpreted in a way
 that a real object can be given and is not only a theoretical one.
-Logical connective are also re-interpreted that they give a way
+Logical connectives are also re-interpreted that they provide a way
 of constructing a proof with real objects and at every time one can
 know which way the proof uses. One can see from the \textit{evidence}
 of some proof with the disjunction $A\vee B$ which part of the disjunction
@@ -144,17 +144,17 @@ leads to a correct proof.~\cite{kreitz1994automatisierte}
   \label{tab:intsymbols}
 \end{table}
 
-Table~\ref{tab:intsymbols} shows the intuitionistic interpretation for the logical
+Table~\ref{tab:intsymbols} shows the intuitionistic interpretation of the logical
 symbols in typed predicate logic. As an application example, proofs about
-programs can only be done \textit{constructivly} since a proof of contradiction
+programs can only be done \textit{constructively} since a proof of contradiction
 says nothing about how to construct such a program or if the program
 fulfills some property.~\cite{kreitz1994automatisierte}
-Therefore, within the rest of this theses logical
-statements uses the intuitionistic logical interpretation.
+Therefore, within the rest of this thesis logical
+statements use the intuitionistic logical interpretation.
 
 \paragraph{proofs-as-programs}
 Taken the intuitionistic interpretation into computer science then for
-mathematical questions the result is a piece of code which can be
+mathematical questions the result is a piece of code that can be
 executed. This means, that for some typed piece of code the same
 rules apply as well as for the intuitionistic logic. They're
 fundamentally the same concept in different areas.
@@ -185,7 +185,7 @@ functional program is called a~\textit{realizer} for the proof.
 \end{table}
 
 Table~\ref{tab:proofsasprogs} shows the Curry-Howard isomorphism between
-logical proposition and types used to describe function behavior.
+a logical proposition and its type used to describe function behavior.
 
 As an example consider the statement
 \[
@@ -202,13 +202,12 @@ Such functions are also called \textit{correct-by-construction}.
 Over the last decades new constructive methods are developed which
 extend the proofs-as-programs paradigm by applying it to distributed
 systems. Such programs are not pure functional which means they have
-side-effects, an internal state, multiple agents in a system which
-communicate via messages and so forth. Extracting programs
+side-effects, an internal state, multiple agents in a system that
+communicates via messages, and so forth. Extracting programs
 are much harder since the specification is inherently tied to
 the logical structure of distributed systems. These logical
 structures are called \textit{event structures} and one of these
 is the \textit{logic of events}.~\cite{bickford2009component}
-
 
 \subsection{Logic of Events}
 The following section presents the logical language \textit{logic of events},
@@ -219,13 +218,13 @@ The logic of events is an approach to find an adequate logic for distributed
 systems. It should bear the power of explaining and providing the
 technical needs for a constructive logic. The logic builds on an
 abstract high level without the binding to a specific computational
-oder executional model. This provides room for the creative building
+or execution model. This provides room for the creative building
 of distributed systems and their verification. Therefore, the realization
 is excluded because it needs a deep understanding of systems programming.
 These can be implemented and verified on another level an provided for
 the logic of events as realizer or extractor.~\cite{bickford2005causal}
 
-The main idea is to describe a causal system which is defined by it's
+The main idea is to describe a causal system that is defined by its
 behavior on cause and effect, like in interacting computational systems
 or likewise physical systems.~\cite{bickford2005causal}
 The ideas are based on the early work from Lamport on ``Time, clocks, and
@@ -233,7 +232,7 @@ the ordering of events in a distributed system''~\cite{lamport1978time}
 and Winskel on ``An introduction to event
 structures''~\cite{winskel1988introduction}.
 
-The atomic building blocks of the theory are events. These are action
+The atomic building blocks of the theory are events. These are actions
 in space and time which are considered to be instantaneous.
 
 \begin{defi}
@@ -242,17 +241,17 @@ in space and time which are considered to be instantaneous.
 
 The event structure is determined by events happening at discrete and separate
 points which are called \textit{entities} or \textit{loci}. Actions or events
-are located at these locus and the set of loci can change over time.
-Each loci can have different properties which are identified by some
+are located at this locus and the set of loci can change over time.
+Each locus can have different properties that are identified by some
 \textit{key} and have some type $T$. These are properties are
 \textit{observables} and their value can be measured somehow.
 The list of observables at some locus is called its \textit{state}.
 The interaction which happens between the entities relays on
 \textit{communication channels} which allows the entities to send
 \textit{messages} (actions) to each other. The channel structure
-can be dynamic but the links are relaible and messages can't be blocked.
+can be dynamic but the links are reliable and messages can't be blocked.
 Two types of messages are distinguished. The first one is an
-external one which is recieved by another entity and the other on is triggered
+external one that is received by another entity and the other one is triggered
 by the entity itself in response to a former event.~\cite{bickford2005causal}
 
 \begin{figure}[ht]
@@ -289,22 +288,22 @@ by the entity itself in response to a former event.~\cite{bickford2005causal}
   \label{fig:structure}
 \end{figure}
 
-Figure~\ref{fig:structure} shows an example network of five nodes which
+Figure~\ref{fig:structure} shows an example network of five nodes that
 are all linked together. Each of the four nodes ($A..D$) can have some internal
-and maybe observable state and messages are send over the communication channels
+and maybe observable state and messages are sent over the communication channels
 to the other entities of the network. 
 
-The underlying computational model for the entities or nodes is the
-message automata. This follows the assumption that ``the universe is run by
-computation''~\cite{bickford2005causal} and everything can be modelled
+The message automata is the underlying computational model for the entities or
+nodes. This follows the assumption that ``the universe is run by
+computation''~\cite{bickford2005causal} and everything can be modeled
 by functionally updating the state and the message queues on the communication
 channels of some entity. The proposed update function is $s':=f(s,v)$ where
 the next state $s'$ follows from the current state $s$ and some internal or
 external message $v$. $f$ is some arbitrary function which computes
 the update step.~\cite{bickford2005causal}
 
-To axiomatize these structure two types which are disjoint and two partial
-functions are needed. The equality of the types are decidable.
+To axiomatize these structures two types which are disjoint and two partial
+functions are needed. The equality of the types is decidable.
 
 \begin{defi}
   The large type of discrete types is
@@ -337,15 +336,15 @@ returns true if $e$ is the first event happening at some location.
 The other function derived is $recv?(e)=\ if\ is\_left(sender?(e))\ then\ true\
 else\ false$ returns true if the event $e$ was sent by another event.~\cite{bickford2005causal}
 
-From these function we define the order relation.
+From these functions we define the order relation.
 
 \begin{defi}
-  The strongly well-founded oder relation is
+  The strongly well-founded order relation is
   $pred!(e,e') == (\neg first(e') \Rightarrow e = pred?(e')) \vee e = sender(e')$.
   This is the causal order relation from Lampert and denoted by $e<e'$.
 \end{defi}
 
-Additionally, there are three axioms that are needed to constraint the
+Additionally, three axioms that are needed to constraint the
 event structure.~\cite{bickford2005causal}
 
 \begin{axiom}
@@ -367,10 +366,10 @@ event structure.~\cite{bickford2005causal}
 
 Axiom 3 can be explained as a ``tour'' through the event structure where
 events happen as they're examined on the tour. This means that local
-events are linearly ordered at each location and a recieve only happens
+events are linearly ordered at each location and a receive-only happens
 after a corresponding send.~\cite{bickford2005causal}
 
-From that assumptions we define the finite list of events before a given event as
+From those assumptions we define the finite list of events before a given event as
 \[before(e):=\ if\ first(e)\ then\ [\,]\ else\ pred?(e)\ append\ before((pred?(e)))\] 
 and likewise the finite tree of all events causally before e as
 \begin{align*}
@@ -379,7 +378,7 @@ and likewise the finite tree of all events causally before e as
              & else\ <e,prior(pred?(e))>
 \end{align*}
 
-This basic language allows to describe event structures but to make
+This basic language allows us to describe event structures but to make
 it more useful events should send values to each other. To distinguish
 between internal events a discrete type called Act is used.~\cite{bickford2005causal}
 
@@ -390,9 +389,9 @@ between internal events a discrete type called Act is used.~\cite{bickford2005ca
 \end{defi}
 
 \begin{defi}
-  $Ty:Loc\rightarrow kinde\rightarrow Type$ returns the type of some event value at some specific
+  $Ty:Loc\rightarrow kind\rightarrow Type$ returns the type of some event value at some specific
   node. For internal events $val:E\rightarrow Ty(loc(e),kind(e))$ can be any element of
-  $Ty(e,a)$ choosen by any method.
+  $Ty(e,a)$ chosen by any method.
 \end{defi}
 
 \begin{figure}
@@ -416,15 +415,15 @@ between internal events a discrete type called Act is used.~\cite{bickford2005ca
     processes A and B.}
 \end{figure}
 
-Figure~\ref{fig:sequence} shows a simple event structure between two
-processes. The process $A$ sends a natural number to process $B$ which adds
-one to the value and retuns the result.
+Figure~\ref{fig:sequence} shows a simple event structure between the two
+processes. Process $A$ sends a natural number to process $B$ which adds
+one to the value and returns the result.
 
 To model the fact that an event $e$ can depend on a previous event $e'$ at
 some location the notion of state and three relations are introduced.~\cite{bickford2005causal}
 
 \begin{defi}
-  $Identifiers$ $Id:\mathbb{D}$ are the discrete type of names of state variables where each
+  $Identifiers$ $Id:\mathbb{D}$ is the discrete type of names of state variables where each
   holds a value with some specific type $T:x:Id\rightarrow i:Loc\rightarrow Type$.
 \end{defi}
 
@@ -445,7 +444,7 @@ happening. The change of the state is modeled as $\triangle$ operator with the
 following definition.~\cite{bickford2005causal}
 
 \begin{defi}
-  The formula $x\triangle e = (x\ \textbf{after}\ e\ne x\ \textbf{when} e)$ returns true
+  The formula $x\triangle e = (x\ \textbf{after}\ e\ne x\ \textbf{when}\ e)$ returns true
   if some event $e$ changes the state variable $x$.
 \end{defi}
 
@@ -460,19 +459,19 @@ following definition.~\cite{bickford2005causal}
   exactly $n$ changes unit $x$ and including the event $e$.
 \end{defi}
 
-The communiction between locations is modelled as a link or communication
-channel as mentioned earlier. To abstract away specific topologies the structure
-is imagened as directed graph between the nodes or locations.~\cite{bickford2005causal}
+The communication between locations is modeled as a link or communication
+channel as mentioned earlier. To abstract away from specific topologies the structure
+is imagined as a directed graph between the nodes or locations.~\cite{bickford2005causal}
 
 \begin{defi}
   A link between a source and destination is a labeled pair $l=<i,j>$.
-  \textbf{Link:} $\mathbb{D}$ is the discrete type of links.\\
+  \textbf{Link:} $\mathbb{D}$ is the discrete type of a link.\\
   \textbf{src:} $Link\rightarrow Loc$ and \textbf{dst:} $Link\rightarrow Loc$ returns the sender
-  or reciever of a message.
+  or receiver of a message.
 \end{defi}
 
 A sender can send multiple messages $m$ of $Type\ T$ over a link.
-In order to distinguish between the messages a discrete type $Tag$
+To distinguish between the messages a discrete type $Tag$
 is added to the messages on the link and processed in first-in-first-out order.~\cite{bickford2005causal}
 
 \begin{defi}
@@ -480,14 +479,14 @@ is added to the messages on the link and processed in first-in-first-out order.~
 \end{defi}
 
 \begin{axiom}
-  The processing happens in first in first out order.\\
+  The processing happens in first-in-first-out order.\\
   $\forall e_1,e_2:E.recv(l,t)(e_1)\ \&\ recv(l,t)(e_2) \Rightarrow sender?(e_1)<sender?(e_2)\Rightarrow e_1<e_2$
 \end{axiom}
 
-So far, the language specification of event structures consists out of events
-which send messages over links to different or the same node and trigger new
-events based on some update function and the nodes state. In addition, time
-is needed to reason about realtime properties and changes over time.~\cite{bickford2005causal}
+So far, the language specification of event structures consists of events
+that send messages over links to different or the same node and trigger new
+events based on some update function and the nodes state. Also, time
+is needed to reason about real-time properties and changes over time.~\cite{bickford2005causal}
 
 \begin{defi}
   Time is a map $time:E\rightarrow Time$ added to the event structure where $Time$
@@ -496,8 +495,8 @@ is needed to reason about realtime properties and changes over time.~\cite{bickf
 \end{defi}
 
 \begin{defi}
-  State changes are modeled as step function which implicitly depending on time.
-  $discrete:Id\rightarrow Id\rightarrow \mathbb{B}$ such that a varaible $x$ can only be changed
+  State changes are modeled as step functions which implicitly depending on time.
+  $discrete:Id\rightarrow Id\rightarrow \mathbb{B}$ such that a variable $x$ can only be changed
   from one constant to another.
 \end{defi}
 
@@ -512,9 +511,9 @@ concurrently and asynchronously interacting processes.
 Now a computing model as an abstract realizer for the specification language is needed.
 The event structure could be realized with multiple possible approaches but
 for distributed systems the \textit{message automata} based on the IO automata
-and active objects. The message automaton is a nondeterministic state machine.
+and active objects. The message automaton is a non-deterministic state machine.
 Each machine operates by sending and reacting to messages as well as
-executing internal state transistions.
+executing internal state transitions.
 the computation is considered to be fair in terms that every send message is
 received.~\cite{bickford2003logic}
 
@@ -531,8 +530,8 @@ received.~\cite{bickford2003logic}
 
 A message automaton consists out of the discrete type of state variables
 $St$. Furthermore, it is parametrized by the type of internal actions $Act$ 
-and recieved messages $Msg$. The $update$ function returns a new state
-depending on the current state and event happening. Resulting message are
+and received messages $Msg$. The $update$ function returns a new state
+depending on the current state and event happening. Resulting messages are
 computed by the event happening and the current state of the message automata.
 A distributed system is now a collection of message automata $M_1,M_2,...$ which
 are interconnected by links. The links form a directed graph with $M_i$ at the
@@ -541,21 +540,21 @@ and actions $(s_0,q_0,a_0),(s_1,q_1,a_1),....$ and the message queues as links.~
 
 \begin{defi}
   Let $a_i$ be an internal action, then is the next state
-  $s_{i+1}=update(a_i)(s_i)$ the new messag queue $q_{i+1}=enq(send(a_i)(s_i)q_i)$.
+  $s_{i+1}=update(a_i)(s_i)$ the new message queue $q_{i+1}=enq(send(a_i)(s_i)q_i)$.
 \end{defi}
 
 \begin{defi}
-  Let $a_i$ be a recieved message then is the next state
+  Let $a_i$ be a received message then is the next state
   $s_{i+1}=update(a_i)(s_i)$ and the new message queue
   $q_{i+1}=enq(send(a_i)(s_i)deq?(a_i,q_{i+1}))$ where $deq?$ takes
-  a recieved message from the queue. 
+  a received message from the queue. 
 \end{defi}
 
 To model possible computations of the distributed system the computation
 is split into discrete progression steps index by the natural numbers $0,1,...$.
 A \textit{world} is a trace of some execution of a distributed system because
 at every location $i$ at every time $t$ there is some state $s(i,t)$ and action
-$a(i,t)$ and a possible empty list of messages $m(i,t)$.
+$a(i,t)$ and a possibly empty list of messages $m(i,t)$.
 
 
 %%% Local Variables:
