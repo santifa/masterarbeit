@@ -19,12 +19,12 @@ let msgs2string msgs = coq2string (directedMsgs2string msgs)
 let node2string name = coq2string (name2string name)
 
 (* create a leader node for tests *)
-let to_leader n =
-  let node = leader_replica (Obj.magic n) in
-  let timer = Timer_msg timer0 in
-  let (node', d) = lrun_sm  node (Obj.magic timer) in
-  log_msgs "Leader" (msgs2string d);
-  ({ id = Obj.magic (Replica (Obj.magic n)); replica = node' }, d)
+(* let to_leader n =
+ *   let node = leader_replica (Obj.magic n) in
+ *   let timer = Timer_msg timer0 in
+ *   let (node', d) = lrun_sm  node (Obj.magic timer) in
+ *   log_msgs "Leader" (msgs2string d);
+ *   ({ id = Obj.magic (Replica (Obj.magic n)); replica = node' }, d) *)
 
 (* create a normal node without any initialization *)
 let to_replica n =

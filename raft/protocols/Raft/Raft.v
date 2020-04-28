@@ -241,15 +241,12 @@ Section Raft.
     (* We have no entry at position llit + 1, so we can just add the new entries. *)
     | None => update_log s (add2log (log s) e)
     | Some e' => (* test if we have an conflicting entry or maybe the same *)
-      let x := match e with
-               | [] => new_term_entry term0
-               | x' :: _ => x'
-               end in
-      if TermDeq (entry_term e') (entry_term x) then
+      if TermDeq (entry_term e') llt then
         (* the entries are equal so do nothing *)
         s
       else (* the entries conflict so remove the log tail from this entry on *)
-        let l := take_from_log (lli + 1) (log s) in
+        let lli' := Datatypes.length (log s) - (lli + 1) in
+        let l := take_from_log (log s) lli' in
         update_log s (add2log l e)
     end.
 
@@ -474,7 +471,7 @@ Section Raft.
     fun state msg =>
        match msg with
        | client_request c sid rid cmd =>
-         let failed_response := mk_client_response false None (leader_id state) c in
+         let failed_response := mk_client_response false None (leader_id state) (Some c) in
          (* we have a request and we're the leader *)
          if is_leader (node_state state) then
            (* check if the request is new and the session is valid *)
@@ -487,11 +484,11 @@ Section Raft.
               (* replicate the request *)
               (Some s', [ae_msg])
             else (* The request is old so check the cache even if the session is invalid *)
-              let result := get_cached_result (last_cache (log state)) sid rid in
-              let response := mk_client_response false result (leader_id state) c in
-              (Some state, [response])
+              let result := get_cached_result (cache state) sid rid in
+              let response := mk_client_response false result (leader_id state) (Some c) in
+              (Some state, response)
         else (* we're not the leader so point the leader if one *)
-          (Some state, [failed_response])
+          (Some state, failed_response)
       | _ => (Some state, []) (* ignore response messages *)
       end.
 
@@ -517,33 +514,18 @@ Section Raft.
    ** racts to replication messages.
    ** NOTE: Even if the message can contain lists of entries and most functions handles lists
    ** of new log entries some are only build to apply the new head. So only send messages with
-   ** one entry at a time to ensure correctness. **)
+   ** one entry at a time to ensure correctness.
+   **
+   ** TODO: Check log handling
+   ** TODO: Handle log mismatches correctly, resending of old entries
+   ** TODO: Resend failed entries
+   ** TODO: Apply early to the state machine as leader and late as follower
+   ** TODO: Write coq dummy tests for logs, caches, sessions, states
+   ** TODO: Rewrite some functions to handle updates more precisly in one function instead
+   ** of cluttering them. **)
   Definition handle_append_entries (slf : Rep) : Update RaftState AppendEntries DirectedMsgs :=
     fun state msg =>
       match msg, node_state state with
-      | heartbeat t l lli llt ci, _ =>
-      (* heartbeats are handled by all nodes including the leader which may be no longer one. *)
-        if t <? (current_term state) then
-          (* the senders term is lower, so only respond with false.  *)
-          let response := mk_append_response state slf false in
-          (Some state, response)
-        else (* the senders term is equal or greater *)
-          (* convert the node or update the term if neccessary *)
-          let s := equal_term_or_follower state t in
-          if check_entry_term (log state) lli (term llt) then
-            (* the log has an entry at index lli with term llt *)
-            (* update the leader *)
-            let s' := update_leader_id state l in
-            (* apply to the raft state machine if there are new commits and update the cache *)
-            let (s'', result) := apply_to_sm (update_commit_index s' ci) in
-            let s''' := update_cache s'' (result2cache (cache s'') (last_applied s'') result) in
-            (* Respond with success to the leader *)
-            let response := mk_append_response state slf true in
-            (Some s''', response)
-          else (* the logs doesn't match, so only respond with false *)
-            let response := mk_append_response state slf false in
-            (Some state, response)
-
       | replicate t l lli llt ci e id, follower =>
         (* replication messages are only handled by followers *)
         if t <? (current_term state) then
@@ -554,11 +536,16 @@ Section Raft.
           (* convert the node or update the term if neccessary *)
           let s := equal_term_or_follower state t in
           if check_entry_term (log state) lli (term llt) then
-            (* add the recieved entries to the log and possible fix the log. *)
-            let s' := fix_log s e lli llt in
-            (* add the new entry to the cache with the next index for recognition *)
-            let c := add2cache (cache s') (fst id) (snd id) (last_log_index (log s')) in
-            let s'' := update_cache s c in
+            let s' := update_leader_id state l in
+            let s'' := match e with
+                       | [] => s' (* we have an heartbeat *)
+                       | x => (* we have an replication request *)
+                         (* add the recieved entries to the log and possible fix the log. *)
+                         let s' := fix_log s e lli llt in
+                         (* add the new entry to the cache with the next index for recognition *)
+                         let c := add2cache (cache s') (fst id) (snd id) (last_log_index (log s')) in
+                         update_cache s c
+                       end in
             (* check for new commits and apply them to the raft state machine *)
             let (s''', result) := apply_to_sm (update_commit_index s'' ci) in
             let st := update_cache s''' (result2cache (cache s''') (last_applied s''') result) in
@@ -587,8 +574,8 @@ Section Raft.
             | None => (Some state, [])
             | Some c' =>
               (* Return the result to the client *)
-              let response := mk_client_response true result (leader_id s'') c' in
-              (Some s'', [response])
+              let response := mk_client_response true result (leader_id s'') (Some c') in
+              (Some s'', response)
             end
           else (* not replicated to a majority, so do nothing *)
             (Some s, [])

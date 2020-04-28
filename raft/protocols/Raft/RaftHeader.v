@@ -277,6 +277,18 @@ Section RaftHeader.
     | _ => false
     end.
 
+  Definition gni (s : NodeState) : NextIndex :=
+    match s with
+    | leader l => (next_index l)
+    | _ => []
+    end.
+
+  Definition gmi (s : NodeState) : MatchIndex :=
+    match s with
+    | leader l => (match_index l)
+    | _ => []
+    end.
+
   (*! Client and linearizable semantics !*)
   (** The client needs to register at the network which creates a session id for
    ** the client and expects request ids for every client request along with the
@@ -430,8 +442,6 @@ Section RaftHeader.
   | content (c : Content)
   (* The current valid sessions are also replicated as log entry to save messages. *)
   | session (s : Sessions)
-  (* The current cache *)
-  | cache (c : Cache)
   (* mark the start of a new term. *)
   | new_term.
 
@@ -452,9 +462,6 @@ Section RaftHeader.
 
   Definition new_term_entry (t : Term) :=
     MkEntry t new_term.
-
-  Definition new_cache_entry (t : Term) (c : Cache) :=
-    MkEntry t (cache c).
 
   (** Define an abbreviation for the entry list.  **)
   Definition Log := list Entry.
@@ -481,33 +488,18 @@ Section RaftHeader.
     | S n, _ :: xs => check_entry_term xs n t
     end.
 
-  (** Take e elements from the log. Start from the end of the list. **)
-  Fixpoint take_from_log_util (e : nat) (l : Log) :=
-    match l with
-    | [] => ([], 0)
-    | x :: xs =>
-      let (l, i) := take_from_log_util e xs in
-      if (i <? e) then (x :: l, i+1) else (l,i)
-    end.
-
   (** Remove the last elements from a log starting at e. **)
-  Definition take_from_log (e : nat) (l : Log) :=
-    let (l, i) := take_from_log_util e l in l.
+  Definition take_from_log (l : Log) (e : nat) :=
+    rev (List.skipn e (rev l)).
+
 
   (** Append new entries to a log  **)
-  Fixpoint add2log (l : Log) (e : list Entry) := Datatypes.app e l.
+  Fixpoint add2log (l : Log) (e : list Entry) := Datatypes.app l e.
 
   Definition is_session_entry (e : Entry) : bool :=
     match (entry e) with
     | session _ => true
     | _ => false
-    end.
-
-  Definition is_cache_entry (e : Entry) : bool :=
-    match (entry e) with
-    | cache _ => true
-    | _ => false
-
     end.
 
   Definition is_content_entry (e : Entry) : bool :=
@@ -521,14 +513,6 @@ Section RaftHeader.
     let entry := option_map entry (List.find is_session_entry (rev l)) in
     match entry with
     | Some (session s) => s
-    | _ => []
-    end.
-
-  (** Find and return the last cache entry or the empty list. **)
-  Definition last_cache (l : Log) : Cache :=
-    let entry := option_map entry (List.find is_cache_entry (rev l)) in
-    match entry with
-    | Some (cache c) => c
     | _ => []
     end.
 
@@ -551,12 +535,13 @@ Section RaftHeader.
   | client_response (status : bool) (result : option RaftSM_result) (leader : option Rep).
 
   (** The append entries messages are the core of raft. It is used as heartbeat maintaining
-   ** leadership in idle times and for the replication itself. To get the caching and
+   ** leadership in idle times and for the replication itself. The heartbeat is a replication
+   ** message with an empty entry list. To get the caching and
    ** recognition right the session and request ids are send along,
    ** despite the raft suggestions. **)
   Inductive AppendEntries :=
-  | heartbeat (term : Term) (leader : Rep) (last_log_index : nat)
-              (last_log_term : nat) (commit_index : nat)
+  (* | heartbeat (term : Term) (leader : Rep) (last_log_index : nat) *)
+  (*             (last_log_term : nat) (commit_index : nat) *)
   | replicate (term : Term) (leader : Rep) (last_log_index : nat) (last_log_term : Term)
               (commit_index : nat) (entry : list Entry) (id : SessionId * RequestId)
   (** The follower responses to the leader if the issued requests succeds **)
@@ -681,7 +666,7 @@ Section RaftHeader.
     (** Create a new heartbeat message. **)
   Definition mk_heartbeat_msg (n : Rep) : (Term -> nat -> Term -> nat -> DirectedMsg) :=
     fun t lli llt ci =>
-      let beat := heartbeat t n lli llt ci in
+      let beat := replicate t n lli llt ci [] (session_id0, request_id0) in
       MkDMsg (append_entries_msg beat) (other_names n) 0.
 
   (** Create a replication message to all other nodes. **)
@@ -705,7 +690,10 @@ Section RaftHeader.
 
   (** Create a reponse for some client request. **)
   Definition mk_client_response (g : bool) (r : option RaftSM_result)
-             (l : option Rep) (c : option Client) : DirectedMsg :=
-    MkDMsg (response_msg (client_response g r l)) [client c] 0.
+             (l : option Rep) (c : option Client) : DirectedMsgs :=
+    match c with
+    | None => []
+    | Some c => [MkDMsg (response_msg (client_response g r l)) [client c] 0]
+    end.
 
 End RaftHeader.
