@@ -41,6 +41,11 @@ raft-ext: sim-ext
 	mv RaftReplicaEx.ml raft/
 	mv RaftReplicaEx.mli raft/
 
+raft-ext-test: sim-ext
+	coqc $(COQ_PATH) raft/RaftTest.v
+	mv RaftReplicaTest.ml raft/
+	mv RaftReplicaTest.mli raft/
+
 pbft-ext: sim-ext
 	coqc $(COQ_PATH) pbft/PBFTsim.v
 

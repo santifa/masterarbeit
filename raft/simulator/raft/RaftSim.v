@@ -1,20 +1,21 @@
-(*!
- * This file defines an instance of the raft protocol
- * and extracts the code necessary to use the simulator and runtime
- * from ocaml.
- !*)
+(*! This file is part of the raft implementation in velisarios !*)
+
+(*! abstract !*)
+(** This file implements a realization of the raft protocol.
+ ** This means that it defines a concrete instance of a raft
+ ** context and state machine. The last step is the extraction into
+ ** real OCaml code. **)
 
 Require Export Simulator.
 Require Export Protocols.Raft.Raft.
 Require Export Ascii String.
+From RecordUpdate Require Import RecordSet.
+Import RecordSetNotations.
+
 
 (** This section defines a real instance of the previously defined
  ** raft protocol. **)
 Section RaftInstance.
-
-  (*! notations !*)
-  Notation Log := (list Entry).
-  Notation Sessions := (list (SessionId * Client)).
 
   (* ================== TIME ================== *)
   (*! Define timing stuff !*)
@@ -119,7 +120,7 @@ Section RaftInstance.
       (client_deq C) (* client decidability *)
       (clients2nat C) (* client 2 nat conversion *)
       (bijective_clients2nat C) (* proof that conversion is bijective *)
-      1000 (* timeout in ms *)
+      (* 1000 (* timeout in ms *) *)
       content (* content type *)
       nat2string (* content -> string *)
       result (* result type *)
@@ -127,7 +128,7 @@ Section RaftInstance.
       0 (* initial state *)
       update_sm.
 
-  Check MkEntry (term 0) 0.
+  Check new_entry (term 0) 0.
 
   (** Some examples **)
   Definition l : Log := [new_entry (term 0) 0, new_entry (term 1) 1].
@@ -135,8 +136,8 @@ Section RaftInstance.
   Compute(get_last_log_term l).
   Compute (get_last_log_index l2).
   (* Compute (check_last_log l 2 (term 1)). *)
-  Compute (check_last_log [] 1 (term 0)).
-  Compute (check_last_log l 3 (term 2)).
+  Compute (check_entry_term [] 1 (term 0)).
+  Compute (check_entry_term l 3 (term 2)).
   Compute (take_from_log 0 l).
   Compute (take_from_log 1 l).
 
@@ -216,6 +217,12 @@ Section RaftInstance.
   Definition number2string (name : string) (i : nat) : string :=
     str_concat [name, ": ", nat2string i].
 
+  Definition bool2string (b : bool) : string :=
+    match b with
+    | true => "true "
+    | false => "false "
+    end.
+
   (* Fix: there's only one client anyway *)
   (** Name the client **)
   Definition client2string (c : raft_client C) : string := str_concat ["Client: ", nat2string C].
@@ -254,9 +261,18 @@ Section RaftInstance.
                                [session_id2string sid, client2string c]
     end.
 
+  Definition sessions2string (s : list (SessionId * Client)) : string :=
+    str_concat ["Sessions", ":", list2string s session2string].
+
   Definition register_client2string (r : RegisterClient) :=
     match r with
-    | register_client c => str_concat ["Register: ", client2string c]
+    | request_register_client c => str_concat ["Register: ", client2string c]
+    | response_register_client s sid l =>
+      match l with
+      | None => str_concat ["Registering ", bool2string s, session_id2string sid]
+      | Some l' =>
+        str_concat ["Registering ", bool2string s, session_id2string sid, replica2string l']
+      end 
     end.
 
   Definition cmd2string (c : nat) : string := number2string "Cmd" c.
@@ -266,13 +282,25 @@ Section RaftInstance.
     | client_request cl sid rid c =>
       record_concat "Request" [client2string cl, session_id2string sid,
                                request_id2string rid, cmd2string c]
+    | client_response s res l =>
+      record_concat "Response" [bool2string s, number2string "Result" res]
     end.
 
+  Definition entry_type2string (e : EntryType) : string :=
+    match e with
+    | session s => sessions2string s
+    | new_term => "Next term"
+    | RaftHeader.content c => content2string c
+     end.
+
   Definition entry2string (e : Entry) : string :=
-    match e as e' with
-    | MkEntry t content =>
-      record_concat "Entry" [term2string t, content2string content]
-    end.
+    record_concat "Entry" [term2string (entry_term e), entry_type2string (entry e)].
+
+  (* Definition entry2string (e : Entry) : string := *)
+  (*   match e as e' with *)
+  (*   | MkEntry t content => *)
+  (*     record_concat "Entry" [term2string t, content2string content] *)
+  (*   end. *)
 
   Definition log2string (l : list Entry) : string :=
     str_concat ["Log: ", list2string l entry2string].
@@ -289,17 +317,6 @@ Section RaftInstance.
   Definition last_log_term2string (t : nat) : string := number2string "Last_log_term" t.
   Definition commit_index2string (i : nat) : string := number2string "Commit_index" i.
 
-  Definition append_entries2string (a : AppendEntries) : string :=
-    match a with
-    | heartbeat t l lli llt ci =>
-      record_concat "Heartbeat"
-                    [term2string t, replica2string l, last_log_index2string lli,
-                     last_log_term2string llt, commit_index2string ci]
-    | replicate t l lli llt ci e =>
-      record_concat "Replicate"
-                    [term2string t, replica2string l, last_log_index2string lli,
-                     last_log_term2string llt, commit_index2string ci, entries2string e]
-    end.
 
   Definition request_vote2string (r : RequestVote) : string :=
     match r with
@@ -307,28 +324,40 @@ Section RaftInstance.
       record_concat "RequestVote"
                     [term2string t, replica2string c,
                      last_log_index2string lli, last_log_term2string llt]
+    | response_vote t s => record_concat "ResponseVote" [term2string t, bool2string s]
     end.
 
-  Definition bool2string (b : bool) : string :=
-    match b with
-    | true => "true"
-    | false => "false"
+  Definition append_entries2string (a : AppendEntries) : string :=
+    match a with
+    | heartbeat t l lli llt ci =>
+      record_concat "Heartbeat"
+                    [term2string t, replica2string l, last_log_index2string lli,
+                     last_log_term2string llt, commit_index2string ci]
+    | replicate t l lli llt ci e (sid, rid) =>
+      record_concat "Replicate"
+                    [term2string t, replica2string l, last_log_index2string lli,
+                     last_log_term2string llt, commit_index2string ci,
+                     entries2string e, session_id2string sid, request_id2string rid]
+    | response t s n (sid, rid) =>
+      record_concat "Response"
+                    [term2string t, bool2string s, replica2string n,
+                     session_id2string sid, request_id2string rid]
     end.
 
-  Definition result2string (r : Result) : string :=
-    match r with
-    | client_res staus res => number2string "ClientResult" res
-    | append_entries_res t status s =>
-      record_concat "AppendEntriesResult"
-                    [str_concat ["Success: ", bool2string status], term2string t]
-    | request_vote_res t v =>
-      record_concat "RequestVoteResult"
-                    [str_concat ["Vote_granted: ", bool2string v], term2string t]
-    | register_client_res s sid l =>
-      record_concat "RegisterClientResult"
-                    [str_concat ["Registered:", bool2string s],
-                     session_id2string sid, replica_option2string l]
-    end.
+  (* Definition result2string (r : Result) : string := *)
+  (*   match r with *)
+  (*   | client_res staus res => number2string "ClientResult" res *)
+  (*   | append_entries_res t status s => *)
+  (*     record_concat "AppendEntriesResult" *)
+  (*                   [str_concat ["Success: ", bool2string status], term2string t] *)
+  (*   | request_vote_res t v => *)
+  (*     record_concat "RequestVoteResult" *)
+  (*                   [str_concat ["Vote_granted: ", bool2string v], term2string t] *)
+  (*   | register_client_res s sid l => *)
+  (*     record_concat "RegisterClientResult" *)
+  (*                   [str_concat ["Registered:", bool2string s], *)
+  (*                    session_id2string sid, replica_option2string l] *)
+  (*   end. *)
 
   Definition timer2string (t : Timer) := number2string "TimerId" t.
 
@@ -340,18 +369,18 @@ Section RaftInstance.
   Fixpoint msg2string (m : RaftMsg) : string :=
     match m with
     | register_msg m => register_client2string m
-    | register_result_msg m => result2string m
-    | broadcast_sessions_msg m =>  str_concat ["Broadcast: ", list2string m session2string]
+    | register_response_msg m => register_client2string m
+    (* | broadcast_sessions_msg m =>  str_concat ["Broadcast: ", list2string m session2string] *)
     | request_msg r => request2string r
-    | response_msg r => result2string r
+    | response_msg r => request2string r
     | append_entries_msg r => append_entries2string r
-    | append_entries_result_msg r => result2string r
+    | append_entries_response_msg r => append_entries2string r
     | request_vote_msg r => request_vote2string r
-    | response_vote_msg r => result2string r
-    | forward_msg m => str_concat ["Forward: ", msg2string m]
+    | request_vote_response_msg r => request_vote2string r
+    (* | forward_msg m => str_concat ["Forward: ", msg2string m] *)
     | timer_msg d => timer2string d
     | init_msg d => init2string d
-    | debug_msg d => debug2string d
+    (* | debug_msg d => debug2string d *)
     end.
 
   (* convert the node types to names *)
@@ -436,16 +465,16 @@ Section RaftInstance.
                               next_index2string (next_index l),
                               match_index2string (match_index l)].
   
-  Definition current_leader2string (c : option name) : string :=
+  Definition current_leader2string (c : option Rep) : string :=
     match c with
     | None => "Current_leader: None"
-    | Some n => str_concat ["Current_leader: ", name2string n]
+    | Some n => str_concat ["Current_leader: ", name2string (replica n)]
     end.
 
-  Definition voted_for2string (c : option name) : string :=
+  Definition voted_for2string (c : option Rep) : string :=
     match c with
     | None => "Voted_for: None"
-    | Some n => str_concat ["Voted_for: ", name2string n]
+    | Some n => str_concat ["Voted_for: ", name2string (replica n)]
     end.
 
   Definition candidate2string (c : CandidateState) :=
@@ -468,7 +497,7 @@ Section RaftInstance.
                    commit_index2string (commit_index s),
                    number2string "Last_Applied" (last_applied s),
                    node_state2string (node_state s),
-                   str_concat ["Sessions: ", list2string (sessions s) session2string],
+                   (* str_concat ["Sessions: ", list2string (sessions s) session2string], *)
                    timer2string (timer s)].
 
   (*! System definition !*)
@@ -595,8 +624,8 @@ Extract Inlined Constant nat2string    => "Prelude.char_list_of_int".
 
 (* numbers *)
 Extract Inlined Constant Nat.modulo    => "(mod)".
-Extract Inlined Constant random_init => "Random.init"
-Extract Inlined Constant random => "Random.int"
+(* Extract Inlined Constant random_init => "Random.init". *)
+(* Extract Inlined Constant random => "Random.int". *)
 
 (* lists *)
 Extract Inlined Constant forallb => "List.for_all".
@@ -646,10 +675,10 @@ Require Export ExtrOcamlString.
 Definition local_replica (*(F C : nat)*) (* (leader : bool) *) :=
   @RaftReplicaSM (@Raft_I_context).
 
-Definition leader_replica :=
-  @RaftLeaderSM (@Raft_I_context).
+(* Definition leader_replica := *)
+(*   @RaftLeaderSM (@Raft_I_context). *)
 
 (* Definition init_replica (n : Rep) (offset : nat) := *)
 (*   run_sm n (init_msg offset). *)
 
-Extraction "RaftReplicaEx.ml" state2string lrun_sm RaftdummySM local_replica leader_replica DirectedMsgs2string name2string.
+Extraction "RaftReplicaEx.ml" state2string lrun_sm RaftdummySM local_replica (* leader_replica *) DirectedMsgs2string name2string.

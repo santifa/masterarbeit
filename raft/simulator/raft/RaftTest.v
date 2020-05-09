@@ -118,9 +118,9 @@ Section RaftTestInstance.
                              [(new_term_entry (term 1)),
                               (new_sessions_entry (term 1) (fst s)),
                               (new_content_entry (term 1) 5)].
-  Compute log3. 
+  Compute log3.
   Compute get_last_entry log3. (* return content entry 5 *)
-  Compute last_session log3. (* get the last session *) 
+  Compute last_session log3. (* get the last session *)
   Compute take_from_log log3 2. (* remove last two added entries *)
   Compute check_entry_term log3 6 (term 1). (* check that content entry 5 is valid *)
 
@@ -142,5 +142,25 @@ Section RaftTestInstance.
   Compute add_result2cache cache 1 3.
   Compute get_cached_result (add_result2cache cache 1 3) session_id0 request_id0. (* returns 3 *)
 
+  (*! Fake states !*)
+  (** For some tests it's handy to have faked states.
+   ** The resulting network has four nodes, one leader and three followers. **)
+  Definition fake_leader : RaftState :=
+    to_leader state0 (nat2rep 0).
+
+  Definition RaftLeaderSM : MStateMachine _ :=
+    mkSM
+      (replica_update (nat2rep 0))
+      (to_leader state0 (nat2rep 0)).
+
+  Definition test_leader := @RaftLeaderSM. (* may be error?! *)
+  Definition test_replica := @RaftReplicaSM (@Raft_I_context).
+
 
 End RaftTestInstance.
+
+Require Export ExtrOcamlBasic.
+Require Export ExtrOcamlNatInt.
+Require Export ExtrOcamlString.
+
+Extraction "RaftReplicaTest.ml" test_replica test_leader.

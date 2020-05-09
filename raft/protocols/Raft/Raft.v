@@ -499,8 +499,7 @@ Section Raft.
    ** Candidates convert to followers if a heartbeat with at least the same term is recieved.
    **
    ** 1. Heartbeats are used to maintain leadership in the network. In the original paper
-   ** heartbeats are empty append entry calls but this is modeled different here by using
-   ** a specific type. A reciever checks the term and the last log index and term.
+   ** heartbeats are empty append entry calls. A reciever checks the term and the last log index and term.
    ** If there is something to commit the node applies it to the raft state machine.
    **
    ** 2. Replication messages are triggered by the leader to update the log of its followers.
@@ -516,11 +515,9 @@ Section Raft.
    ** of new log entries some are only build to apply the new head. So only send messages with
    ** one entry at a time to ensure correctness.
    **
-   ** TODO: Check log handling
    ** TODO: Handle log mismatches correctly, resending of old entries
    ** TODO: Resend failed entries
    ** TODO: Apply early to the state machine as leader and late as follower
-   ** TODO: Write coq dummy tests for logs, caches, sessions, states
    ** TODO: Rewrite some functions to handle updates more precisly in one function instead
    ** of cluttering them. **)
   Definition handle_append_entries (slf : Rep) : Update RaftState AppendEntries DirectedMsgs :=
@@ -586,14 +583,6 @@ Section Raft.
 
       | _, _ => (Some state, []) (* otherwise ignore the replication request at the moment *)
       end.
-
-  (*! maybe useless client handlers !*)
-  (* Definition handle_register_result (slf : Rep) : Update RaftState Result DirectedMsgs := *)
-  (*   fun state _ => (Some state, []). *)
-
-  (* (** Cl -  The client handles the response from a node - currently nothing **) *)
-  (* Definition handle_response (slf : Rep) : Update RaftState Result DirectedMsgs := *)
-  (*   fun state _ => (Some state, []). *)
 
   (** The main update function which calls the appropriate handler function
    ** for the incoming message type. **)

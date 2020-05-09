@@ -492,7 +492,6 @@ Section RaftHeader.
   Definition take_from_log (l : Log) (e : nat) :=
     rev (List.skipn e (rev l)).
 
-
   (** Append new entries to a log  **)
   Fixpoint add2log (l : Log) (e : list Entry) := Datatypes.app l e.
 
@@ -540,8 +539,6 @@ Section RaftHeader.
    ** recognition right the session and request ids are send along,
    ** despite the raft suggestions. **)
   Inductive AppendEntries :=
-  (* | heartbeat (term : Term) (leader : Rep) (last_log_index : nat) *)
-  (*             (last_log_term : nat) (commit_index : nat) *)
   | replicate (term : Term) (leader : Rep) (last_log_index : nat) (last_log_term : Term)
               (commit_index : nat) (entry : list Entry) (id : SessionId * RequestId)
   (** The follower responses to the leader if the issued requests succeds **)
