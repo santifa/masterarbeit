@@ -9,19 +9,18 @@ This thesis showed the implementation of Raft using
 Velisarios and the Logic of Events as a fundamental
 basis for distributed consensus protocols. The Raft
 thesis describes the protocol quite detailed and
-straight foreward which makes the implementation
+straight forward which makes the implementation
 goes along with the description. Only some details
 are left to the programmer to decide on how to implement
 these parts and their interoperation. Also, many existing
 implementations\footnote{\url{https://raft.github.io/}}
 help to correctly interpret some not very clear points.
-The diffculty with implementing something in COQ is that
+The difficulty with implementing something in Coq is that
 it requires programmers from other languages or unfamiliar
 with the functional concepts to rethink many parts
 as other common languages are mostly based on an imperative
-paradigm. Also, the
-restriction to algebraic types and deterministic recursive
-functions is not forseen by the description of Raft.
+paradigm. Also, the restriction to algebraic types and deterministic recursive
+functions is not foreseen by the description of Raft.
 But these led to a more predictable and less error-prone
 code so that mostly only logical failures are left as
 bugs in the code. As shown with this thesis Velisarios
@@ -29,12 +28,12 @@ is a perfect fit for implementing distributed protocols
 and using them in the real world. But one has to note that
 Velisarios is addressed to programmers already familiar with the
 concepts of \texttt{proofs-as-programs} and functional
-programming in COQ and the tooling is far from perfect.
+programming in Coq and the tooling is far from perfect.
 The basic aspects are described in the paper but the understanding about how the
-parts fit together in code are left to the example
+parts fit together in code is left to the example
 implementation of PBFT. In conclusion, this thesis
 may serve as an additional reference point for
-further approaches and implementions from non-theoretical
+further approaches and implementations from a non-theoretical
 computer scientist.
 
 \subsection{Outlook}
@@ -50,7 +49,7 @@ this feature can be quite tedious to implement.
 Additionally, the Raft protocol provides log
 compaction like most of the other Paxos protocols.
 This can be easily integrated into the existing
-implemntation by introducing a bunch of new message
+implementation by introducing a bunch of new message
 types. With this feature the Raft protocol can be
 compared to other protocols like the PBFT variant
 implemented by the original Velisarios authors.
@@ -60,10 +59,10 @@ introduced by Velisarios. With the proofs
 done the implemented version of Raft
 can be seen as a fully \texttt{proof-as-program}.
 On a larger scale, more approaches to implement and
-logical describe complex systems are needed. The
-complexity of these system are hard to design
+logically describe complex systems are needed. The
+complexity of these systems is hard to design
 correctly by hand-woven code in non-functional
-languages. So, these approaches maybe a common
+languages. So, these approaches may be a common
 standard in the future to handle complex systems
 and make the life of programmers easier.
 
